@@ -66,9 +66,11 @@ test("propose is offered only for an available, conflict-free, hashed and unacce
 
 test("the previewed version states why it was chosen and the latest acceptance", () => {
   assert.equal(previewBasis(page({ preview: { state: "not_applicable" } })), "");
-  assert.equal(previewBasis(page()), "release");
-  assert.equal(previewBasis(page({ proposals: [plan(4, "pending", "u2")] })), "pending");
-  assert.equal(previewBasis(page({ proposals: [plan(4, "pending", "u2", hash, "1.1.0")] })), "release");
+  assert.equal(previewBasis(page({ preview_basis: "newest_release" })), "release");
+  assert.equal(previewBasis(page({ preview_basis: "pending_plan" })), "pending");
+  assert.equal(previewBasis(page({ preview_basis: "newest_release", proposals: [plan(4, "pending", "u2")] })), "release", "the served basis is used, not a guess from the listed proposals");
+  assert.equal(previewBasis(page({ preview_basis: "pending_plan", proposals: [] })), "pending", "a pending plan outside the listed proposals is still the basis");
+  assert.equal(previewBasis(page()), "", "without a served basis nothing is claimed");
   const list = page({ proposals: [plan(2, "applied", "u2"), plan(6, "applied", "u2", hash, "1.1.0"), plan(7, "pending", "u1")] }).proposals;
   assert.equal(latestAcceptance(list)?.number, 6);
   assert.equal(latestAcceptance([]), null);
@@ -287,13 +289,10 @@ test("a refusal sentence is kept until a definite answer or the row shows a bloc
   forget();
 });
 
-test("a returned number already listed announces a duplicate", () => {
-  const list = page({ proposals: [plan(4, "pending", "u1")] }).proposals;
-  assert.equal(duplicateOf(list, "4"), true);
-  assert.equal(duplicateOf(list, "5"), false);
-  assert.equal(duplicateOf(list, ""), false);
-  assert.equal(duplicateOf(list, "04"), false);
-  assert.equal(k.duplicate("en", "4"), "This plan was already proposed as #4.");
+test("a duplicate is announced only when the service says the answer is an existing proposal", () => {
+  assert.equal(duplicateOf("true"), true);
+  assert.deepEqual([duplicateOf(undefined), duplicateOf(""), duplicateOf("false"), duplicateOf("TRUE")], [false, false, false, false]);
+  assert.equal(k.duplicate("en", "4"), "This plan was already proposed as #4. No new proposal was created, and that proposal keeps its original reason.");
 });
 
 test("conflicts and effects show only for an available preview", () => {
@@ -368,9 +367,24 @@ test("grouped retained note displays the matching server receipt in every locale
   const p = page({ proposals: [plan(1, "pending", "u")] });
   for (const l of locales) {
     const h = renderToStaticMarkup(createElement(Proposals, {
-      l, page: p, api: {} as AdminClient, me: "u", selected: "", onDenied: () => {}, onReload: async () => true,
+      l, page: p, api: {} as AdminClient, me: "u", selected: "", stale: false, onDenied: () => {}, onReload: async () => true,
       onDone: () => {}, onNotice: () => {}, onSignedOut: () => {},
     }));
+    assert.equal(/<button[^>]*disabled/.test(h), false, l);
+    const kept = renderToStaticMarkup(createElement(Proposals, {
+      l, page: p, api: {} as AdminClient, me: "u", selected: "", stale: true, onDenied: () => {}, onReload: async () => true,
+      onDone: () => {}, onNotice: () => {}, onSignedOut: () => {},
+    }));
+    const buttons = kept.match(/<button[^>]*>/g) ?? [];
+    assert.ok(buttons.length > 0 && buttons.every(b => b.includes("disabled") && b.includes('aria-describedby="p01-stale"')), l + " " + buttons.join(" "));
+    const { CommandForm } = await import("./LiveProposals");
+    const form = renderToStaticMarkup(createElement(CommandForm, {
+      l, page: p, api: {} as AdminClient, me: "u", selected: "", stale: true, onDenied: () => {}, onReload: async () => true,
+      onDone: () => {}, onNotice: () => {}, onSignedOut: () => {}, onClose: () => {},
+      command: "installation.approve", target: "installation-proposal-1", values: {}, title: "t", facts: null, impact: "i", verb: "v", done: () => "", gone: "g",
+    } as Parameters<typeof CommandForm>[0]));
+    const submit = (form.match(/<button[^>]*type="submit"[^>]*>/g) ?? []);
+    assert.ok(submit.length === 1 && submit[0].includes("disabled") && submit[0].includes('aria-describedby="p01-stale"'), l + " " + submit.join(" "));
     assert.ok(h.includes("server-approve"), l);
     assert.ok(h.includes("server-withdraw") && h.includes("installation.withdraw"), l);
     assert.match(h, /<bdi[^>]*dir="ltr"[^>]*>invalid_stage<\/bdi>/, l);

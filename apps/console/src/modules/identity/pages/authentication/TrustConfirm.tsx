@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import type { Locale } from "../../../../shared/types";
 import { AdminError, attempt, type AdminClient, type Attempt, type CommandId, type Outcome, type PolicyPage } from "../../../../service/admin";
 import { c as sc } from "../../../../service/copy";
+import { Summary } from "../../../../service/Service";
 import { FailureBox, Reason, reasonProblem } from "../users/Live";
 import { w } from "../users/live-copy";
 import { ConfirmBody, primaryLabel } from "./TrustConfirmBody";
@@ -46,7 +47,11 @@ export function ConfirmDialog({ l, page, api, k, opener, workspace, onDone, onCl
     onClose(reload);
     const kind = k.kind;
     window.setTimeout(() => {
-      const target = opener && opener.isConnected ? opener : document.querySelector<HTMLElement>(`[data-action="${kind}"]`) ?? document.querySelector<HTMLElement>(".m02-detail-title");
+      const target = opener && opener.isConnected ? opener
+        : (kind === "propose" ? document.querySelector<HTMLElement>('.m02-form button[type="submit"]') : null)
+          ?? document.querySelector<HTMLElement>(`[data-action="${kind}"]`)
+          ?? document.querySelector<HTMLElement>(".m02-detail-title")
+          ?? (kind === "propose" ? document.querySelector<HTMLElement>(".m02-propose") : null);
       target?.focus();
     }, 0);
   };
@@ -88,10 +93,7 @@ export function ConfirmDialog({ l, page, api, k, opener, workspace, onDone, onCl
       <form onSubmit={submit} noValidate>
         <h2 id="m02-confirm-title" tabIndex={-1} ref={title}>{ty.confirmTitle(l, label, k.change?.number ?? 0)}</h2>
         {problem && (
-          <div className="service-summary" role="alert">
-            <h2>{sc.check(l)}</h2>
-            <ul><li><a href="#live-reason" onClick={(ev) => { ev.preventDefault(); document.getElementById("live-reason")?.focus(); }}>{problem}</a></li></ul>
-          </div>
+          <Summary locale={l} title={sc.check(l)} problems={[{ field: "live-reason", message: problem }]} focusKey={focusKey} />
         )}
         {error !== null && <FailureBox l={l} error={error} focusKey={focusKey} describe={(l2, e2) => trustFailure(l2, e2, k.kind)} />}
         <ConfirmBody l={l} page={page} k={k} expectedDigest={digest} workspace={workspace} dead={dead} />

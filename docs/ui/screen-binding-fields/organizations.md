@@ -23,16 +23,20 @@ This is part of the [screen binding register](../screen-binding-register.md#orga
 
 | View | Field, column or state | Source | Parser | Rendered at |
 | --- | --- | --- | --- | --- |
-| All | As-of date, revision pin | `on`, `relationship_revision`, `active_revision` | `admin.ts:983-986` | `organizations/Live.tsx:702` (tree meta); newer-revision notice derived by `live-model.ts:231` |
+| All | As-of date, revision pin | `on`, `relationship_revision`, `active_revision` | `admin.ts:983-986` | `organizations/Live.tsx` tree heading; newer-revision notice derived by `live-model.ts:231` |
 | All | Filter band (legal entity, relationship kind, unattributed, search) | request `entity`, `kind`, `unattributed`, `q`; echoed in `filters` | `admin.ts:993-996` | `organizations/Live.tsx:964-966`, `filters.tsx` |
 | All | Legal entity choices | `parties[]` where `kind = legal_entity` | `admin.ts:988` | `organizations/Live.tsx:962` |
 | All | Provider filter: not connected | `provider_filter` (value `not_connected`); the line itself is fixed copy | `admin.ts:997` | `organizations/filters.tsx:81` |
 | All | Denied | `permission_denied` failure | `admin.ts:776` | `organizations/Live.tsx:476-477` |
 | All | Load failed, with Try again or Sign in again | other failure | `admin.ts:776` | `organizations/Live.tsx:568-575` |
-| Tree | Nodes: parties and accounts under their parent | `parties[]` (`id`, `name`, `kind`, `parent`) and `members[]` of `kind=hierarchy` (`member`, `name`, `targets`) | `admin.ts:988`, `:991` | built by `live-model.ts:26` (`tree`); `organizations/Live.tsx:722` |
-| Tree | Conflicting, cyclic, not loaded, without organization | derived by `tree()` from the same rows | `live-model.ts:26` | `organizations/Live.tsx:723-753` |
-| Tree | Loaded count; incomplete with Load more | derived from loaded `members` and `next` | `admin.ts:992` | `organizations/Live.tsx:702`, `:756-760` |
-| Tree | Empty (no parties, no revision, none of the kind) | derived from `parties`, `revision` | `admin.ts:988` | `organizations/Live.tsx:713` |
+| Tree | Roots, and the nodes under one opened node | `GET /api/v1/organizations/tree` (`parent` absent or set) → `nodes[]` (`id`, `name`, `kind`, `state`, `source`, `children`), `next`, `scan_stopped` (`apps/api/server/orgtree.go`) | `admin.ts` `tree()`, parsed strictly by `organization-read.ts` `organizationTreeOf` | `organizations/tree.tsx` (`Branch`, `BranchView`); read through `organizations/Live.tsx` `readTree` |
+| Tree | Whether a node can be opened | `nodes[].children` (`some`, `none`, `unchecked`); a node already on its own path is not opened | same | `tree.tsx` `canOpen` |
+| Tree | Legal entities on a cycle | the same read with `group=detached` | same | `tree.tsx` `TreeGroup`, hidden when empty |
+| Tree | Without organization on the day | `GET /api/v1/organizations` with `kind=hierarchy`, `unattributed=true` → `members[]`; each row is shown with `children` unknown | `admin.ts` `organizations()` | `tree.tsx` `unplaced`, `TreeGroup` |
+| Tree | Heading facts, registry sentences, selected node's detail | `GET /api/v1/organizations` with a page size of one (`relationship_revision`, `workspace`, `parties`, `profiles`) and with `member=` for the selected node | `admin.ts` `organizations()` | `organizations/Live.tsx` `prime`, `useMemberFacts` |
+| Tree | Not bound | `registry_empty` of the tree read is parsed and not used; the empty sentence still reads the party list | | |
+| Tree | States of each list: loading, failure with Try again, nothing under the node, further page, stopped search, failed further page, node already shown on its path | status of that list's own read; `next`, `scan_stopped` | `use-pages.ts` | `tree.tsx` `BranchView` |
+| Tree | Empty: no parties, no revision or none of the kind, shown only when the roots, the cycle list and the no-organization list are all empty; otherwise "Nothing is placed at the top of the tree" | derived from `parties`, `revision` of the page-size-one read and from the three lists | `admin.ts` `organizations()`, `tree()` | `organizations/Live.tsx` tree view (`beside`) |
 | Accounts | Account name and ID | `members[].member`, `name` (`subject=account`) | `admin.ts:991` | `organizations/Live.tsx:795` |
 | Accounts | Organization on the day | `members[].targets` of `kind=hierarchy`, joined by `member=` | derived, `live-model.ts:101-108` | `organizations/Live.tsx:796` |
 | Accounts | Payer on the day | `members[].targets` of `kind=payer` | derived, `live-model.ts:107` | `organizations/Live.tsx:797` |
@@ -61,7 +65,7 @@ This is part of the [screen binding register](../screen-binding-register.md#orga
 | Header | Active revision; open plans against the limit | `GET /api/v1/organizations/plans` → `active_revision`, `open_plans`, `open_limit` | `admin.ts:1021-1029` | `changes/Live.tsx:767-768`, `:924-926` |
 | Plan list | Member or group, action, kind, target, from, stale | `plans[]` → `member_name`, `change` (`kind`, `member`, `action`, `target`, `from`), `target_name`, `stale`; `draft` for group plans | `admin.ts:329-371` (`planOf`) | `changes/Live.tsx:933-941` |
 | Plan | Title, draft name, ID | `draft` (`name`, `member_count`, `new_group`), `id` | `planOf` | `changes/Live.tsx:135-137` |
-| Plan | Stale base; truncated | `stale`, `base`, `truncated`; `active_revision` | `planOf` | `changes/Live.tsx:139-140` |
+| Plan | Stale base; rejection reasons cut at the module's limit (`truncated` is about violations, not members; [HYB-365](../../features/HYB-365/plan.md)); the relationship kind under a changed member when a plan changes several kinds | `stale`, `base`, `truncated`; `active_revision`; `members[].kind`, `kinds[]` | `planOf` | `changes/Live.tsx` (`Detail`) |
 | Plan facts | Member, change, target, from, state, base, proposer, at, reason | `change.*`, `member_name`, `target_name`, `state`, `base`, `proposer_login`, `proposer`, `created`, `reason` | `planOf` | `changes/Live.tsx:142-151` |
 | Plan | Violations | `violations[]` (`kind`, `member`, `rule`) | `planOf` | `changes/Live.tsx:155-164` |
 | Plan | Changed members (before and after) | `members[]` (`member`, `name`, `differs`, `before`, `after`) | `admin.ts:351` | `changes/Live.tsx:174-201` |
@@ -70,13 +74,20 @@ This is part of the [screen binding register](../screen-binding-register.md#orga
 | Plan | Held block; progress steps | derived from `impact`, `blocked`, `can_activate`, `state` | `changes/live-model.ts:70-99` | `changes/Live.tsx:86`, `:107-109`, `:243`, `:272` |
 | Plan | Only a sealed plan can be decided | `state` | `planOf` | `changes/Live.tsx:266` |
 | Decision | Activate or discard result | `relationship.activate` → `fields.revision`; `relationship.discard` | `admin.ts:735` | `changes/Live.tsx:707-712` |
-| Proposal form | Member, kind, target choices | `GET /api/v1/organizations`, all kinds, read page by page in the browser | `admin.ts:991` | `changes/Live.tsx:40-60` (`readChoices`), `:870`, `:886` |
+| Proposal form | Party list and pinned revision for the form | `GET /api/v1/organizations` with a page size of one → `parties[]`, `relationship_revision` | `admin.ts` `organizations()` | `changes/Live.tsx` `readChoices` |
+| Proposal form | Member search results | `GET /api/v1/organizations` with `subject=account`, `q`, `limit=10`, the pinned revision → `members[].member`, `name`, `next`, `scan_stopped`; active internal units from `parties[]` are listed first for the hierarchy kind | same | `changes/choices.tsx` `Picker`, `unitChoices`; `changes/Live.tsx` `searchMembers` |
+| Proposal form | Target choices | hierarchy and payer: `parties[]`; pools and view group: `GET /api/v1/organizations/targets` with `kind`, `q`, `limit=10`, the pinned revision → `targets[].id`, `name`, `next`, `scan_stopped` | `admin.ts` `targets()` | `changes/live-model.ts` `targetChoices`; `changes/choices.tsx` `Picker`; `changes/Live.tsx` `searchTargets` |
+| Proposal form | Present targets of the chosen member | `GET /api/v1/organizations` with `member=`, the kind, the pinned revision → `members[0].history`; no member in the answer means no relationship of the kind | `admin.ts` `organizations()` | `changes/choices.tsx` `usePresent`; `changes/Live.tsx` `currentTargets` |
+| Proposal form | Whether a member carried by a link can be chosen from the search | `GET /api/v1/organizations` with `member=`, `subject=account` → whether a member is returned | same | `changes/Live.tsx` (effect on `choices`), `live-model.ts` `memberMode` |
 | Proposal form | Base revision from O01 | URL handoff, checked against `active_revision` | derived | `changes/Live.tsx:604`, `:817`, `:838` |
 | Proposal form | From date | typed, minimum today | none | `changes/Live.tsx:823`, `:898` |
 | Proposal result | New plan ID | `relationship.propose` or `view_group.propose` → `fields.plan` | `admin.ts:735` | `changes/Live.tsx:687` |
 | Group plan | Draft members | view group drafts and members reads | `admin.ts:1044`, `:1055` | `changes/Live.tsx:381-383` |
 | Closed plan | Link to O01 at the activated revision | `change.from`, `activated_revision` | `planOf` | `changes/Live.tsx:956` |
 | All | Denied | `permission_denied` | `admin.ts:776` | `changes/Live.tsx:456`, `:471` |
+| Result | Closed plans: how many are kept and shown, and the cursor for the rest | `GET /api/v1/organizations/plans` → `closed.total`, `next`, `kept`, `dropped` (`relplans.go` `closedFacts`) | `admin.ts` `plans()`, `closedFactsOf` | `changes/Live.tsx` result view |
+| Result | Further closed plans and search | `GET /api/v1/organizations/plans/closed` with `after`, `limit`, `q` → `plans[]`, `next`, `matching`, `closed` (`relplans.go` `listClosedPlans`) | `admin.ts` `closedPlans()` | `changes/Live.tsx` (`history`, `usePages`), `organizations/filters.tsx` `SearchForm`, `MoreBar` |
+| Result | Changed members of a plan: count when some are left out; more members loaded by relationship kind, failure | `plans[].kinds[].next`, `kinds[].changed`, `members[].kind`; `GET /api/v1/organizations/plans/members` with `plan`, `kind`, `after`, `limit` → `members[]`, `next`, `total` (`relplanmembers.go` `listPlanMembers`) | `admin.ts` (`planMembers()`, `planMembersPageOf`, `planMemberOf`); `shared/more-rows.ts` `appended` | `organizations/pages/changes/Live.tsx` (`Detail`) |
 
 ## O03 Contract lifecycle
 

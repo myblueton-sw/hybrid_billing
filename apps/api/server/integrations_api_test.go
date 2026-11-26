@@ -99,7 +99,7 @@ func TestIntegrationsReadShape(t *testing.T) {
 	if s := fmt.Sprint(clients["state"], " ", clients["manage_on"], " ", clients["oauth_clients"], " ", clients["service_users"]); s != "configured M04 not_connected []" {
 		t.Errorf("clients %s", s)
 	}
-	if s := fmt.Sprint(clients["clients"]); s != "[map[grants:[map[action:view id:reader-console kind:focus_data not_after:2026-12-16T09:00:00Z not_before:2026-11-16T09:00:00Z "+
+	if s := fmt.Sprint(clients["clients"]); s != "[map[grants:[map[action:view id:approval-console kind:approval_review not_after:2026-12-16T09:00:00Z not_before:2026-11-16T09:00:00Z scope:map[contract:all customer:all legal_entity:all period:any] state:active] map[action:view_cost id:candidate-console kind:charge_candidate not_after:2026-12-16T09:00:00Z not_before:2026-11-16T09:00:00Z scope:map[contract:all customer:all legal_entity:all period:any] state:active] map[action:view id:reader-console kind:focus_data not_after:2026-12-16T09:00:00Z not_before:2026-11-16T09:00:00Z "+
 		"scope:map[contract:all customer:all legal_entity:all period:any] state:active]] id:console kind:first_party_console state:active]]" {
 		t.Errorf("console %s", s)
 	}
@@ -165,7 +165,7 @@ func TestIntegrationsReadShape(t *testing.T) {
 	invoices := subscriptionRowFor(t, got, sampleSubscription)
 	if s := fmt.Sprint(invoices["state"], invoices["cursor"], invoices["lag"], invoices["types"], invoices["destination"], invoices["proposer_login"], invoices["approver_login"], invoices["signer"],
 		invoices["history"], invoices["target"]); s != "active3 0 [invoice.issued]sample-erp-webhookadmin@example.invalidadmin2@example.invalidnot_connected"+
-		"[map[action:approve actor:sample-admin-2 actor_login:admin2@example.invalid rationale:Sample data reason: request:]]webhook-subscription:sample-erp-invoices" {
+		"[map[action:approve actor:sample-admin-2 actor_login:admin2@example.invalid number:1 rationale:Sample data reason: request:]]webhook-subscription:sample-erp-invoices" {
 		t.Errorf("invoices %s", s)
 	}
 	if s := fmt.Sprint(invoices["keys"]); s != "[map[approver:sample-admin-2 approver_login:admin2@example.invalid not_after:2027-05-15T09:00:00Z not_before:2026-11-16T09:00:00Z "+

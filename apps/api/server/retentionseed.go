@@ -31,6 +31,8 @@ type retentionHold struct {
 	workspace string
 	created   time.Time
 	rationale string
+	released  bool
+	number    int
 }
 
 type retentionRun struct {
@@ -54,6 +56,7 @@ type retentionStore struct {
 	entries   []*retentionEntry
 	holdSeq   uint64
 	plans     uint64
+	dropped   int
 }
 
 func newRetentionStore() *retentionStore { return &retentionStore{} }
@@ -102,6 +105,7 @@ func (c *retentionStore) keep(e *retentionEntry) {
 	for index, old := range c.entries {
 		if old.view.State != retention.ProposalPending {
 			c.entries = append(c.entries[:index], c.entries[index+1:]...)
+			c.dropped++
 			return
 		}
 	}
@@ -228,6 +232,11 @@ func (s *Server) retentionApprove(e *retentionEntry, by retention.Actor, reviewe
 		e.closedBy, e.closing = by.ID, rationale
 	}
 	e.view = view
+	if view.Change.Kind == retention.ChangeRelease && view.State == retention.ProposalApplied {
+		if h := s.ret.hold(view.Change.Release.Hold); h != nil {
+			h.released = true
+		}
+	}
 	return nil
 }
 
@@ -247,7 +256,7 @@ func (s *Server) retentionPlaceHold(h retention.Hold, by retention.Actor, worksp
 		return retention.HoldView{}, err
 	}
 	created := s.clock()
-	s.ret.holds = append(s.ret.holds, &retentionHold{id: h.ID, workspace: workspace, created: created, rationale: rationale})
+	s.ret.holds = append(s.ret.holds, &retentionHold{id: h.ID, workspace: workspace, created: created, rationale: rationale, number: len(s.ret.holds) + 1})
 	s.holdPlaced.Store(h.ID, created)
 	return view, nil
 }
@@ -396,6 +405,11 @@ func (s *Server) seedRetention(now time.Time) error {
 		func() error {
 			return s.retentionCall("refer", func() error {
 				return s.retention.Refer(retention.Reference{From: "sample-final-1", To: "sample-source-3", Kind: retention.Requires}, ingest)
+			})
+		},
+		func() error {
+			return s.retentionCall("refer", func() error {
+				return s.retention.Refer(retention.Reference{From: "sample-claim-1", To: "sample-source-1", Kind: retention.Guards}, ingest)
 			})
 		},
 		policy(retention.ClassSource, 365, 30),

@@ -1,3 +1,4 @@
+import { keptFactsOf, type KeptFacts } from "./kept";
 export type InstallItem = { kind: string; target: string; action: string; conflict: string };
 export type InstallEffect = { volume: string; effect: string };
 export type InstallPreview = {
@@ -36,7 +37,7 @@ export type InstallRelease = {
   services: InstallReleaseService[] | null;
   volumes: { name: string; data: boolean | null }[] | null;
   artifacts: { name: string; kind: string }[] | null;
-  mark: InstallMark | null;
+  mark: InstallMark | null | "unknown";
 };
 export type InstallSummary = {
   key_version: string;
@@ -82,9 +83,11 @@ export type InstallationPage = {
   installed: InstallInstalled;
   releases: InstallRelease[];
   preview: InstallPreview;
+  preview_basis: "pending_plan" | "newest_release" | "";
   upgrade: InstallPreview;
   rollback: InstallPreview;
   proposals: InstallProposal[];
+  proposal_history: KeptFacts;
   destinations: InstallDestination[];
   reports: InstallReport[];
   runs: string;
@@ -136,8 +139,9 @@ function installedOf(v: unknown): InstallInstalled {
   };
 }
 
-function markOf(v: unknown): InstallMark | null {
-  if (!isRow(v)) return null;
+function markOf(v: unknown): InstallMark | null | "unknown" {
+  if (v === null) return null;
+  if (!isRow(v)) return "unknown";
   return { by: str(v.by), by_login: str(v.by_login), reason: str(v.reason), confirmed_by: str(v.confirmed_by), confirmed_by_login: str(v.confirmed_by_login) };
 }
 
@@ -215,9 +219,11 @@ export function installationOf(body: Raw): InstallationPage {
     installed: installedOf(body.installed),
     releases: rows(body.releases, releaseOf),
     preview: previewOf(body.preview),
+    preview_basis: body.preview_basis === "pending_plan" || body.preview_basis === "newest_release" ? body.preview_basis : "",
     upgrade: previewOf(body.upgrade),
     rollback: previewOf(body.rollback),
     proposals: rows(body.proposals, proposalOf),
+    proposal_history: keptFactsOf(body.proposal_history),
     destinations: rows(body.destinations, (d) => ({ id: str(d.id), host: str(d.host), port: num(d.port), ranges: strs(d.ranges) })),
     reports: rows(body.reports, (d) => ({
       destination: str(d.destination),

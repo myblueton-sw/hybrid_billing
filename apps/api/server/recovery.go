@@ -58,6 +58,7 @@ type recoverySetRow struct {
 	Recovery     recoveryOpenRow      `json:"recovery"`
 	History      []recoveryHistoryRow `json:"history"`
 	HistoryTotal int                  `json:"history_total"`
+	HistoryNext  string               `json:"history_next"`
 	Begin        string               `json:"begin"`
 	Abandon      string               `json:"abandon"`
 }
@@ -72,6 +73,7 @@ type recoveryCallRow struct {
 }
 
 type recoveryLockRow struct {
+	Number    int    `json:"number"`
 	By        string `json:"by"`
 	ByLogin   string `json:"by_login"`
 	Rationale string `json:"rationale"`
@@ -90,9 +92,11 @@ type recoveryIsolationRow struct {
 	CallsSource  string            `json:"open_calls_source"`
 	OpenCalls    []recoveryCallRow `json:"open_calls"`
 	OpenTotal    int               `json:"open_calls_total"`
+	OpenNext     string            `json:"open_calls_next"`
 	OtherScope   bool              `json:"other_scope_present"`
 	Permits      string            `json:"permits"`
 	Locks        []recoveryLockRow `json:"locks"`
+	LockHistory  logFacts          `json:"lock_history"`
 }
 
 type recoveryExternalRow struct {
@@ -114,6 +118,7 @@ type recoveryReconcileRow struct {
 	Externals    []recoveryExternalRow `json:"externals"`
 	Unknown      []recoveryTargetRow   `json:"unknown_targets"`
 	UnknownTotal int                   `json:"unknown_total"`
+	UnknownNext  string                `json:"unknown_next"`
 	OtherScope   bool                  `json:"other_scope_present"`
 	Skipped      int                   `json:"skipped"`
 	Reconciler   string                `json:"reconciler"`
@@ -132,6 +137,7 @@ type recoveryResumeRow struct {
 	Phase         string             `json:"phase"`
 	Pending       []recoveryEventRow `json:"pending_events"`
 	PendingTotal  int                `json:"pending_total"`
+	PendingNext   string             `json:"pending_next"`
 	Lost          []uint64           `json:"lost"`
 	LostDigest    string             `json:"lost_digest"`
 	CanUnlock     bool               `json:"can_propose_unlock"`
@@ -209,6 +215,7 @@ type recoveryPage struct {
 	Migration      recoveryMigrationSection `json:"migration"`
 	Resume         recoveryResumeSection    `json:"resume"`
 	Proposals      []recoveryProposalRow    `json:"proposals"`
+	History        keptFacts                `json:"proposal_history"`
 }
 
 type recoveryFacts struct {
@@ -284,10 +291,7 @@ func setRow(f recoveryFacts) recoverySetRow {
 			row.Recovery.Domains = append(row.Recovery.Domains, recoveryDomainRow{Domain: d.Domain, Status: d.Status, Mismatch: append([]int{}, d.Mismatch...)})
 		}
 	}
-	for index := len(f.history) - 1; index >= 0 && len(row.History) < recoveryShown; index-- {
-		h := f.history[index]
-		row.History = append(row.History, recoveryHistoryRow{Recovery: h.Recovery, ManifestDigest: h.ManifestDigest, Generation: h.Generation, Outcome: h.Outcome, Lost: h.Lost})
-	}
+	row.History, row.HistoryNext = historyRows(f, 0, recoveryShown)
 	return row
 }
 
@@ -302,20 +306,16 @@ func (s *Server) isolationRow(f recoveryFacts, workspace string) recoveryIsolati
 	if v := f.view; v != nil {
 		row.CallsSource = callsFromRecovery
 		for _, c := range v.OpenCalls {
-			if c.Target.Workspace != workspace {
-				row.OtherScope = true
-				continue
-			}
-			row.OpenTotal++
-			if len(row.OpenCalls) < recoveryShown {
-				row.OpenCalls = append(row.OpenCalls, recoveryCallRow{ID: c.ID, Writer: c.Writer, Deadline: stamp(c.Deadline), Key: c.Target.Key, Series: c.Target.Series,
-					Number: c.Target.Number})
-			}
+			row.OtherScope = row.OtherScope || c.Target.Workspace != workspace
 		}
+		row.OpenCalls, row.OpenTotal = openCallRows(f, workspace, 0, recoveryShown)
+		row.OpenNext = nextOf(len(row.OpenCalls), row.OpenTotal, 0)
 	}
-	for _, l := range i.locks {
-		row.Locks = append(row.Locks, recoveryLockRow{By: l.by, ByLogin: s.loginOf(l.by), Rationale: l.rationale, At: stamp(l.at)})
+	first, facts := newestOf(len(i.locks), recoveryShown)
+	for index := first; index < len(i.locks); index++ {
+		row.Locks = append(row.Locks, s.lockRow(i, index))
 	}
+	row.LockHistory = facts
 	return row
 }
 
@@ -325,26 +325,13 @@ func (s *Server) reconcileRow(f recoveryFacts, workspace string) (recoveryReconc
 	for _, x := range v.Externals {
 		row.Externals = append(row.Externals, recoveryExternalRow{ID: x.ID, Kind: x.Kind, Status: x.Status})
 	}
-	errs := []error{}
 	for _, t := range v.Unknown {
-		if t.Workspace != workspace {
-			row.OtherScope = true
-			continue
-		}
-		row.UnknownTotal++
-		if len(row.Unknown) >= recoveryShown {
-			continue
-		}
-		target := recoveryTargetRow{Key: t.Key, Series: t.Series, Number: t.Number}
-		errs = append(errs, s.recoveryCall("fenced", func() (err error) { target.Fenced, err = s.recovery.Fenced(id, workspace, t.Key); return }))
-		if t.Series != "" {
-			var high int64
-			errs = append(errs, s.recoveryCall("high_water", func() (err error) { high, err = s.recovery.HighWater(id, workspace, t.Series); return }))
-			target.HighWater = &high
-		}
-		row.Unknown = append(row.Unknown, target)
+		row.OtherScope = row.OtherScope || t.Workspace != workspace
 	}
-	return row, errors.Join(errs...)
+	var err error
+	row.Unknown, row.UnknownTotal, err = s.unknownRows(f, workspace, 0, recoveryShown)
+	row.UnknownNext = nextOf(len(row.Unknown), row.UnknownTotal, 0)
+	return row, err
 }
 
 func (s *Server) resumeRow(f recoveryFacts) recoveryResumeRow {
@@ -352,11 +339,8 @@ func (s *Server) resumeRow(f recoveryFacts) recoveryResumeRow {
 	switch v := f.view; {
 	case v != nil:
 		row.Mode, row.Phase, row.PendingTotal, row.Lost = modeRecoveryResume, v.Phase, len(v.Pending), append(row.Lost, v.Lost...)
-		for _, e := range v.Pending {
-			if len(row.Pending) < recoveryShown {
-				row.Pending = append(row.Pending, recoveryEventRow{Sequence: e.Sequence, Kind: e.Event.Kind, Domain: e.Event.Domain, At: stamp(e.At)})
-			}
-		}
+		row.Pending = pendingRows(f, 0, recoveryShown)
+		row.PendingNext = nextOf(len(row.Pending), row.PendingTotal, 0)
 	case f.state == recovery.StateLocked:
 		row.Mode = modeLockRelease
 	}
@@ -430,11 +414,11 @@ func (s *Server) recoveryPage(reader, workspace string, installs []*recoveryInst
 		page.Resume.Rows = append(page.Resume.Rows, s.resumeRow(f))
 	}
 	page.Reconciliation.State = configured(len(page.Reconciliation.Rows) > 0)
-	for index := len(s.rec.entries) - 1; index >= 0 && len(page.Proposals) < recoveryShown; index-- {
-		if e := s.rec.entries[index]; s.rec.tenantOf(e) == workspace {
-			page.Proposals = append(page.Proposals, s.recoveryProposalRow(e, reader))
-		}
+	listed, closed, next := listKept(s.rec.of(workspace), recoveryPending, recoveryNumber, recoveryShown)
+	for _, e := range listed {
+		page.Proposals = append(page.Proposals, s.recoveryProposalRow(e, reader))
 	}
+	page.History = keptFacts{Total: closed, Next: next, Kept: installKept, Dropped: s.rec.dropped[workspace]}
 	return page, errors.Join(errs...)
 }
 
@@ -457,5 +441,114 @@ func (s *Server) readRecovery(w http.ResponseWriter, r *http.Request) {
 		failCode(w, commands.DependencyUnavailable, request)
 		return
 	}
+	writeJSON(w, http.StatusOK, request, page)
+}
+
+func recoveryPending(e *recoveryEntry) bool { return e.view.State == recovery.ProposalPending }
+
+func recoveryNumber(e *recoveryEntry) uint64 { return e.view.Number }
+
+type recoveryProposalsPage struct {
+	Revision   string                `json:"revision"`
+	ServerTime string                `json:"server_time"`
+	Order      string                `json:"order"`
+	Q          string                `json:"q"`
+	Proposals  []recoveryProposalRow `json:"proposals"`
+	Next       string                `json:"next"`
+	Matching   int                   `json:"matching"`
+	History    keptFacts             `json:"proposal_history"`
+}
+
+func (s *Server) listRecoveryProposals(w http.ResponseWriter, r *http.Request) {
+	request := r.Header.Get("X-Request-Id")
+	s.domain.RLock()
+	defer s.domain.RUnlock()
+	_, answer, ok := s.admitted(w, r)
+	if !ok {
+		return
+	}
+	q, valid := parseKeptQuery(r.URL.Query())
+	if !valid {
+		failCode(w, commands.InvalidRequest, request)
+		return
+	}
+	workspace := answer.Workspace()
+	page := recoveryProposalsPage{Revision: s.Revision(), ServerTime: stamp(s.clock()), Order: closedPlansOrder, Q: q.term, Proposals: []recoveryProposalRow{}}
+	if len(s.visibleInstalls(workspace)) == 0 {
+		writeJSON(w, http.StatusOK, request, page)
+		return
+	}
+	mine := s.rec.of(workspace)
+	_, closed, _ := listKept(mine, recoveryPending, recoveryNumber, 0)
+	page.History = keptFacts{Total: closed, Kept: installKept, Dropped: s.rec.dropped[workspace]}
+	walk := keptWalk{q: q}
+	for index := len(mine) - 1; index >= 0; index-- {
+		e := mine[index]
+		if recoveryPending(e) {
+			continue
+		}
+		v := e.view
+		number := strconv.FormatUint(v.Number, 10)
+		if walk.take(v.Number, q.matches(number, recoveryProposalTarget+number, v.Change.Kind, changeScope(v.Change), v.State, v.Proposer, s.loginOf(v.Proposer), e.rationale)) {
+			page.Proposals = append(page.Proposals, s.recoveryProposalRow(e, answer.User()))
+		}
+	}
+	page.Next, page.Matching = walk.Next, walk.Matching
+	writeJSON(w, http.StatusOK, request, page)
+}
+
+type recoveryLocksPage struct {
+	Revision     string            `json:"revision"`
+	ServerTime   string            `json:"server_time"`
+	Installation string            `json:"installation"`
+	Order        string            `json:"order"`
+	Q            string            `json:"q"`
+	Locks        []recoveryLockRow `json:"locks"`
+	Next         string            `json:"next"`
+	Matching     int               `json:"matching"`
+	Total        int               `json:"total"`
+}
+
+func (s *Server) lockRow(i *recoveryInstall, index int) recoveryLockRow {
+	l := i.locks[index]
+	return recoveryLockRow{Number: index + 1, By: l.by, ByLogin: s.loginOf(l.by), Rationale: l.rationale, At: stamp(l.at)}
+}
+
+func (s *Server) listRecoveryLocks(w http.ResponseWriter, r *http.Request) {
+	request := r.Header.Get("X-Request-Id")
+	s.domain.RLock()
+	defer s.domain.RUnlock()
+	_, answer, ok := s.admitted(w, r)
+	if !ok {
+		return
+	}
+	values := r.URL.Query()
+	named := values["installation"]
+	values.Del("installation")
+	q, valid := parseKeptQuery(values)
+	if !valid || len(named) != 1 || named[0] == "" {
+		failCode(w, commands.InvalidRequest, request)
+		return
+	}
+	var install *recoveryInstall
+	for _, i := range s.visibleInstalls(answer.Workspace()) {
+		if i.id == named[0] {
+			install = i
+		}
+	}
+	if install == nil {
+		failCode(w, commands.InvalidRequest, request)
+		return
+	}
+	page := recoveryLocksPage{Revision: s.Revision(), ServerTime: stamp(s.clock()), Installation: install.id, Order: closedPlansOrder, Q: q.term, Locks: []recoveryLockRow{},
+		Total: len(install.locks)}
+	walk := keptWalk{q: q}
+	for index := len(install.locks) - 1; index >= 0; index-- {
+		l := install.locks[index]
+		if walk.take(uint64(index+1), q.matches(l.by, s.loginOf(l.by), l.rationale)) {
+			page.Locks = append(page.Locks, s.lockRow(install, index))
+		}
+	}
+	page.Next, page.Matching = walk.Next, walk.Matching
 	writeJSON(w, http.StatusOK, request, page)
 }

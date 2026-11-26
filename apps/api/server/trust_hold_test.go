@@ -8,35 +8,29 @@ import (
 	"sort"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/myblueton-sw/hybrid_billing/modules/commands"
 	"github.com/myblueton-sw/hybrid_billing/modules/identity"
 )
 
-var holdAllowed = []string{"access.reject_request", "access.request_revoke", "access.revoke_delegation", "access.withdraw_request", "bulk_revocation.add_matching", "bulk_revocation.add_targets",
-	"bulk_revocation.discard", "bulk_revocation.execute", "bulk_revocation.prepare", "identity.depart_user",
-	"identity.remove_membership", "identity.revoke_invitation", "identity.suspend_membership", "identity.suspend_user", "installation.withdraw",
-	"integrations.letter_withdraw_dismiss", "integrations.letter_withdraw_redeliver", "integrations.plugin_disable", "integrations.plugin_stop", "integrations.plugin_withdraw",
-	"integrations.subscription_pause", "integrations.subscription_revoke", "integrations.subscription_withdraw", "integrations.subscription_withdraw_resume",
-	"recovery.lock", "recovery.withdraw", "relationship.discard", "release_evidence.withdraw", "retention.place_hold", "retention.stop_run", "retention.withdraw",
-	"service.retire", "service.revoke_credential", "service.suspend", "view_group.discard_draft"}
+var holdAllowed = []string{
+	"access.reject_request", "access.request_revoke", "access.revoke_delegation", "access.withdraw_request", "bulk_revocation.add_matching", "bulk_revocation.add_targets", "bulk_revocation.discard", "bulk_revocation.execute", "bulk_revocation.prepare", "bulk_revocation.remove_targets", "document_authority.reject", "document_authority.withdraw", "document_evidence.revoke", "erp_final.reject", "erp_final_authority.revoke", "erp_final_permission.reject", "erp_final_permission.withdraw", "erp_final_request_permission.reject", "erp_final_request_permission.withdraw", "financial_authority.revoke", "financial_charge.reject", "financial_permission.reject", "financial_permission.withdraw", "financial_request_permission.reject", "financial_request_permission.withdraw", "identity.depart_user", "identity.remove_membership", "identity.revoke_invitation", "identity.suspend_membership", "identity.suspend_user", "input.reject", "input_authority.reject", "input_authority.withdraw", "installation.withdraw", "integrations.letter_withdraw_dismiss", "integrations.letter_withdraw_redeliver", "integrations.plugin_disable", "integrations.plugin_stop", "integrations.plugin_withdraw", "integrations.subscription_pause", "integrations.subscription_revoke", "integrations.subscription_withdraw", "integrations.subscription_withdraw_resume", "issuance_draft_authority.reject", "issuance_draft_authority.withdraw", "issuance_protected_authority.reject", "issuance_protected_authority.withdraw", "issuance_term_authority.reject", "issuance_term_authority.withdraw", "pricing_authority.reject", "pricing_authority.withdraw", "pricing_policy.revoke", "recovery.lock", "recovery.withdraw", "relationship.discard", "release_evidence.withdraw", "result_authority.reject", "result_authority.withdraw", "result_evidence.revoke", "retention.place_hold", "retention.stop_run", "retention.withdraw", "service.retire", "service.revoke_credential", "service.suspend", "view_group.discard_draft",
+}
 
 var holdConditional = []string{"access.approve_request", "identity.change_role", "identity.set_role_period"}
 
-var holdRefused = []string{"access.request_grant", "contract.end", "contract.evidence", "contract.renew", "contract.reopen", "contract.resume", "contract.settle",
-	"contract.suspend", "contract.withdraw", "identity.create_user", "identity.invite", "identity.issue_reset_link", "identity.issue_set_link",
-	"identity.reinstate_membership", "identity.reinstate_user", "installation.approve", "installation.propose_plan", "integrations.letter_approve_dismiss",
-	"integrations.letter_approve_redeliver", "integrations.letter_request_dismiss", "integrations.letter_request_redeliver", "integrations.plugin_approve",
-	"integrations.plugin_propose", "integrations.redelivery_reapprove", "integrations.subscription_approve", "integrations.subscription_approve_resume",
-	"integrations.subscription_propose", "integrations.subscription_request_resume", "recovery.approve", "recovery.propose_unlock", "relationship.activate", "relationship.propose",
-	"release_evidence.approve", "release_evidence.retire_profile", "release_evidence.retire_requirement", "retention.approve", "retention.propose_policy",
-	"retention.propose_release", "service.create", "service.declare", "service.issue_credential", "service.reinstate", "trust.activate", "trust.approve", "trust.cancel", "trust.propose", "trust.reject", "trust.validate",
-	"view_group.draft", "view_group.edit", "view_group.propose"}
+var holdRefused = []string{
+	"access.request_grant", "contract.end", "contract.evidence", "contract.renew", "contract.reopen", "contract.resume", "contract.settle", "contract.suspend", "contract.withdraw", "document_authority.approve", "document_authority.propose_console", "document_authority.propose_human", "document_evidence.confirm", "document_evidence.propose", "erp_final.approve", "erp_final.request", "erp_final_authority.confirm", "erp_final_authority.propose", "erp_final_permission.approve", "erp_final_permission.propose", "erp_final_policy.confirm", "erp_final_policy.propose", "erp_final_request_permission.approve", "erp_final_request_permission.propose_console", "erp_final_request_permission.propose_human", "erp_preparation.prepare", "erp_result.apply", "financial_authority.confirm", "financial_authority.propose", "financial_charge.approve", "financial_charge.request", "financial_permission.approve", "financial_permission.propose", "financial_policy.confirm", "financial_policy.propose", "financial_request_permission.approve", "financial_request_permission.propose_console", "financial_request_permission.propose_human", "identity.create_user", "identity.invite", "identity.issue_reset_link", "identity.issue_set_link", "identity.reinstate_membership", "identity.reinstate_user", "input.confirm_publish", "input_authority.approve", "input_authority.propose_console", "input_authority.propose_human", "installation.approve", "installation.propose_plan", "integrations.letter_approve_dismiss", "integrations.letter_approve_redeliver", "integrations.letter_request_dismiss", "integrations.letter_request_redeliver", "integrations.plugin_approve", "integrations.plugin_propose", "integrations.redelivery_reapprove", "integrations.subscription_approve", "integrations.subscription_approve_resume", "integrations.subscription_propose", "integrations.subscription_request_resume", "issuance_draft.approve", "issuance_draft.prepare_approval", "issuance_draft.submit", "issuance_draft_authority.approve", "issuance_draft_authority.propose_console", "issuance_draft_authority.propose_human", "issuance_protected_authority.approve", "issuance_protected_authority.propose_console", "issuance_protected_authority.propose_human", "issuance_setup.admit_channel", "issuance_setup.approve_term", "issuance_setup.approve_term_binding", "issuance_setup.attest_change_instruction", "issuance_setup.attest_change_verification", "issuance_setup.attest_channel_admission", "issuance_setup.attest_channel_registration", "issuance_setup.bind_term", "issuance_setup.confirm_configuration", "issuance_setup.confirm_protected_rules", "issuance_setup.decide_change", "issuance_setup.propose_configuration", "issuance_setup.propose_protected_rules", "issuance_setup.record_term", "issuance_setup.register_channel", "issuance_setup.request_change", "issuance_setup.verify_change", "issuance_setup.withdraw_change_instruction", "issuance_setup.withdraw_change_verification", "issuance_setup.withdraw_channel_admission", "issuance_setup.withdraw_channel_registration", "issuance_term_authority.approve", "issuance_term_authority.propose_console", "issuance_term_authority.propose_human", "pricing_authority.approve", "pricing_authority.propose_console", "pricing_authority.propose_human", "pricing_policy.approve", "pricing_policy.capture", "pricing_policy.propose", "recovery.approve", "recovery.propose_unlock", "relationship.activate", "relationship.propose", "release_evidence.approve", "release_evidence.retire_profile", "release_evidence.retire_requirement", "result_authority.approve", "result_authority.propose_console", "result_authority.propose_human", "result_evidence.confirm", "result_evidence.propose", "retention.approve", "retention.propose_policy", "retention.propose_release", "service.create", "service.declare", "service.issue_credential", "service.reinstate", "service.rotate_credential", "trust.activate", "trust.approve", "trust.cancel", "trust.propose", "trust.reject", "trust.validate", "view_group.draft", "view_group.edit", "view_group.propose",
+}
 
 func TestHoldTableIsExplicitAndComplete(t *testing.T) {
 	f := setup(t, SeedSample).ready()
 	registered := []string{}
-	for id := range f.s.mutating {
+	for id, mutating := range f.s.mutating {
+		if !mutating {
+			continue
+		}
 		registered = append(registered, id)
 		if _, ok := holdTable[id]; !ok {
 			t.Errorf("registered command %s has no hold row", id)
@@ -64,7 +58,7 @@ func TestHoldTableIsExplicitAndComplete(t *testing.T) {
 			t.Errorf("%s rows\n%v\nwant\n%v", key, got, want)
 		}
 	}
-	if len(registered) != 89 || len(holdTable) != 89 {
+	if len(registered) != 198 || len(holdTable) != 198 {
 		t.Errorf("registered %d rows %d", len(registered), len(holdTable))
 	}
 	data, err := os.ReadFile("boundary.go")
@@ -118,9 +112,13 @@ func TestHoldAllowsDecreasesOnly(t *testing.T) {
 		f.code(t, id, got, 503, string(commands.DependencyUnavailable))
 	}
 	before := map[string]int{}
+	f.advance(time.Minute)
 	for _, id := range holdAllowed {
 		before[id] = f.holdLogs(&logs, id)
-		f.run(root, id, "any-target", nil)
+		f.advance(time.Second)
+		if got := f.run(root, id, "any-target", nil); got.body["code"] == string(commands.RateLimited) {
+			t.Fatalf("%s was rate limited after passing the hold", id)
+		}
 		if f.holdLogs(&logs, id) != before[id] {
 			t.Errorf("the hold refused %s", id)
 		}

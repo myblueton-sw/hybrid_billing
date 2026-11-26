@@ -9,7 +9,7 @@ import type { SessionOperation } from "../../../../service/session-query";
 if (typeof nodeModule.registerHooks === "function") nodeModule.registerHooks({ load: (url,context,next) => /\.(css|svg)(\?.*)?$/.test(url) ? { format:"module",source:"export default ''",shortCircuit:true } : next(url,context) });
 const { SelectionRows } = await import("./SessionSelection");
 const { SessionTimeHint } = await import("./LiveSessions");
-const { summarySentence, CleanupGroups } = await import("./SessionOperations");
+const { summarySentence, CleanupGroups, operationFailure } = await import("./SessionOperations");
 const unknown = { state:"unconfirmed",ended_count:null,cleanup:null } as SessionOperation;
 for (const l of ["en","ko","ar"] as const) {
   test(`${l} preview rows retain inactive states and directional session references`, () => {
@@ -80,4 +80,10 @@ for (const l of ["en","ko","ar"] as const) test(`${l} session exclusion tag requ
   const present=renderToStaticMarkup(<ExclusionTag l={l} reference="session-end-recorded" onOperation={()=>{}} />);
   assert.ok(present.includes(sq.notIncluded(l)) && present.includes(sq.viewOperation(l)));
   assert.ok(!present.includes('started after') && !present.includes('still active'));
+});
+test("a referenced operation that is missing reads as unavailable and any other failed read as unread", async () => {
+  const { AdminError, failureOf } = await import("../../../../service/admin");
+  assert.equal(operationFailure(failureOf(404, { code: "unsupported_command" })), "unavailable");
+  assert.equal(operationFailure(new AdminError("invalid", [], 0, "", "operation_mismatch")), "unavailable");
+  for (const e of [new AdminError("unavailable"), failureOf(503, { code: "dependency_unavailable" }), failureOf(429, {}), new AdminError("invalid"), new Error("x")]) assert.equal(operationFailure(e), "unread");
 });

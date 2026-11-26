@@ -37,7 +37,7 @@ func (s *Server) Document() ([]byte, error) {
 			item.(map[string]any)["post"].(map[string]any)["x-step-up"] = true
 		}
 	}
-	reads := map[string]any{"/identity/users": usersReadPath(), "/identity/users/count": usersCountPath(), "/identity/bulk-revocations": bulkReadsPath(), "/integrations": integrationsReadPath()}
+	reads := map[string]any{"/identity/users": usersReadPath(), "/identity/users/count": usersCountPath(), "/identity/bulk-revocations": bulkReadsPath(), "/integrations": integrationsReadPath(), "/charge-candidates": candidateReadPath(false), "/charge-candidates/{id}": candidateReadPath(true)}
 	for path, entry := range s.serviceQueryReadPaths() {
 		reads[path] = entry
 	}

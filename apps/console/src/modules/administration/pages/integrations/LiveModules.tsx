@@ -3,7 +3,7 @@ import type { Locale } from "../../../../shared/types";
 import type { PluginInstall, PluginVersion } from "../../../../service/integrations";
 import { k, storageText } from "./live-copy";
 import {
-  blockerPolicy, capabilityOf, changeKey, frozenValues, installOf, keepDraft, draftOf, pendingNow, pluginIds, pluginTarget, proposeOffer, proposeValues, refusedNow, duplicateIn,
+  blockerPolicy, capabilityOf, changeKey, frozenValues, installOf, keepDraft, draftOf, pendingNow, pluginIds, pluginTarget, proposeOffer, proposeValues, refusedNow, existingProposal,
   refusedByList, refusedLicense, refusedValues,
   type Change, type ChangeKind, changeKinds,
 } from "./live-model";
@@ -248,7 +248,7 @@ function Propose({ plugin, ...shared }: Shared & { plugin: string }) {
           }
           impact={k.proposeImpact(l)}
           verb={k.proposeVerb(l, chosen ? k.change(l, chosen.kind, chosen.version ? fsi(chosen.version) : "").trim() : "", plugin)}
-          done={(fields, _, snapshot) => (duplicateIn(snapshot, fields.proposal ?? "") ? k.duplicateProposal(l, fields.proposal ?? "") : k.proposedDone(l, fields.proposal || k.unknown(l)))}
+          done={(fields) => (existingProposal(fields) ? k.duplicateProposal(l, fields.proposal || k.unknown(l)) : k.proposedDone(l, fields.proposal || k.unknown(l)))}
           onClose={close}
         />
       )}

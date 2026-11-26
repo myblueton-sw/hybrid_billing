@@ -271,7 +271,7 @@ func (r *Registry) AddGrant(grant Grant) error {
 	joined := uint64(0)
 	if grant.SubjectID != "" {
 		subject, known := r.subject(grant.SubjectID)
-		if !known || subject.State != Active || ((humanOnly(grant.Terms.Action) || InstallationAction(grant.Terms.Action)) && subject.Kind != Human) {
+		if !known || subject.State != Active || ((humanOnly(grant.Terms.Action) || directHuman(grant.Terms.Action) || InstallationAction(grant.Terms.Action)) && subject.Kind != Human) {
 			return ErrInvalid
 		}
 		active := false
@@ -382,7 +382,7 @@ func (r *Registry) AddDelegation(delegation Delegation) error {
 	defer r.mu.Unlock()
 	terms := copyTerms(delegation.Terms)
 	generation := r.subjectsGeneration()
-	if !validID(delegation.ID) || !r.validTerms(terms) || !delegation.Validity.valid() || humanOnly(terms.Action) || InstallationAction(terms.Action) ||
+	if !validID(delegation.ID) || !r.validTerms(terms) || !delegation.Validity.valid() || humanOnly(terms.Action) || directHuman(terms.Action) || InstallationAction(terms.Action) ||
 		delegation.DelegatorID == delegation.DelegateID || !r.activeHuman(delegation.DelegatorID) || !r.activeHuman(delegation.DelegateID) {
 		return ErrInvalid
 	}

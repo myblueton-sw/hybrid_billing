@@ -154,7 +154,7 @@ func TestRetentionSeed(t *testing.T) {
 		t.Error("second seed")
 	}
 	counts := retentionSteps(t)
-	if fmt.Sprint(counts) != "map[retention-approve:5 retention-claim:3 retention-place_hold:2 retention-proceed:2 retention-propose:7 retention-refer:1 "+
+	if fmt.Sprint(counts) != "map[retention-approve:5 retention-claim:3 retention-place_hold:2 retention-proceed:2 retention-propose:7 retention-refer:2 "+
 		"retention-register:14 retention-report:3 retention-run:2]" {
 		t.Errorf("seed calls %v", counts)
 	}
@@ -282,9 +282,17 @@ func TestRetentionStoreAndTargets(t *testing.T) {
 	}
 	got := retSection(f.retentionRead(f.as(AdminLogin)), "proposals")
 	rows := retRows(got)
-	if len(rows) != retentionShown || fmtInt(got["total"]) != 67 || got["more"] != true || fmt.Sprint(rows[0]["number"]) != "159" ||
-		fmt.Sprint(rows[retentionShown-1]["number"]) != "110" {
-		t.Errorf("page %d %v", len(rows), got["total"])
+	waiting, oldest := 0, ""
+	for _, row := range rows {
+		if row["state"] == retention.ProposalPending {
+			waiting++
+		} else {
+			oldest = fmt.Sprint(row["number"])
+		}
+	}
+	if len(rows) != retentionShown || fmtInt(got["total"]) != 67 || got["more"] != true || fmt.Sprint(rows[0]["number"]) != "159" || waiting == 0 ||
+		oldest != fmt.Sprint(110+waiting) {
+		t.Errorf("page %d %v waiting %d oldest closed %s", len(rows), got["total"], waiting, oldest)
 	}
 }
 
@@ -343,13 +351,20 @@ func TestRetentionRowsAreBounded(t *testing.T) {
 	holds, deletion, proposals := retSection(got, "holds"), retSection(got, "deletion"), retSection(got, "proposals")
 	refs := holds["references"].(map[string]any)
 	tomb := retSection(got, "decisions")["tombstones"].(map[string]any)
-	run := retRun(t, got, "run/53")
+	finished := f.readAs(root, "/api/v1/retention/runs")
+	if rows, _ := finished.body["runs"].([]any); finished.status != 200 || len(rows) == 0 {
+		t.Fatalf("the finished runs: %s", finished.raw[:min(len(finished.raw), 300)])
+	}
+	run := finished.body["runs"].([]any)[0].(map[string]any)
+	if run["run"].(map[string]any)["label"] != "run/53" {
+		t.Fatalf("the newest finished run is %v", run["run"])
+	}
 	hold := retHold(t, got, "bulk-hold")
 	sizes := fmt.Sprint(len(claim["artifacts"].([]any)), claim["total"], claim["more"], len(retRows(holds)), holds["total"], holds["more"], len(retRows(refs)), refs["total"],
 		refs["more"], len(retRows(deletion)), deletion["total"], deletion["more"], len(retRows(proposals)), proposals["total"], proposals["more"],
 		len(retRows(tomb)), tomb["total"], tomb["more"], retRows(tomb)[0]["sequence"], len(run["artifacts"].(map[string]any)["rows"].([]any)), run["artifacts"].(map[string]any)["total"],
 		run["artifacts"].(map[string]any)["more"], len(hold["outcomes"].([]any)), hold["outcomes_more"], retSection(got, "decisions")["watermark"])
-	if sizes != "50 1002 true 50 53 true 50 51 true 50 53 true 50 58 true 50 1000 true 1003 50 1001 true 50 true 1003" {
+	if sizes != "50 1002 true 53 53 false 50 51 true 51 53 true 50 58 true 50 1000 true 1003 50 1001 true 50 true 1003" {
 		t.Errorf("sizes %s", sizes)
 	}
 	pages := 0
@@ -359,7 +374,7 @@ func TestRetentionRowsAreBounded(t *testing.T) {
 		}
 		return false
 	}
-	outcomes, err := (&retentionFacts{s: f.s, workspace: SampleWorkspace}).visibleOutcomes("bulk-hold")
+	outcomes, err := (&retentionFacts{s: f.s, workspace: SampleWorkspace}).visibleOutcomes("bulk-hold", "", retentionShown)
 	f.s.fault = nil
 	if len(outcomes) != retentionShown+950 || pages != 1 || err != nil {
 		t.Errorf("a full visible page took %d calls for %d outcomes %v", pages, len(outcomes), err)
@@ -494,7 +509,7 @@ func TestRetentionActorsAndEffectsAreConfined(t *testing.T) {
 			})
 		}
 	}
-	if fmt.Sprint(found) != "map[Claim:1 KindSystem:2 Proceed:1 Refer:1 Register:1 Report:1 human actors:4 member actors:1]" {
+	if fmt.Sprint(found) != "map[Claim:1 KindSystem:2 Proceed:1 Refer:2 Register:1 Report:1 human actors:4 member actors:1]" {
 		t.Errorf("found %v", found)
 	}
 }
@@ -634,7 +649,7 @@ func TestRetentionHiddenArtifactsInVisibleRuns(t *testing.T) {
 	}
 	f.s.ret.runs = append(f.s.ret.runs, &retentionRun{id: run, workspace: SampleWorkspace})
 	row := retRun(t, f.retentionRead(root), run)
-	if s := fmt.Sprint(row["artifacts"], " ", row["stores"]); s != "map[more:false rows:[map[id:sample-source-5 outcome:not_due]] total:1] "+
+	if s := fmt.Sprint(row["artifacts"], " ", row["stores"]); s != "map[more:false next: rows:[map[id:sample-source-5 outcome:not_due]] total:1] "+
 		"[map[deleted:1 excluded:2 failed:0 pending:0 store:sample-database target:3]]" {
 		t.Errorf("injected run %s", s)
 	}

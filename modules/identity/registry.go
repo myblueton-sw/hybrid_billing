@@ -89,41 +89,43 @@ type session struct {
 }
 
 type credential struct {
-	serial   uint64
-	user     string
-	verifier Verifier
-	validity Validity
-	revoked  bool
+	serial     uint64
+	user       string
+	verifier   Verifier
+	validity   Validity
+	revoked    bool
+	replaces   string
+	replacedBy string
 }
 
 type Registry struct {
-	mu              sync.Mutex
-	built           bool
-	installation    string
-	instance        [16]byte
-	limits          Limits
-	clock           func() time.Time
-	users           map[string]*user
-	identities      map[Triple]*identityRecord
-	boot            bootstrap
-	invitations     map[string]*invitation
-	memberships     map[string]map[string]*membership
-	sessions        map[Verifier]*session
-	serials         map[uint64]*session
-	byUser          map[string]map[Verifier]struct{}
-	serial          uint64
-	credentials     map[string]*credential
-	generation      uint64
-	userIndex       []string
-	serviceIndex    map[string][]string
-	credentialIndex map[string][]string
-	memberIndex     map[string][]string
-	usersVersion    uint64
-	membersVersion  map[string]uint64
-
-	querySubjects    uint64
-	queryCredentials map[string]uint64
-	credentialExpiry map[string][]credentialExpiry
+	mu                 sync.Mutex
+	built              bool
+	installation       string
+	instance           [16]byte
+	limits             Limits
+	clock              func() time.Time
+	users              map[string]*user
+	identities         map[Triple]*identityRecord
+	boot               bootstrap
+	invitations        map[string]*invitation
+	pendingInvitations map[string]map[string]struct{}
+	memberships        map[string]map[string]*membership
+	sessions           map[Verifier]*session
+	serials            map[uint64]*session
+	byUser             map[string]map[Verifier]struct{}
+	serial             uint64
+	credentials        map[string]*credential
+	generation         uint64
+	userIndex          []string
+	memberIndex        map[string][]string
+	usersVersion       uint64
+	membersVersion     map[string]uint64
+	serviceIndex       map[string][]string
+	credentialIndex    map[string][]string
+	querySubjects      uint64
+	queryCredentials   map[string]uint64
+	credentialExpiry   map[string][]credentialExpiry
 }
 
 type Installation struct{ r *Registry }
@@ -139,7 +141,7 @@ func New(installation string, limits Limits, clock func() time.Time) (*Registry,
 		return nil, ErrInvalid
 	}
 	r := &Registry{built: true, installation: installation, limits: limits, clock: clock,
-		users: map[string]*user{}, identities: map[Triple]*identityRecord{}, invitations: map[string]*invitation{},
+		users: map[string]*user{}, identities: map[Triple]*identityRecord{}, invitations: map[string]*invitation{}, pendingInvitations: map[string]map[string]struct{}{},
 		memberships: map[string]map[string]*membership{}, sessions: map[Verifier]*session{}, serials: map[uint64]*session{},
 		byUser: map[string]map[Verifier]struct{}{}, credentials: map[string]*credential{},
 		serviceIndex: map[string][]string{}, credentialIndex: map[string][]string{},
@@ -329,8 +331,11 @@ func (r *Registry) serviceUsers(workspace string) bool {
 }
 
 func (r *Registry) strands(workspace, target string, after *membership, now time.Time) bool {
+	if !r.activeAdministrator(workspace, target, now) || after != nil && after.role == Administrator && effective(after, now) && r.activeHuman(target) {
+		return false
+	}
 	before := r.administrators(workspace, now)
-	if before == 0 || after != nil && after.role == Administrator && effective(after, now) && r.activeHuman(target) {
+	if before == 0 {
 		return false
 	}
 	remaining := before

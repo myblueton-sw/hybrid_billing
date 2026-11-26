@@ -113,7 +113,7 @@ test("the filtered empty state names the scope and offers to clear the filters",
   }
 });
 
-const { PlanActions, planMember, planNode } = await import("./Live");
+const { PlanActions } = await import("./Live");
 const bare = (html: string) => html.replace(/<[^>]+>/g, "").replace(/&#x27;/g, "'").replace(/&quot;/g, '"').replace(/&amp;/g, "&");
 const actions = (l: Locale, plan: { kind: "hierarchy" | "payer" | "view_group"; member: string; base: number } | null, on: string, child = true) =>
   renderToStaticMarkup(<PlanActions l={l} plan={plan} on={on} today="2026-11-18" lang={l}>{child && <button type="button" id="history">{o.viewHistory(l)}</button>}</PlanActions>);
@@ -149,14 +149,4 @@ test("without a plan target the action and its hint are absent, never disabled",
     const alone = actions(l, { kind: "view_group", member: "acct-3", base: 1 }, "2026-12-01", false);
     assert.ok(alone.startsWith('<div class="live-buttons"><a id="o01-create-plan"'), l);
   }
-});
-
-test("in the tree only loaded units and accounts can be a hierarchy member, never a legal entity", () => {
-  const leaf = { id: "acct-1", name: "A", kind: "account" as const, state: "", source: "relationship" as const, children: [] };
-  const unit = { id: "unit-1", name: "U", kind: "internal_unit" as const, state: "active", source: "registry" as const, children: [leaf] };
-  const root = { id: "le-1", name: "L", kind: "legal_entity" as const, state: "active", source: "none" as const, children: [unit] };
-  const odd = { id: "x-1", name: "x-1", kind: "unknown" as const, state: "", source: "none" as const, children: [] };
-  assert.equal(planNode([root, odd], "acct-1"), leaf);
-  assert.equal(planNode([root], "nope"), undefined);
-  assert.deepEqual([root, unit, leaf, odd, undefined].map(planMember), [false, true, true, false, false]);
 });

@@ -1,0 +1,70 @@
+import { DocumentStore } from "../apps/console/src/modules/issuance/pages/approval-inbox/documents/store";
+import { documentGateway } from "../apps/console/src/modules/issuance/pages/approval-inbox/documents/gateway";
+import assert from "node:assert/strict";
+import { writeFile } from "node:fs/promises";
+import { documentTransport } from "../apps/console/src/modules/issuance/pages/approval-inbox/documents/transport";
+import { inspectionOf, adviceOf, preparationInspectionOf } from "../apps/console/src/modules/issuance/pages/approval-inbox/documents/inspection";
+import type { DocumentRow, PreparationRow } from "../apps/console/src/modules/issuance/pages/approval-inbox/documents/contract";
+import { loadContext, loadHistory } from "../apps/console/src/modules/issuance/pages/approval-inbox/documents/reads";
+import { emptyDraft, packetOf } from "../apps/console/src/modules/issuance/pages/approval-inbox/documents/packet";
+import { attempt } from "../apps/console/src/service/admin";
+import { serviceClient } from "../apps/console/src/service/api";
+const args=Object.fromEntries(process.argv.slice(2).flatMap((v,i,a)=>v.startsWith("--")?[[v.slice(2),a[i+1]]]:[]));
+const proposerCookie=process.env.HB_DOCUMENT_CLIENT_PROPOSER,confirmerCookie=process.env.HB_DOCUMENT_CLIENT_CONFIRMER;
+delete process.env.HB_DOCUMENT_CLIENT_PROPOSER;delete process.env.HB_DOCUMENT_CLIENT_CONFIRMER;
+assert.ok(proposerCookie&&confirmerCookie&&args.api&&args.output&&args.request&&args.digest);
+const evidence:{checks:string[];outcome?:string}={checks:[]};
+function transport(cookie:string):typeof fetch{return async(input,init)=>fetch(new URL(String(input),args.api),{...init,headers:{...Object.fromEntries(new Headers(init?.headers)),Cookie:cookie,Origin:"http://127.0.0.1:8896"}});}
+try{
+ const proposerFetch=transport(proposerCookie),confirmerFetch=transport(confirmerCookie);
+ const proposer=await serviceClient(proposerFetch).current(),confirmer=await serviceClient(confirmerFetch).current();
+ assert.ok(proposer&&confirmer&&proposer.user!==confirmer.user);
+ const p=documentTransport(proposer,proposerFetch),c=documentTransport(confirmer,confirmerFetch);
+ const scope={request:args.request,digest:args.digest,workspace:proposer.workspace};
+ const context=await loadContext(p.read,scope);
+ assert.equal(context.header.total,"15");assert.equal(context.lines.length,2);assert.equal(context.permission.state,"allowed");
+ evidence.checks.push("actual owned context and proposal permission parsed");
+ const draft={...emptyDraft(context),selectedERP:true,unit:"document-unit",evidence:"client-evidence",net:"15",tax:"1",rationale:"Explicit synthetic client document",lines:Object.fromEntries(context.lines.map((l,i)=>[l.line,{quantity:i===0?"2":"3",tax:i===0?"0.25":"0.75",evidence:`client-line-${i}`}]))};
+ const packet=packetOf(context,draft);
+ const proposed=await p.submit({action:"propose",target:"client-document",fields:{packet:packet.text},rationale:packet.rationale,revision:context.revision,attempt:attempt()});
+ assert.equal(proposed.state,"pending");
+ const documents=await loadHistory(c.read,scope,"documents");
+ assert.ok(documents.rows.some(r=>"document"in r&&r.document==="client-document"&&"digest"in r&&r.digest===proposed.digest));
+ evidence.checks.push("strict packet accepted and independently discovered");
+ const row=documents.rows.find(r=>"document"in r&&r.document==="client-document") as DocumentRow;
+ const inspectedDocument=inspectionOf(await c.read("document_evidence.inspect","client-document",{digest:proposed.digest}),scope,row);
+ assert.equal(inspectedDocument.basis.ExpectedNet,"15");
+ const advice=adviceOf(await c.read("document_evidence.advice","client-document",{digest:proposed.digest}),row);
+ assert.equal(advice.readiness.confirm.state,"ready");
+ const confirmed=await c.submit({action:"confirm",target:"client-document",fields:{digest:proposed.digest},rationale:"Independent synthetic client confirmation",revision:advice.revision,attempt:attempt()});
+ assert.equal(confirmed.state,"confirmed");
+ evidence.checks.push("independent current advice and confirmation receipt parsed");
+ let loseResponse=true;
+ const uncertainFetch:typeof fetch=async(input,init)=>{
+  const response=await proposerFetch(input,init);
+  if(String(input).endsWith("/erp_preparation.prepare")&&loseResponse){loseResponse=false;await response.arrayBuffer();throw new Error("synthetic lost response after server completion");}
+  return response;
+ };
+ const store=new DocumentStore(proposer,documentGateway(proposer,uncertainFetch));store.select("actual-client",scope);
+ await store.loadHistory("documents");await store.loadHistory("preparations");await store.inspectDocument("client-document");
+ store.reviewAction("prepare","Explicit internal preparation");const prepare=store.snapshot().review!;assert.ok(prepare);
+ await store.submit();assert.equal(store.snapshot().entries[0].phase,"unknown");
+ store.select("elsewhere");await store.retry(prepare.attempt.key);
+ const recorded=store.snapshot().entries[0];assert.equal(recorded.phase,"recorded");assert.ok(recorded.receipt?.replay);
+ const prepared=recorded.receipt!,preparationKey=prepare.target;
+ evidence.checks.push("session controller preserves unknown after actual response loss and reconciles identical retry after navigation");
+ const history=await loadHistory(p.read,scope,"preparations");
+ assert.ok(history.rows.some(r=>"preparation"in r&&r.preparation===preparationKey&&r.recorded_receipt===prepared.digest));
+ const preparationRow=history.rows.find(r=>"preparation"in r&&r.preparation===preparationKey) as PreparationRow;
+ const inspected=await p.read("erp_preparation.inspect",preparationKey,{});
+ const parsedPreparation=preparationInspectionOf(inspected,preparationRow);
+ assert.equal(parsedPreparation.total.Net,"15.00");
+ assert.equal(inspected.fields.ledger_observation,"matching_prepared");assert.equal(inspected.fields.recorded_receipt,prepared.digest);
+ evidence.checks.push("real preparation, identical retry and owned receipt discovery parsed");
+ const revoke=await c.read("document_evidence.advice","client-document",{digest:proposed.digest});
+ assert.equal((await c.submit({action:"revoke",target:"client-document",fields:{digest:proposed.digest},rationale:"Synthetic client revocation",revision:revoke.revision,attempt:attempt()})).state,"revoked");
+ assert.equal((await p.read("erp_preparation.inspect",preparationKey,{})).fields.recorded_receipt,prepared.digest);
+ evidence.checks.push("revocation preserves preparation history");
+ evidence.outcome="passed";
+}catch{evidence.outcome="failed";process.exitCode=1;}
+finally{await writeFile(args.output,JSON.stringify(evidence,null,2));}

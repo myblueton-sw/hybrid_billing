@@ -78,8 +78,12 @@ func (s *Server) evidenceEntryOf(target, workspace string) *evidenceEntry {
 	return nil
 }
 
+func cutRequirementTarget(target string) (string, bool) {
+	return strings.CutPrefix(target, traceRequirementTarget)
+}
+
 func (s *Server) evidenceRequirementOf(target, workspace string) (releasetrace.Key, bool) {
-	raw, found := strings.CutPrefix(target, traceRequirementTarget)
+	raw, found := cutRequirementTarget(target)
 	index, ok := canonicalNumber(raw)
 	if !found || !ok || workspace != s.bootWorkspace || index == 0 || index > uint64(len(s.ev.requirements)) {
 		return releasetrace.Key{}, false

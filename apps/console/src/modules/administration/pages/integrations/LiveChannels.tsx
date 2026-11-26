@@ -1,6 +1,8 @@
 import { useState } from "react";
 import type { Locale } from "../../../../shared/types";
-import { subscriptionActions, type Subscription, type SubscriptionAction } from "../../../../service/integrations";
+import { subscriptionActions, type HistoryEntry, type Subscription, type SubscriptionAction } from "../../../../service/integrations";
+import { AdminError } from "../../../../service/admin";
+import { useOlderRows, type OlderPage } from "../../../../shared/older-rows";
 import { k } from "./live-copy";
 import {
   blockerPolicy, coveredBy, draftOf, duplicateIn, frozenValues, keepDraft, normalTypes, pendingNow, refusedNow, subscribeBlocker, subscribeProblems, subscriptionTarget,
@@ -54,12 +56,16 @@ function Destinations({ l, page }: Shared) {
   );
 }
 
-function Fold({ l, s }: { l: Locale; s: Subscription }) {
+function Fold({ l, s, revision, read, onRefused }: { l: Locale; s: Subscription; revision: string; read?: (subscription: string, after: string) => Promise<OlderPage<HistoryEntry>>; onRefused?: (e: unknown) => boolean }) {
+  const older = useOlderRows<HistoryEntry>(s.id + "\u0000" + revision, s.history_facts, s.history, read ? (after) => read(s.id, after) : undefined, onRefused ?? (() => false));
+  const failed = older.status === "failed";
   return (
     <details className="p02-fold">
       <summary>{k.historyFold(l)}</summary>
       <h4>{k.historyTitle(l)}</h4>
-      <ListOr l={l} items={s.history} empty={k.noHistory(l)}>
+      {older.cut && <p className="p02-small live-quiet p02-history-count" role="status" ref={older.countRef} tabIndex={-1}>{older.all ? k.historyAll(l, older.total) : k.historyShown(l, older.rows?.length ?? 0, older.total)}</p>}
+      {older.reset && <p className="p02-small p02-history-reset" role="status">{k.historyReset(l)}</p>}
+      <ListOr l={l} items={older.rows} empty={k.noHistory(l)}>
         {(list) => (
           <div className="live-table">
             <table className="p02-table">
@@ -67,7 +73,7 @@ function Fold({ l, s }: { l: Locale; s: Subscription }) {
               <thead><tr><th scope="col">{k.colAction(l)}</th><th scope="col">{k.colBy(l)}</th><th scope="col">{k.colReason(l)}</th></tr></thead>
               <tbody>
                 {list.map((h, i) => (
-                  <tr key={i}>
+                  <tr key={h.number ?? "n" + i} className="p02-history-row">
                     <td className="p02-first"><Code l={l} value={h.action} say={k.history} /></td>
                     <td data-label={k.colBy(l)}>{h.reason === "requester_lost_right" ? r.closedAutomatically(l) : <Who l={l} login={h.actor_login} id={h.actor} />}</td>
                     <td data-label={k.colReason(l)}>
@@ -80,12 +86,20 @@ function Fold({ l, s }: { l: Locale; s: Subscription }) {
           </div>
         )}
       </ListOr>
+      {older.more && (
+        <div className="p02-history-more">
+          {failed && <p role="alert">{k.historyFailed(l)}</p>}
+          <button type="button" className="live-secondary p02-history-more-button" aria-disabled={older.status === "loading" || undefined} onClick={older.load}>
+            {failed ? k.historyTryAgain(l) : older.status === "loading" ? k.historyLoading(l) : k.historyMore(l)}
+          </button>
+        </div>
+      )}
       <h4>{k.keysTitle(l)}</h4>
       <ListOr l={l} items={s.keys} empty={k.noKeys(l)}>
         {(list) => (
           <div className="live-table">
             <table className="p02-table">
-              <colgroup><col className="p02-c16" /><col className="p02-c16" /><col className="p02-c16" /><col className="p02-c12" /><col className="p02-c20" /><col className="p02-c20" /></colgroup>
+              <colgroup><col className="p02-c20" /><col className="p02-c16" /><col className="p02-c16" /><col className="p02-c14" /><col className="p02-c16" /><col className="p02-c18" /></colgroup>
               <thead>
                 <tr>
                   <th scope="col">{k.colKey(l)}</th><th scope="col">{k.colFrom(l)}</th><th scope="col">{k.colUntil(l)}</th><th scope="col">{k.colState(l)}</th>
@@ -187,7 +201,11 @@ function SubRow({ s, ...shared }: Shared & { s: Subscription }) {
         <p className="p02-small">{people.join(" · ")}</p>
         <p className="p02-small">{k.reason(l)}: <Prose l={l} value={s.rationale} empty={k.noReason(l)} /></p>
         {s.id && <p className="p02-small"><a className="p02-link" href={href(l, "events", { subscription: s.id })}>{k.deliveriesLink(l)}</a></p>}
-        <Fold l={l} s={s} />
+        <Fold l={l} s={s} revision={shared.page.revision} read={shared.api.subscriptionHistory} onRefused={(e) => {
+          if (e instanceof AdminError && e.failure === "denied") { shared.onLostAccess(); return true; }
+          if (e instanceof AdminError && e.failure === "unauthenticated") { shared.onSignedOut(); return true; }
+          return false;
+        }} />
         <RowNote l={l} diagnostics={diagnostics(subscriptionActions.map((action) => [commandOf(action), targetOf(action)]))} kept={kept} blockers={blockers} focus={focusNote} />
         {shown.length > 0 && (
           <div className="live-buttons">

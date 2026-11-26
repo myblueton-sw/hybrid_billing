@@ -53,6 +53,7 @@ export default function LiveRecovery({ locale: l, view: rawView, params, session
   const [denied, setDenied] = useState(false);
   const [signedOut, setSignedOut] = useState(false);
   const [notice, setNotice] = useState("");
+  const [readComplete, setReadComplete] = useState(false);
   const [noticeDetail, setNoticeDetail] = useState<CommandDiagnostic | null>(null);
   const [terminalDetail, setTerminalDetail] = useState<CommandDiagnostic | null>(null);
   const [busy, setBusy] = useState(false);
@@ -62,8 +63,9 @@ export default function LiveRecovery({ locale: l, view: rawView, params, session
   const selection = selectionOf(params, page, view);
   const selectedId = selection.proposal ? "p03-proposal-" + selection.proposal : selection.installation && prefixes[view] ? rowId(prefixes[view], selection.installation) : "";
 
-  const load = useCallback(async (): Promise<RecoveryPage | null> => {
+  const load = useCallback(async (userRefresh = false): Promise<RecoveryPage | null> => {
     const n = ++seq.current;
+    setReadComplete(false);
     const generation = currentScope();
     setBusy(true);
     try {
@@ -72,6 +74,7 @@ export default function LiveRecovery({ locale: l, view: rawView, params, session
       pruneRefusals(got);
       setPage(got);
       setStatus("ready");
+      setReadComplete(userRefresh);
       setLoadError(null);
       return got;
     } catch (e) {
@@ -85,6 +88,11 @@ export default function LiveRecovery({ locale: l, view: rawView, params, session
       if (n === seq.current && generation === currentScope()) setBusy(false);
     }
   }, [api]);
+
+  const refresh = (fromError = false) => {
+    if (fromError) document.querySelector<HTMLButtonElement>(".p03-reload")?.focus();
+    void load(true);
+  };
 
   useLayoutEffect(() => { void load(); return () => { seq.current++; }; }, [load]);
   useEffect(() => {
@@ -137,7 +145,7 @@ export default function LiveRecovery({ locale: l, view: rawView, params, session
   const configured = page?.state === "configured";
   const shared: Shared | null = page && configured
     ? {
-        l, page, api, me: session.user, selection, canCommand: commandsAllowed(page),
+        l, page, api, me: session.user, selection, canCommand: commandsAllowed(page) && status !== "error",
         onDone: (text) => { void announce(text); },
         onNotice: showNotice,
         onReload: load,
@@ -153,6 +161,7 @@ export default function LiveRecovery({ locale: l, view: rawView, params, session
 
   return (
     <div className="p03-live" data-live={view} aria-busy={busy || undefined}>
+      <p className="visually-hidden p03-read-status" role="status" aria-live="polite">{readComplete ? sc.dataReloaded(l) : ""}</p>
         <CommandDiagnostics l={l} detail={terminalDetail ?? detail} />
       {loadError != null && <ErrorDiagnostics l={l} error={loadError} />}
       <div className="p03-scope">
@@ -161,7 +170,7 @@ export default function LiveRecovery({ locale: l, view: rawView, params, session
           <div><dt>{k.revision(l)}</dt><dd>{page ? <Known l={l} value={page.revision} /> : "—"}</dd></div>
           <div><dt>{k.now(l)}</dt><dd>{page ? <Stamp l={l} at={page.now} /> : "—"}</dd></div>
         </dl>
-        <button type="button" className="live-secondary p03-reload" onClick={() => void load()}>{k.reload(l)}</button>
+        <button type="button" className="live-secondary p03-reload" onClick={() => refresh()}>{k.reload(l)}</button>
       </div>
       <p className="live-note-rule p03-statement"><strong>{k.statementLead(l)}</strong> {k.statement(l)}</p>
       <p className="p03-permission">{k.permission(l)}</p>
@@ -170,9 +179,10 @@ export default function LiveRecovery({ locale: l, view: rawView, params, session
         <div className="live-error p03-failure" role="alert">
           <h2>{diagnosticCopy.load(l, "recovery")}</h2>
           {failure && <p>{failure}</p>}
-          <button type="button" className="live-secondary" onClick={() => void load()}>{sc.tryAgain(l)}</button>
+          <button type="button" className="live-secondary" onClick={() => refresh(true)}>{sc.tryAgain(l)}</button>
         </div>
       )}
+      {status === "error" && page && <p id="p03-stale" className="live-note-rule p03-readonly" role="status">{diagnosticCopy.stale(l)}</p>}
       {gone.length > 0 && (
         <div className="p03-vanished" role="status">
           {gone.map((g) => (
@@ -199,7 +209,7 @@ export default function LiveRecovery({ locale: l, view: rawView, params, session
               {view === "resume" && <> <strong>{k.resumeLeadStrong(l)}</strong></>}
             </p>
           )}
-          {!shared.canCommand && view !== "migration" && <p className="live-note-rule p03-readonly" role="status">{k.readOnly(l)}</p>}
+          {!shared.canCommand && status !== "error" && view !== "migration" && <p className="live-note-rule p03-readonly" role="status">{k.readOnly(l)}</p>}
           {sectionState !== expected && !(view === "reconciliation" && sectionState === "not_configured") ? (
             <p className="live-empty">{sectionState ? <>{k.unknown(l)} ({ltr(sectionState)})</> : k.unknown(l)}</p>
           ) : view === "sets" ? (

@@ -94,3 +94,97 @@ test("counts and day hints read with counted nouns", () => {
   assert.match(a.daysHint("ko", 29, "d"), /^1~29일\./);
   assert.equal(a.effectFor("ar", "x"), "الأثر على x");
 });
+
+
+test("candidate cost access has localized scope and an exact request phrase", () => {
+  for (const l of ["en", "ko", "ar"] as const) {
+    const text = accessText(l, "view_cost", ["charge_evidence"]);
+    assert.ok(!text.includes("charge_evidence"));
+    assert.ok(!scopeText(l, "charge_candidate", "").includes("charge_candidate"));
+    assert.ok(accessPhrase(l, "view_cost", "charge_candidate", ["charge_evidence"]));
+    assert.equal(accessPhrase(l, "view", "charge_candidate", ["charge_evidence"]), null);
+    assert.equal(accessPhrase(l, "view_cost", "charge_candidate", ["charge_evidence", "rows"]), null);
+  }
+});
+
+
+test("grant capabilities preserve identity across reorder and refuse removed or expired selection", async () => {
+  const { capabilityKey, grantCapabilities, selectedCapability } = await import("./live-model");
+  const focus = { action: "view", kind: "focus_data", fields: ["rows"], until: "2026-12-16T00:00:00Z" };
+  const cost = { action: "view_cost", kind: "charge_candidate", fields: ["charge_evidence"], until: "2026-12-01T00:00:00Z" };
+  const current = { now: "2026-11-16T00:00:00Z", catalog: [cost, focus] };
+  assert.equal(selectedCapability(current, ""), undefined);
+  assert.equal(selectedCapability(current, capabilityKey(focus)), focus);
+  assert.equal(selectedCapability({ ...current, catalog: [focus, cost] }, capabilityKey(focus)), focus);
+  assert.equal(selectedCapability({ ...current, catalog: [cost] }, capabilityKey(focus)), undefined);
+  const later = { ...cost, until: "2026-12-10T00:00:00Z" };
+  assert.deepEqual(grantCapabilities({ ...current, catalog: [cost, later, focus] }), [later, focus]);
+  assert.deepEqual(grantCapabilities({ ...current, catalog: [later, cost, focus] }), [later, focus]);
+  const expired = { ...cost, until: current.now };
+  assert.deepEqual(grantCapabilities({ ...current, catalog: [expired, focus] }), [focus]);
+  assert.equal(selectedCapability({ ...current, catalog: [expired, focus] }, capabilityKey(cost)), undefined);
+  assert.deepEqual(grantCapabilities({ ...current, catalog: [{ ...cost, action: "issue" }, focus] }), [focus]);
+  assert.equal(capabilityKey({ ...focus, fields: ["b", "a"] }), capabilityKey({ ...focus, fields: ["a", "b"] }));
+});
+
+
+test("approval review is a distinct read capability alongside FOCUS and candidate costs", async () => {
+  const { capabilityKey, grantCapabilities, selectedCapability } = await import("./live-model");
+  const approval = { action: "view", kind: "approval_review", fields: ["approval_evidence"], until: "2026-12-16T00:00:00Z" };
+  const focus = { ...approval, kind: "focus_data", fields: ["rows"] };
+  const cost = { ...approval, action: "view_cost", kind: "charge_candidate", fields: ["charge_evidence"] };
+  const page = { now: "2026-11-16T00:00:00Z", catalog: [approval, cost, focus] };
+  assert.equal(grantCapabilities(page).length, 3);
+  for (const capability of page.catalog) assert.equal(selectedCapability(page, capabilityKey(capability)), capability);
+  for (const l of ["en", "ko", "ar"] as const) {
+    assert.ok(!accessText(l, "view", ["approval_evidence"]).includes("approval_evidence"));
+    assert.ok(!scopeText(l, "approval_review", "").includes("approval_review"));
+    assert.ok(accessPhrase(l, "view", "approval_review", ["approval_evidence"]));
+    assert.equal(accessPhrase(l, "request_approval", "approval_review", ["approval_evidence"]), null);
+    assert.equal(accessPhrase(l, "view_cost", "approval_review", ["approval_evidence"]), null);
+    assert.equal(accessPhrase(l, "view", "approval_review", ["charge_evidence"]), null);
+  }
+});
+test("synthetic input confirmation is labeled without enabling generic requests", () => {
+  for (const l of ["en", "ko", "ar"] as const) {
+    assert.ok(!accessText(l, "confirm_input", []).includes("confirm_input"));
+    assert.ok(!scopeText(l, "synthetic_input_evidence", "").includes("synthetic_input_evidence"));
+    assert.equal(accessPhrase(l, "confirm_input", "synthetic_input_evidence", []), null);
+ assert.equal(accessPhrase(l, "view_cost", "synthetic_input_evidence", ["input_review_evidence"]), null);
+ assert.ok(!accessText(l, "view_cost", ["input_review_evidence"]).includes("input_review_evidence"));
+  }
+});
+
+
+test("pricing grant labels remain separate from generic grant offers", () => {
+ for (const l of ["en", "ko", "ar"] as const) {
+  for (const action of ["propose_pricing_policy", "approve_pricing_policy", "revoke_pricing_policy", "use_pricing_policy"]) {
+   assert.ok(!accessText(l, action, []).includes(action));
+   assert.equal(accessPhrase(l, action, "synthetic_pricing_policy", []), null);
+  }
+  assert.ok(!scopeText(l, "synthetic_pricing_policy", "").includes("synthetic_pricing_policy"));
+  assert.ok(!accessText(l, "view_cost", ["pricing_policy_evidence"]).includes("pricing_policy_evidence"));
+  assert.equal(accessPhrase(l, "view_cost", "synthetic_pricing_policy", ["pricing_policy_evidence"]), null);
+ }
+});
+
+
+test("document authority uses explicit localized action and evidence labels", () => {
+ for (const l of ["en", "ko", "ar"] as const) {
+  for (const action of ["propose_document_evidence", "confirm_document_evidence", "revoke_document_evidence", "prepare_erp_record"]) {
+   assert.ok(!accessText(l, action, []).includes(action));
+  }
+  assert.ok(!accessText(l, "view_cost", ["document_evidence"]).includes("document_evidence"));
+  assert.equal(accessPhrase(l, "view_cost", "synthetic_document_evidence", ["document_evidence"]), null);
+ }
+});
+
+test("ERP result authority uses explicit localized action and evidence labels", () => {
+ for (const l of ["en", "ko", "ar"] as const) {
+  for (const action of ["propose_erp_result", "confirm_erp_result", "revoke_erp_result", "apply_erp_result"]) {
+   assert.ok(!accessText(l, action, []).includes(action));
+  }
+  assert.ok(!accessText(l, "view_cost", ["erp_result_evidence"]).includes("erp_result_evidence"));
+  assert.equal(accessPhrase(l, "view_cost", "synthetic_erp_result_evidence", ["erp_result_evidence"]), null);
+ }
+});

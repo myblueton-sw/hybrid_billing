@@ -6,7 +6,7 @@ import { axes, budgetStateWords, counted, gateStatusWords, gateWords, metrics, p
 import {
   blockerPolicy, budgetUnexpected, duplicateIn, keptKey, pendingNow, pendingRetire, profileRetire, profileTarget, refusedNow, rowId, stateSentence, verdictLine, verdictShown, type VerdictLine,
 } from "./live-model";
-import { Absent, Code, Digest, Fixed, State, Gap, Known, ListOr, MoreLine, Num, Stamp, Template, Unexpected, Who, gapOf, ltr } from "./live-format";
+import { Absent, Code, Digest, Fixed, State, Gap, Known, ListFoot, ListOr, MoreLine, Num, Stamp, Template, Unexpected, Who, gapOf, ltr, type ProfilesList } from "./live-format";
 import { CommandForm, RowNote, line, useOpen, type Blocker, type Shared } from "./LiveCommand";
 import { PendingLink } from "./LiveRequirements";
 
@@ -86,7 +86,7 @@ export function Readiness({ l, page }: { l: Locale; page: EvidencePage }) {
   );
 }
 
-function Hardware({ l, page }: { l: Locale; page: EvidencePage }) {
+function Hardware({ l, page, list }: { l: Locale; page: EvidencePage; list?: ProfilesList }) {
   const h = page.load.hardware;
   return (
     <section className="p05-hw" aria-labelledby="p05-hw-title">
@@ -109,7 +109,8 @@ function Hardware({ l, page }: { l: Locale; page: EvidencePage }) {
           </>
         )}
       </ListOr>
-      <MoreLine l={l} more={h.more} total={h.total} forms={plurals.showing50} />
+      {!list && <MoreLine l={l} more={h.more} total={h.total} forms={plurals.showing50} />}
+      {list && <ListFoot l={l} kind="hw" list={list} shown={h.rows?.length ?? 0} total={h.total} copy={{ shown: k.hardwareShown, more: k.hardwareMore, failed: k.hardwareFailed, reset: k.hardwareReset }} />}
     </section>
   );
 }
@@ -333,9 +334,10 @@ function Profile({ p, ...shared }: Shared & { p: ProfileRow }) {
   );
 }
 
-export function LoadView(shared: Shared) {
-  const { l, page } = shared;
+export function LoadView(shared: Shared & { list?: ProfilesList; hardwareList?: ProfilesList }) {
+  const { l, page, list, hardwareList } = shared;
   const profiles = page.load.profiles;
+  const shown = profiles.rows?.length ?? 0;
   return (
     <>
       <p className="p05-lead">{k.loadLead(l)}</p>
@@ -345,11 +347,12 @@ export function LoadView(shared: Shared) {
         <p>{page.load.measurement === "not_connected" ? k.measurement(l) : <>{k.measurementLabel(l)}: <Fixed l={l} value={page.load.measurement} locator="measurement" /></>}</p>
       </div>
       <Readiness l={l} page={page} />
-      <Hardware l={l} page={page} />
+      <Hardware l={l} page={page} list={hardwareList} />
       <section className="p05-profiles" aria-labelledby="p05-profiles-title">
         <h3 id="p05-profiles-title" className="visually-hidden">{k.profilesTitle(l)}</h3>
         <ListOr l={l} items={profiles.rows} empty={k.noProfiles(l)}>{(rows) => <>{rows.map((p, i) => <Profile key={p.target || "p" + i} p={p} {...shared} />)}</>}</ListOr>
-        <MoreLine l={l} more={profiles.more} total={profiles.total} forms={plurals.showing50} />
+        {!list && <MoreLine l={l} more={profiles.more} total={profiles.total} forms={plurals.showing50} />}
+        {list && <ListFoot l={l} kind="profiles" list={list} shown={shown} total={profiles.total} copy={{ shown: k.profilesShown, more: k.profilesMore, failed: k.profilesFailed, reset: k.profilesReset }} />}
       </section>
     </>
   );

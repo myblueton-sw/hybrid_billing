@@ -82,7 +82,9 @@ type integrationStore struct {
 	plugins       []*pluginRecord
 	workspace     string
 	entries       []*pluginEntry
+	dropped       int
 	subscriptions []*subscriptionEntry
+	purged        []*subscriptionEntry
 	redeliver     map[string]letterRequest
 	dismiss       map[string]letterRequest
 	types         []typeRecord
@@ -112,6 +114,7 @@ func (c *integrationStore) keep(e *pluginEntry) {
 	for index, old := range c.entries {
 		if old.view.State != plugins.ProposalPending {
 			c.entries = append(c.entries[:index], c.entries[index+1:]...)
+			c.dropped++
 			return
 		}
 	}
@@ -201,16 +204,22 @@ func (s *Server) eventCall(name string, call func() error) error {
 }
 
 func (s *Server) pluginPropose(c plugins.Change, by plugins.Actor, rationale string) (*pluginEntry, error) {
+	e, _, err := s.pluginProposeOnce(c, by, rationale)
+	return e, err
+}
+
+func (s *Server) pluginProposeOnce(c plugins.Change, by plugins.Actor, rationale string) (*pluginEntry, bool, error) {
 	var view plugins.ProposalView
 	if err := s.pluginCall("propose", func() (err error) { view, err = s.plugins.Propose(c, by); return }); err != nil {
-		return nil, err
+		return nil, false, err
 	}
 	e := s.integ.entry(view.Number)
-	if e == nil {
-		e = &pluginEntry{view: view, created: s.clock(), rationale: rationale}
-		s.integ.keep(e)
+	if e != nil {
+		return e, true, nil
 	}
-	return e, nil
+	e = &pluginEntry{view: view, created: s.clock(), rationale: rationale}
+	s.integ.keep(e)
+	return e, false, nil
 }
 
 func (s *Server) pluginApprove(e *pluginEntry, by plugins.Actor, rationale string) error {
@@ -258,7 +267,28 @@ func (s *Server) subscriptionPropose(sub webhooks.Subscription, by webhooks.Acto
 		e = &subscriptionEntry{id: sub.ID, created: s.clock(), proposer: by.ID, rationale: rationale, proposed: true}
 		s.integ.subscriptions = append(s.integ.subscriptions, e)
 	}
+	s.dropPurgedSubscriptions(e)
 	return e, view, nil
+}
+
+func (s *Server) dropPurgedSubscriptions(keep *subscriptionEntry) {
+	held := s.integ.subscriptions[:0]
+	for _, e := range s.integ.subscriptions {
+		if e != keep {
+			if _, err := s.subscriptionOf(e.id); errors.Is(err, webhooks.ErrNotFound) {
+				s.integ.purged = append(s.integ.purged, &subscriptionEntry{id: e.id, proposer: e.proposer})
+				continue
+			}
+		}
+		held = append(held, e)
+	}
+	if extra := len(s.integ.purged) - requestTombstone; extra > 0 {
+		s.integ.purged = append([]*subscriptionEntry{}, s.integ.purged[extra:]...)
+	}
+	for index := len(held); index < len(s.integ.subscriptions); index++ {
+		s.integ.subscriptions[index] = nil
+	}
+	s.integ.subscriptions = held
 }
 
 func (s *Server) subscriptionStep(e *subscriptionEntry, action string, by webhooks.Actor, rationale string,

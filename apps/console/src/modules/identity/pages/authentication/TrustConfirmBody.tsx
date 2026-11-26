@@ -26,7 +26,8 @@ export function ConfirmBody({ l, page, k, expectedDigest, workspace, dead = fals
 }) {
   const ch = k.change;
   const val = (v: string | undefined, digest = false) => (v ? (digest ? ltr(v) : actor(v)) : <span className="live-quiet">{ty.notRecorded(l)}</span>);
-  const members = ch?.impact.members || page.holders.members;
+  const members = ch?.impact?.members || page.holders.members;
+  const count = (n: number | undefined) => (n === undefined ? <span className="live-quiet">{ty.impactNotComputed(l)}</span> : String(n));
   const items = new Map((ch?.validation?.items ?? []).map((i) => [i.item, i]));
   const finding = (key: string) => {
     const it = items.get(key);
@@ -89,8 +90,8 @@ export function ConfirmBody({ l, page, k, expectedDigest, workspace, dead = fals
           <Row label={ty.evidenceDigest(l)} value={val(ch?.validation?.evidence_digest, true)} wide />
           {!dead && <Row label={ty.yourAuthority(l)} value={ty.authority(l)} wide />}
           {!dead && <Row label={ty.lockout(l)} value={finding("recovery_path")} wide />}
-          <Row label={ty.members(l)} value={String(ch?.impact.members ?? 0)} />
-          <Row label={ty.sessionsNow(l)} value={String(ch?.impact.sessions ?? 0)} />
+          <Row label={ty.members(l)} value={count(ch?.impact?.members)} />
+          <Row label={ty.sessionsNow(l)} value={count(ch?.impact?.sessions)} />
         </>
       );
       consequence.push([ty.consequence.approve(l), true], [ty.consequence.approveRecheck(l), false]);
@@ -106,12 +107,12 @@ export function ConfirmBody({ l, page, k, expectedDigest, workspace, dead = fals
           <Row label={ty.approvedBy(l)} value={val(ch?.approver)} />
           <Row label={ty.toBeActivatedBy(l)} value={ty.you(l)} />
           <Row label={ty.expectedVersion(l)} value={<>{ltr(next.text)} <span className="m02-sub">({ty.expected(l)})</span></>} />
-          <Row label={ty.sessionsNow(l)} value={String(ch?.impact.sessions ?? 0)} />
+          <Row label={ty.sessionsNow(l)} value={count(ch?.impact?.sessions)} />
           {!dead && <Row label={ty.item(l, "test_login")} value={finding("test_login")} wide />}
           {!dead && <Row label={ty.lockout(l)} value={finding("recovery_path")} wide />}
         </>
       );
-      if (ch && ch.impact.affected_ids.length > 0) {
+      if (ch && ch.impact && ch.impact.affected_ids.length > 0) {
         after = (
           <details className="m02-members">
             <summary>{ty.affected(l, ch.impact.members)}</summary>

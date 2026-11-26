@@ -1,6 +1,6 @@
 import { DiagnosticDetails } from "../../../../service/CommandDiagnostics";
 import type { CommandDiagnostic } from "../../../../service/command-diagnostics";
-import { currentScope } from "./live-model";
+import { currentScope, withMoreDeliveries } from "./live-model";
 import "../../../../service/command-diagnostics.css";
 import { CommandDiagnostics, ErrorDiagnostics, useCommandDiagnostics } from "../../../../service/CommandDiagnostics";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
@@ -55,17 +55,21 @@ export default function LiveIntegrations({ locale: l, view: rawView, params, ses
   const [signedOut, setSignedOut] = useState(false);
   const [lostAccess, setLostAccess] = useState(false);
   const [notice, setNotice] = useState("");
+  const [readComplete, setReadComplete] = useState(false);
   const [noticeDetail, setNoticeDetail] = useState<CommandDiagnostic | null>(null);
   const [terminalDetail, setTerminalDetail] = useState<CommandDiagnostic | null>(null);
   const [busy, setBusy] = useState(false);
   const [, setTick] = useState(0);
   const seq = useRef(0);
+  const moreSeq = useRef<{ epoch: number; of: Record<string, number> }>({ epoch: 0, of: {} });
+  const [more, setMore] = useState<{ status: Record<string, "loading" | "failed">; loaded: boolean; reset: boolean }>({ status: {}, loaded: false, reset: false });
   const scrolled = useRef(false);
   const selection = selectionOf(params, page, view);
   const selectedId = selection.delivery ? "p02-delivery-" + selection.delivery : selection.proposal ? "p02-proposal-" + selection.proposal : selection.subscription && view === "channels" ? "p02-sub-" + selection.subscription : "";
 
-  const load = useCallback(async (): Promise<IntegrationsPage | null> => {
+  const load = useCallback(async (userRefresh = false): Promise<IntegrationsPage | null> => {
     const n = ++seq.current;
+    setReadComplete(false);
     const generation = currentScope();
     setBusy(true);
     try {
@@ -73,8 +77,11 @@ export default function LiveIntegrations({ locale: l, view: rawView, params, ses
       if (n !== seq.current || generation !== currentScope()) return null;
       pruneRefusals(got, session.user);
       pruneLost(got);
+      moreSeq.current = { epoch: moreSeq.current.epoch + 1, of: {} };
+      setMore((before) => ({ status: {}, loaded: false, reset: before.loaded }));
       setPage(got);
       setStatus("ready");
+      setReadComplete(userRefresh);
       setLoadError(null);
       return got;
     } catch (e) {
@@ -88,6 +95,11 @@ export default function LiveIntegrations({ locale: l, view: rawView, params, ses
       if (n === seq.current && generation === currentScope()) setBusy(false);
     }
   }, [api, session.user]);
+
+  const refresh = (fromError = false) => {
+    if (fromError) document.querySelector<HTMLButtonElement>(".p02-reload")?.focus();
+    void load(true);
+  };
 
   useLayoutEffect(() => { void load(); return () => { seq.current++; }; }, [load]);
   useEffect(() => {
@@ -128,6 +140,31 @@ export default function LiveIntegrations({ locale: l, view: rawView, params, ses
     );
   }
 
+  const moreDeliveries = async (subscription: string) => {
+    const after = page?.events.deliveries_next?.[subscription] ?? "";
+    if (!page || !after || more.status[subscription] === "loading") return;
+    const epoch = moreSeq.current.epoch;
+    const n = (moreSeq.current.of[subscription] = (moreSeq.current.of[subscription] ?? 0) + 1);
+    const generation = currentScope();
+    const current = () => epoch === moreSeq.current.epoch && n === moreSeq.current.of[subscription] && generation === currentScope();
+    const mark = (status: "loading" | "failed" | "idle", loaded: boolean) => setMore((before) => {
+      const next = { ...before.status };
+      if (status === "idle") delete next[subscription];
+      else next[subscription] = status;
+      return { status: next, loaded: before.loaded || loaded, reset: false };
+    });
+    mark("loading", false);
+    try {
+      const answer = await api.integrationDeliveries(subscription, after);
+      if (!current()) return;
+      setPage((p) => (p ? withMoreDeliveries(p, subscription, answer.rows, answer.next) : p));
+      mark("idle", true);
+    } catch (e) {
+      if (!current()) return;
+      if (e instanceof AdminError && (e.failure === "denied" || e.failure === "unauthenticated")) { mark("idle", false); void load(); return; }
+      mark("failed", false);
+    }
+  };
   const configured = page?.state === "configured";
   const shared: Shared | null = page && configured
     ? {
@@ -137,6 +174,7 @@ export default function LiveIntegrations({ locale: l, view: rawView, params, ses
         onReload: load,
         onSignedOut: (reference?: CommandDiagnostic) => { setTerminalDetail(reference ?? null); setSignedOut(true); },
         onLostAccess: (reference?: CommandDiagnostic) => { setTerminalDetail(reference ?? null); setLostAccess(true); },
+        deliveries: { status: (subscription) => more.status[subscription] ?? "idle", reset: more.reset, loaded: more.loaded, load: (subscription) => { void moreDeliveries(subscription); } },
       }
     : null;
   const hidden = shared ? withheld(shared.page, view) : false;
@@ -148,6 +186,7 @@ export default function LiveIntegrations({ locale: l, view: rawView, params, ses
 
   return (
     <div className="p02-live" data-live={view} aria-busy={busy || undefined}>
+      <p className="visually-hidden p02-read-status" role="status" aria-live="polite">{readComplete ? sc.dataReloaded(l) : ""}</p>
         <CommandDiagnostics l={l} detail={terminalDetail ?? detail} />
       {loadError != null && <ErrorDiagnostics l={l} error={loadError} />}
       <div className="p02-scope">
@@ -156,7 +195,7 @@ export default function LiveIntegrations({ locale: l, view: rawView, params, ses
           <div><dt>{k.revision(l)}</dt><dd>{page ? <Known l={l} value={page.revision} /> : "—"}</dd></div>
           <div><dt>{k.now(l)}</dt><dd>{page ? fsi(stamp(l, page.now)) : "—"}</dd></div>
         </dl>
-        <button type="button" className="live-secondary p02-reload" onClick={() => void load()}>{k.reload(l)}</button>
+        <button type="button" className="live-secondary p02-reload" onClick={() => refresh()}>{k.reload(l)}</button>
       </div>
       <p className="live-note-rule p02-statement"><strong>{k.statementLead(l)}</strong> {k.statement(l)}</p>
       {page && configured && (
@@ -173,7 +212,7 @@ export default function LiveIntegrations({ locale: l, view: rawView, params, ses
         <div className="live-error p02-failure" role="alert">
           <h2>{r.loadFailed(l)}</h2>
           {failure && <p>{failure}</p>}
-          <button type="button" className="live-secondary" onClick={() => void load()}>{sc.tryAgain(l)}</button>
+          <button type="button" className="live-secondary" onClick={() => refresh(true)}>{sc.tryAgain(l)}</button>
         </div>
       )}
       <div className="live-toolbar"><h2 id="p02-view-title" tabIndex={-1}>{k.viewTitle(l, view)}</h2></div>

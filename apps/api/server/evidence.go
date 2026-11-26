@@ -95,6 +95,7 @@ type evidenceProblem struct {
 }
 
 type evidencePathRow struct {
+	Number              int                                  `json:"number"`
 	ID                  string                               `json:"id"`
 	Provider            string                               `json:"provider"`
 	Contract            string                               `json:"contract"`
@@ -116,8 +117,9 @@ type evidencePathRow struct {
 }
 
 type evidenceMatrix struct {
-	Origin string                        `json:"origin"`
-	Paths  evidenceList[evidencePathRow] `json:"paths"`
+	Origin    string                        `json:"origin"`
+	Paths     evidenceList[evidencePathRow] `json:"paths"`
+	PathsNext string                        `json:"paths_next"`
 }
 
 type evidenceTarget struct {
@@ -149,6 +151,7 @@ type evidenceRequirementRow struct {
 	Design              string                         `json:"design"`
 	Commit              *string                        `json:"commit"`
 	Retired             bool                           `json:"retired"`
+	State               *string                        `json:"state"`
 	Replacement         *string                        `json:"replacement"`
 	States              map[string]string              `json:"states"`
 	BuildsMore          bool                           `json:"builds_more"`
@@ -171,6 +174,7 @@ type evidenceGate struct {
 type evidenceRequirements struct {
 	Origin       string                               `json:"origin"`
 	Requirements evidenceList[evidenceRequirementRow] `json:"requirements"`
+	Next         string                               `json:"next"`
 	Gate         *evidenceGate                        `json:"gate"`
 }
 
@@ -187,6 +191,7 @@ type evidenceHarnessRow struct {
 }
 
 type evidenceResultRow struct {
+	Number           uint64  `json:"number"`
 	Namespace        string  `json:"namespace"`
 	Test             string  `json:"test"`
 	Build            string  `json:"build"`
@@ -203,8 +208,10 @@ type evidenceResultRow struct {
 type evidenceArtifacts struct {
 	Origin      string                           `json:"origin"`
 	Builds      evidenceList[evidenceBuildRow]   `json:"builds"`
+	BuildsNext  string                           `json:"builds_next"`
 	Harnesses   evidenceList[evidenceHarnessRow] `json:"harnesses"`
 	Results     evidenceList[evidenceResultRow]  `json:"results"`
+	ResultsNext string                           `json:"results_next"`
 	Files       string                           `json:"files"`
 	Logs        string                           `json:"logs"`
 	Environment string                           `json:"environment"`
@@ -233,6 +240,7 @@ type evidenceProposalRow struct {
 type evidenceDecisions struct {
 	Origin           string                            `json:"origin"`
 	Proposals        evidenceList[evidenceProposalRow] `json:"proposals"`
+	ProposalHistory  keptFacts                         `json:"proposal_history"`
 	SupportDecisions string                            `json:"support_decisions"`
 	ActivationReview string                            `json:"activation_review"`
 	Ledger           string                            `json:"ledger"`
@@ -254,9 +262,12 @@ type evidenceFacts struct {
 	s         *Server
 	reader    string
 	eligible  bool
+	rostered  bool
 	origin    string
 	candidate *releasetrace.Release
 	build     string
+	replacing map[releasetrace.Key]bool
+	numbers   map[releasetrace.Key]int
 }
 
 func (s *Server) evidencePerson(id string) *evidencePerson {
@@ -422,8 +433,12 @@ func (f *evidenceFacts) pathRow(id string) (evidencePathRow, error) {
 
 func (f *evidenceFacts) matrix() (evidenceMatrix, error) {
 	paths := f.s.ev.paths
-	list, err := listOf(len(paths), evidenceShown, func(index int) (evidencePathRow, error) { return f.pathRow(paths[index]) })
-	return evidenceMatrix{Origin: f.origin, Paths: list}, err
+	list, err := listOf(len(paths), evidenceShown, f.pathAt)
+	out := evidenceMatrix{Origin: f.origin, Paths: list}
+	if list.More {
+		out.PathsNext = strconv.Itoa(len(list.Rows))
+	}
+	return out, err
 }
 
 func (f *evidenceFacts) notCounted(k releasetrace.Key, q releasetrace.RequirementView, build string) *string {
@@ -458,21 +473,41 @@ func retireCheck(k, replacement releasetrace.Key) releasetrace.Change {
 }
 
 func (f *evidenceFacts) replacements(index int) (evidenceList[evidenceTarget], error) {
+	numbers, err := f.replacementNumbers(index)
+	if err != nil {
+		return evidenceList[evidenceTarget]{}, err
+	}
+	return listOf(len(numbers), evidenceReplacements, func(at int) (evidenceTarget, error) { return f.replacementAt(numbers[at]), nil })
+}
+
+func (f *evidenceFacts) replacementAt(number int) evidenceTarget {
+	return evidenceTarget{Target: requirementTarget(number), Label: label(f.s.ev.requirements[number-1])}
+}
+
+func (f *evidenceFacts) replacementNumbers(index int) ([]int, error) {
 	stored := f.s.ev.requirements
-	all := []evidenceTarget{}
-	for m, other := range stored {
-		if m == index || f.s.ev.pendingReplacement(other) {
-			continue
-		}
-		reason, err := f.check(retireCheck(stored[index], other), f.reader, "")
-		switch {
-		case err != nil:
-			return evidenceList[evidenceTarget]{}, err
-		case reason == "":
-			all = append(all, evidenceTarget{Target: requirementTarget(m + 1), Label: label(other)})
+	if f.replacing == nil {
+		f.replacing = f.s.ev.pendingReplacements()
+	}
+	if f.numbers == nil {
+		f.numbers = make(map[releasetrace.Key]int, len(stored))
+		for m, k := range stored {
+			f.numbers[k] = m + 1
 		}
 	}
-	return capped(all, evidenceReplacements), nil
+	var accepted []releasetrace.Key
+	err := f.s.traceCall("replacements", func() (err error) { accepted, err = f.s.trace.Replacements(stored[index]); return })
+	if err != nil && !errors.Is(err, releasetrace.ErrNotFound) {
+		return nil, err
+	}
+	numbers := []int{}
+	for _, other := range accepted {
+		if n := f.numbers[other]; n > 0 && !f.replacing[other] {
+			numbers = append(numbers, n)
+		}
+	}
+	sort.Ints(numbers)
+	return numbers, nil
 }
 
 func (f *evidenceFacts) retireBlocked(row *evidenceRequirementRow, q releasetrace.RequirementView, k releasetrace.Key) (string, error) {
@@ -481,6 +516,8 @@ func (f *evidenceFacts) retireBlocked(row *evidenceRequirementRow, q releasetrac
 		return releasetrace.ReasonRetired, nil
 	case row.Retire != nil:
 		return alreadyProposed, nil
+	case !f.rostered:
+		return "", errRosterNotRead
 	case !f.eligible:
 		return noEligibleApprover, nil
 	}
@@ -510,6 +547,7 @@ func (f *evidenceFacts) requirementRow(index int) (evidenceRequirementRow, error
 		row.Replacement = optional(label(q.Replacement))
 	}
 	if f.candidate != nil {
+		row.State = optional(q.State)
 		builds := s.ev.builds
 		for n := len(builds) - 1; n >= 0 && len(row.States) < evidenceStatesShown; n-- {
 			v, err := s.traceRequirement(k, builds[n].id)
@@ -539,8 +577,14 @@ func (f *evidenceFacts) requirements() (evidenceRequirements, error) {
 	s := f.s
 	section := evidenceRequirements{Origin: f.origin}
 	var err error
-	if section.Requirements, err = listOf(len(s.ev.requirements), evidenceShown, f.requirementRow); err != nil || f.candidate == nil {
+	if section.Requirements, err = listOf(len(s.ev.requirements), evidenceShown, f.requirementRow); err != nil {
 		return section, err
+	}
+	if section.Requirements.More {
+		section.Next = strconv.Itoa(len(section.Requirements.Rows))
+	}
+	if f.candidate == nil {
+		return section, nil
 	}
 	g, err := s.traceGate(*f.candidate)
 	if err != nil {
@@ -561,46 +605,25 @@ func (f *evidenceFacts) artifacts() (evidenceArtifacts, error) {
 	s := f.s
 	section := evidenceArtifacts{Origin: f.origin, Files: notConnected, Logs: notConnected, Environment: notConnected, Content: notConnected}
 	builds := s.ev.builds
-	section.Builds, _ = listOf(len(builds), evidenceShown, func(index int) (evidenceBuildRow, error) {
-		n := len(builds) - 1 - index
-		return evidenceBuildRow{Build: builds[n].id, Commit: builds[n].commit, Order: n + 1}, nil
-	})
+	section.Builds, _ = listOf(len(builds), evidenceShown, func(index int) (evidenceBuildRow, error) { return buildRow(builds, len(builds)-1-index), nil })
+	if section.Builds.More {
+		section.BuildsNext = strconv.Itoa(len(builds) - evidenceShown + 1)
+	}
 	harnesses := s.ev.harnesses
-	section.Harnesses, _ = listOf(len(harnesses), evidenceShown, func(index int) (evidenceHarnessRow, error) {
+	section.Harnesses, _ = listOf(len(harnesses), len(harnesses), func(index int) (evidenceHarnessRow, error) {
 		return evidenceHarnessRow{Module: harnesses[index].module, ID: harnesses[index].id, Revocation: notConnected}, nil
 	})
-	type timed struct {
-		at  time.Time
-		row evidenceResultRow
-	}
-	all := []timed{}
-	for n := len(s.ev.results) - 1; n >= 0; n-- {
-		k := s.ev.results[n]
-		v, err := s.traceResults(k)
+	section.Results = evidenceList[evidenceResultRow]{Total: len(s.ev.results), Rows: []evidenceResultRow{}}
+	for n := len(s.ev.results) - 1; n >= 0 && len(section.Results.Rows) < evidenceShown; n-- {
+		row, err := f.resultRow(s.ev.results[n])
 		if err != nil {
 			return evidenceArtifacts{}, err
 		}
-		outcome := outcomeFail
-		if v.Result.Passed {
-			outcome = outcomePass
-		}
-		row := evidenceResultRow{Namespace: k.namespace, Test: k.test, Build: k.build, Counted: v.Counted, LatestOutcome: outcome, Evidence: v.Result.Evidence,
-			Harness: v.Harness, At: stamp(v.At), Passes: v.Passes, Failures: v.Failures}
-		if !v.Counted {
-			reason, err := s.resultNotCounted(k)
-			if err != nil {
-				return evidenceArtifacts{}, err
-			}
-			row.NotCountedReason = optional(reason)
-		}
-		all = append(all, timed{at: v.At, row: row})
+		section.Results.Rows = append(section.Results.Rows, row)
 	}
-	sort.SliceStable(all, func(a, b int) bool { return all[a].at.After(all[b].at) })
-	rows := []evidenceResultRow{}
-	for _, x := range all {
-		rows = append(rows, x.row)
+	if shown := len(section.Results.Rows); shown < section.Results.Total {
+		section.Results.More, section.ResultsNext = true, keptCursor(section.Results.Rows[shown-1].Number)
 	}
-	section.Results = capped(rows, evidenceShown)
 	return section, nil
 }
 
@@ -694,30 +717,47 @@ func (f *evidenceFacts) proposalRow(e *evidenceEntry) (evidenceProposalRow, erro
 
 func (f *evidenceFacts) decisions() (evidenceDecisions, error) {
 	entries := f.s.ev.entries
-	list, err := listOf(len(entries), evidenceShown, func(index int) (evidenceProposalRow, error) {
-		return f.proposalRow(entries[len(entries)-1-index])
-	})
-	return evidenceDecisions{Origin: f.origin, Proposals: list, SupportDecisions: notConnected, ActivationReview: notConnected, Ledger: retentionLedger}, err
+	listed, closed, next := listKept(entries, evidencePending, evidenceSequence, evidenceShown)
+	list, err := listOf(len(listed), len(listed), func(index int) (evidenceProposalRow, error) { return f.proposalRow(listed[index]) })
+	list.Total, list.More = len(entries), len(entries) > len(listed)
+	return evidenceDecisions{Origin: f.origin, Proposals: list, ProposalHistory: keptFacts{Total: closed, Next: next, Kept: installKept, Dropped: f.s.ev.dropped},
+		SupportDecisions: notConnected, ActivationReview: notConnected, Ledger: retentionLedger}, err
+}
+
+func (s *Server) evidenceFactsFor(verifier identity.Verifier, reader string, now time.Time) (*evidenceFacts, error) {
+	approvers, err := s.retentionApprovers(verifier, now)
+	if err != nil {
+		return nil, err
+	}
+	f := s.evidenceFactsWithoutRoster(reader)
+	f.rostered = true
+	for _, user := range approvers {
+		f.eligible = f.eligible || user != reader
+	}
+	return f, nil
+}
+
+func (s *Server) evidenceFactsWithoutRoster(reader string) *evidenceFacts {
+	f := &evidenceFacts{s: s, reader: reader, origin: evidenceOriginEmpty}
+	if s.ev.seeded {
+		f.origin = evidenceOriginSeed
+	}
+	if c := s.ev.candidate; c != nil {
+		f.candidate, f.build = c, c.Build
+	}
+	return f
 }
 
 func (s *Server) evidencePage(verifier identity.Verifier, reader string, now time.Time) (evidencePage, error) {
 	if s.faulty("release-evidence-read") {
 		return evidencePage{}, releasetrace.ErrInvalid
 	}
-	approvers, err := s.retentionApprovers(verifier, now)
+	f, err := s.evidenceFactsFor(verifier, reader, now)
 	if err != nil {
 		return evidencePage{}, err
 	}
-	f := &evidenceFacts{s: s, reader: reader, origin: evidenceOriginEmpty}
-	for _, user := range approvers {
-		f.eligible = f.eligible || user != reader
-	}
-	if s.ev.seeded {
-		f.origin = evidenceOriginSeed
-	}
 	page := evidencePage{Revision: s.Revision(), Now: stamp(now), State: stateConfigured}
-	if c := s.ev.candidate; c != nil {
-		f.candidate, f.build = c, c.Build
+	if c := f.candidate; c != nil {
 		page.Candidate = &evidenceCandidate{Version: c.Version, Build: c.Build, Release: notConnected}
 	}
 	if page.Matrix, err = f.matrix(); err != nil {

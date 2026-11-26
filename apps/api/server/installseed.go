@@ -43,6 +43,7 @@ type installStore struct {
 	entries      []*installEntry
 	destinations []installer.Destination
 	reports      []installReport
+	dropped      int
 }
 
 func newInstallStore() *installStore { return &installStore{} }
@@ -64,6 +65,7 @@ func (c *installStore) keep(e *installEntry) {
 	for index, old := range c.entries {
 		if old.view.State != installer.ProposalPending {
 			c.entries = append(c.entries[:index], c.entries[index+1:]...)
+			c.dropped++
 			return
 		}
 	}
@@ -82,16 +84,22 @@ func (s *Server) installCall(name string, call func() error) error {
 }
 
 func (s *Server) installPropose(c installer.Change, by installer.Actor, rationale string) (*installEntry, error) {
+	e, _, err := s.installProposeOnce(c, by, rationale)
+	return e, err
+}
+
+func (s *Server) installProposeOnce(c installer.Change, by installer.Actor, rationale string) (*installEntry, bool, error) {
 	var view installer.ProposalView
 	if err := s.installCall("propose", func() (err error) { view, err = s.installer.Propose(c, by); return }); err != nil {
-		return nil, err
+		return nil, false, err
 	}
 	e := s.install.entry(view.Number)
-	if e == nil {
-		e = &installEntry{view: view, created: s.clock(), rationale: rationale}
-		s.install.keep(e)
+	if e != nil {
+		return e, true, nil
 	}
-	return e, nil
+	e = &installEntry{view: view, created: s.clock(), rationale: rationale}
+	s.install.keep(e)
+	return e, false, nil
 }
 
 func (s *Server) installApprove(e *installEntry, by installer.Actor, rationale string) error {

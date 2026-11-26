@@ -137,6 +137,11 @@ async function layout(selector, tag, lang) {
     if (args.shots) await page.screenshot({ path: `${args.shots}/${tag}-${lang}-${width}.png`, fullPage: true });
   }
 }
+async function signIn() {
+  await page.locator("#signin-workspace").fill("sample-workspace"); await page.locator("#signin-email").fill("admin@example.invalid");
+  await page.locator("#signin-password").fill(password); await page.locator("form button[type=submit]").click();
+  await page.locator(".service-session").waitFor();
+}
 try {
   if (args.shots) await mkdir(args.shots, { recursive: true });
   const lines = (await readFile(args.activation, "utf8")).trim().split("\n");
@@ -145,9 +150,7 @@ try {
   await page.locator("#link-new").fill(password); await page.locator("#link-confirm").fill(password);
   await page.locator("form button[type=submit]").click(); await page.locator("a.service-button-link").waitFor();
   await page.goto(`${base}/?service=api&lang=en`);
-  await page.locator("#signin-workspace").fill("sample-workspace"); await page.locator("#signin-email").fill("admin@example.invalid");
-  await page.locator("#signin-password").fill(password); await page.locator("form button[type=submit]").click();
-  await page.locator(".service-session").waitFor();
+  await signIn();
   if (args["only-grouped"]) { await setupResume(); await groupedRequests("en"); }
   for (const lang of args["only-grouped"] ? [] : args["only-refusal"] || args["only-open"] || args["only-retention"] ? ["en"] : ["en", "ko", "ar"]) {
     await page.goto(`${base}/?service=api&lang=${lang}&qa=${++navigation}#/integrations?lang=${lang}&view=modules`);
@@ -236,6 +239,15 @@ try {
       for (const [status, body, tag] of [[403, { code: "permission_denied", request_id: "denied-330" }, "denied"], [401, { code: "unauthenticated", request_id: "session-330" }, "session"], [503, null, "missing"]]) {
         await page.route(read, (route) => route.fulfill({ status, contentType: "application/json", body: JSON.stringify(body) }));
         await page.goto(`${base}/?service=api&lang=en&qa=${++navigation}#/${path}?lang=en`);
+        if (status === 401) {
+          await page.locator("#signin-workspace").waitFor();
+          check(`${id} ended session returns to sign-in and says so`, (await page.locator(".service-status").innerText()).includes("Sign in again.") && await page.locator(`.${id}-live`).count() === 0 && await page.locator(".service-session").count() === 0);
+          await page.unroute(read);
+          await signIn();
+          await settled(`.${id}-live`);
+          check(`${id} reads again after signing in`, await page.locator(`.${id}-live .command-diagnostics-details`).count() === 0);
+          continue;
+        }
         await page.locator(`.${id}-live .command-diagnostics-details`).waitFor();
         const text = await page.locator(`.${id}-live`).innerText();
         check(`${id} ${tag} metadata truthful`, body ? text.includes(body.code) && text.includes(body.request_id) : text.includes(missing.en) && !text.includes("Server error code unavailable"));

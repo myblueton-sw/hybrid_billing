@@ -1,5 +1,7 @@
 import type { Locale } from "../../../../shared/types";
 import type { RecoveryPage, SetRow } from "../../../../service/recovery";
+import { historyRowOf } from "../../../../service/recovery";
+import { RowsFoot, useRows } from "./LiveRows";
 import { k } from "./live-copy";
 import { chunksOf, evidenceOf, historyOf, noRestorePoint, reconciledOf, reconciliationOf, rowId, watermarkOf } from "./live-model";
 import { plain } from "./live-copy";
@@ -102,14 +104,17 @@ function PointFold({ l, row, open }: { l: Locale; row: SetRow; open: boolean }) 
   );
 }
 
-function History({ l, row }: { l: Locale; row: SetRow }) {
+function History({ l, row, shared }: { l: Locale; row: SetRow; shared: Shared }) {
   const h = historyOf(row);
+  const paged = row.history_next !== null;
+  const further = useRows(shared, row.installation, "history", row.history, row.history_next, historyRowOf, (x) => x.recovery);
+  const items = paged ? further.rows : row.history;
   return (
     <section className="p03-history" aria-label={k.historyTitle(l)}>
       <h4>{k.historyTitle(l)}</h4>
-      {h.kind === "more" && <p className="p03-small live-quiet">{k.historyMore(l, h.total)}</p>}
+      {!paged && h.kind === "more" && <p className="p03-small live-quiet">{k.historyMore(l, h.total)}</p>}
       {h.kind === "unknown" ? <p>{k.unknown(l)}</p> : (
-      <ListOr l={l} items={row.history} empty={k.noHistory(l)}>
+      <ListOr l={l} items={items} empty={k.noHistory(l)}>
         {(list) => (
           <div className="live-table">
             <table className="p03-table">
@@ -136,11 +141,13 @@ function History({ l, row }: { l: Locale; row: SetRow }) {
         )}
       </ListOr>
       )}
+      {paged && <RowsFoot l={l} kind="history" rows={further} total={row.history_total} moves={false} more={k.rowsMoreHistory(l)} />}
     </section>
   );
 }
 
-export function SetsView({ l, page, selection }: Shared) {
+export function SetsView(shared: Shared) {
+  const { l, page, selection } = shared;
   const list = page.sets.rows;
   return (
     <ListOr l={l} items={list} empty={k.notConfigured(l)}>
@@ -186,7 +193,7 @@ export function SetsView({ l, page, selection }: Shared) {
                         {k.notConnectedLine(l)}: <Code l={l} value={row.begin} say={k.connection} /> · {k.abandonLine(l)}: <Code l={l} value={row.abandon} say={k.connection} />
                       </p>
                       {open && <PointFold l={l} row={row} open={current} />}
-                      <History l={l} row={row} />
+                      <History l={l} row={row} shared={shared} />
                     </td>
                   </tr>
                 </tbody>

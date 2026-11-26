@@ -3,7 +3,7 @@ import { standingKeys, type ArtifactRow, type ClassGroup, type Counts } from "..
 import { counted, plurals } from "./live-codes";
 import { k } from "./live-copy";
 import { artifactTarget, blockerPolicy, decisionLine, keptKey, pendingNow, refusedNow, rowId, runNumber } from "./live-model";
-import { Code, ListOr, MoreLine, Rich, Stamp, href, ltr } from "./live-format";
+import { Code, ItemsFoot, ListOr, MoreLine, Rich, Stamp, href, ltr } from "./live-format";
 import { RowNote, useOpen, type Shared } from "./LiveCommand";
 import { HoldCommand, itemContext } from "./LiveHoldForm";
 
@@ -117,13 +117,13 @@ function Group({ g, ...shared }: Shared & { g: ClassGroup }) {
         <h3 id={head}><Code l={l} value={g.class} say={k.className} /></h3>
         <span className="p04-muted">{g.total === null ? k.unknown(l) : counted(l, g.total, plurals.items)}</span>
       </div>
-      <Strip l={l} counts={g.counts} keys={standingKeys} label={k.standing} cls="p04-strip-7" />
+      <Strip l={l} counts={g.counts} keys={standingKeys} label={k.standing} cls="p04-strip-8" />
       <p className="p04-small live-quiet p04-usage">
         {k.usage(l)}: <Code l={l} value={g.usage} say={k.connection} /> · {k.growth(l)}: <Code l={l} value={g.growth} say={k.connection} /> · {k.bytes(l)}:{" "}
         <Code l={l} value={g.bytes} say={k.connection} />
       </p>
       {g.population !== "registered_sample_artifacts" && <p className="p04-small"><Rich text={k.populationNote(l, g.population)} /></p>}
-      <MoreLine l={l} more={g.more} total={g.total} forms={plurals.showingOf} />
+      {!shared.listOf && <MoreLine l={l} more={g.more} total={g.total} forms={plurals.showingOf} />}
       {g.artifacts === null ? (
         <p className="live-empty">{k.unknown(l)}</p>
       ) : g.artifacts.length === 0 ? (
@@ -150,6 +150,7 @@ function Group({ g, ...shared }: Shared & { g: ClassGroup }) {
           </table>
         </div>
       )}
+      {shared.listOf && <ItemsFoot l={l} kind="items" list={shared.listOf(g.class, g.next)} shown={g.artifacts?.length ?? 0} total={g.total} of={head} />}
     </section>
   );
 }

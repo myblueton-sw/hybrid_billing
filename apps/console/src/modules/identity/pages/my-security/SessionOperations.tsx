@@ -10,6 +10,10 @@ import { sq } from "./query-copy";
 import { useScopedRead, type ScopedValue } from "./scoped-read";
 import "./end.css";
 
+export function operationFailure(error: unknown): "unavailable" | "unread" {
+  return error instanceof AdminError && (error.code === "unsupported_command" || error.code === "operation_mismatch") ? "unavailable" : "unread";
+}
+
 export function summarySentence(l: Locale, op: SessionOperation): string {
   if (op.state === "unconfirmed" || op.ended_count === null || op.cleanup === null) return e.titleUnknown(l);
   if (op.ended_count === 0) return e.completeNone(l);
@@ -83,6 +87,7 @@ function OperationCard({ l,api,op,generation,onEnd,locked,onSignedOut,idPrefix =
     <div className="live-buttons"><button type="button" className="live-secondary" aria-expanded={open && view === "results"} onClick={() => { setView("results");setOpen(current => view !== "results" || !current); }}>{sq.results(l)}</button>
       {op.kind === "others" && op.not_included_count !== null && op.not_included_count > 0 && <button type="button" className="live-secondary" aria-expanded={open && view === "not_included"} onClick={() => { setView("not_included");setOpen(current => view !== "not_included" || !current); }}>{sq.notIncluded(l)}</button>}</div>
     {open && op.state !== "unconfirmed" && <OperationRows l={l} api={api} op={op} generation={generation} view={view} onEnd={onEnd} locked={locked} onSignedOut={onSignedOut} />}
+    {open && op.state === "unconfirmed" && <p role="status">{sq.resultsUnconfirmed(l)}</p>}
   </section></li>;
 }
 
@@ -119,7 +124,7 @@ export default function SessionOperations({ l,api,refreshKey,onEnd,locked,onSign
     return () => clearTimeout(timer);
   },[page,busy,after,failure]);
   return <section className="mysec-ends" aria-labelledby="mysec-ends-title" aria-busy={busy}>
-    <div className="live-toolbar"><div><h3 id="mysec-ends-title">{e.endsTitle(l)}</h3>{page && <><p className="live-meta">{sq.totalOps(l,page.accepted_count)}</p><p className="mysec-checked">{e.checkedAt(l,whenSeconds(l,page.reference_at))}</p></>}</div><button type="button" className="live-secondary" disabled={busy} onClick={() => load()}>{e.checkAgain(l)}</button></div>
+    <div className="live-toolbar"><div><h3 id="mysec-ends-title">{e.endsTitle(l)}</h3>{page && <><p className="live-meta">{sq.totalOps(l,page.accepted_count)}</p><p className="mysec-checked">{e.checkedAt(l,whenSeconds(l,page.reference_at))}</p></>}</div><button type="button" className="live-secondary" aria-disabled={busy || undefined} onClick={() => { if (!busy) load(); }}>{e.checkAgain(l)}</button></div>
     {busy && <p role="status">{e.reading(l)}</p>}{failure !== null && <div role="alert"><p>{failure instanceof AdminError && failure.code === "revision_conflict" ? sq.expired(l) : m.loadFailed(l)}</p><button type="button" className="live-secondary" onClick={() => load()}>{sq.first(l)}</button></div>}
     {stopped && page && <p role="status">{e.stillRunning(l,whenSeconds(l,page.reference_at))}</p>}
     {page && <><ol className="mysec-ops">{page.rows.map(op => <OperationCard key={op.operation} l={l} api={api} op={op} generation={page.generation} onEnd={onEnd} locked={locked} onSignedOut={onSignedOut} />)}</ol>
@@ -133,20 +138,20 @@ export function ReferencedOperation({ l,api,reference,onEnd,locked,onSignedOut }
   const [reload,setReload] = useState(0);
   const key = useMemo(() => ({ api,reference,reload }),[api,reference,reload]);
   const guard = useScopedRead(key);
-  const [data,setData] = useState<ScopedValue<{ op?: SessionOperation; failed?: boolean }> | null>(null);
+  const [data,setData] = useState<ScopedValue<{ op?: SessionOperation; failed?: "unavailable" | "unconfirmed" | "unread" }> | null>(null);
   const value = data?.scope === guard.token ? data.value : null;
   const title = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
     const valid = guard.begin();
     api.sessionOperation(reference).then(op => {
       if (!valid()) return;
-      if (op.operation !== reference || op.kind !== "others" || op.state === "unconfirmed") throw new AdminError("invalid");
-      setData({ scope:guard.token,value:{ op } });
-    }).catch(error => { if (!valid()) return;setData({ scope:guard.token,value:{ failed:true } });if (error instanceof AdminError && error.failure === "unauthenticated") onSignedOut(); });
+      if (op.operation !== reference || op.kind !== "others") throw new AdminError("invalid", [], 0, "", "operation_mismatch");
+      setData({ scope:guard.token,value:op.state === "unconfirmed" ? { failed:"unconfirmed" } : { op } });
+    }).catch(error => { if (!valid()) return;setData({ scope:guard.token,value:{ failed:operationFailure(error) } });if (error instanceof AdminError && error.failure === "unauthenticated") onSignedOut(); });
   },[guard]);
   useEffect(() => { if (value) title.current?.focus(); },[value]);
   return <section className="mysec-referenced-operation" aria-labelledby="mysec-referenced-title"><h3 id="mysec-referenced-title" tabIndex={-1} ref={title}>{sq.viewOperation(l)}</h3>
-    {!value && <p role="status">{e.reading(l)}</p>}{value?.failed && <p role="alert">{sq.operationUnavailable(l)}</p>}
+    {!value && <p role="status">{e.reading(l)}</p>}{value?.failed && <p role={value.failed === "unconfirmed" ? "status" : "alert"}>{value.failed === "unconfirmed" ? sq.operationUnconfirmed(l) : value.failed === "unread" ? sq.operationUnread(l) : sq.operationUnavailable(l)}</p>}
     <button type="button" className="live-secondary" disabled={!value} onClick={() => setReload(n => n+1)}>{e.checkAgain(l)}</button>
     {value?.op && <ol className="mysec-ops"><OperationCard idPrefix="mysec-referenced-op" l={l} api={api} op={value.op} generation={JSON.stringify([value.op.state,value.op.cleanup])} onEnd={onEnd} locked={locked} onSignedOut={onSignedOut} /></ol>}
   </section>;

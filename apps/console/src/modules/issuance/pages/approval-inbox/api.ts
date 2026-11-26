@@ -91,6 +91,8 @@ function principal(v: unknown) {
   );
 }
 function record(r: ApprovalRecord) {
+  const hasProvenance = !!r && Object.hasOwn(r, "requester") && Object.hasOwn(r, "policy_revision");
+  if (hasProvenance && (!principal(r.requester) || !Number.isSafeInteger(r.policy_revision) || Number(r.policy_revision) < 1)) return false;
   if (
     !exact(r, [
       "id",
@@ -106,6 +108,7 @@ function record(r: ApprovalRecord) {
       "erp",
       "evidence",
       "authority",
+      ...(hasProvenance ? ["requester", "policy_revision"] : []),
     ]) ||
     !id(r.id) ||
     !kinds.includes(r.kind) ||
@@ -149,7 +152,7 @@ function record(r: ApprovalRecord) {
           "erp",
         ]) &&
         /^[A-Z]{3}$/.test(a.currency) &&
-        ["net", "tax", "gross", "expense"].includes(a.basis) &&
+        ["net", "tax", "gross", "expense", "rated_candidate_total", "synthetic_reported_net_plus_tax_v1"].includes(a.basis) &&
         [a.base, a.candidate, a.difference, a.erp].every(
           (v) => v === null || validDecimal(v),
         ) &&
@@ -174,6 +177,7 @@ function record(r: ApprovalRecord) {
         r.kind === "final_erp_amount"))
   )
     return false;
+  if (r.amounts.some(a => a.basis === "synthetic_reported_net_plus_tax_v1") && r.kind !== "final_erp_amount") return false;
   const e = r.evidence;
   if (
     !exact(e, [
@@ -283,7 +287,7 @@ export function valid(d: Data, q: URLSearchParams): boolean {
       d.schema !== 1 ||
       d.numeric_format !== "decimal-strings-read-v1" ||
       d.read_only !== true ||
-      d.commands !== "unconnected" ||
+      !["unconnected", "financial_charge_v1", "financial_approval_v2"].includes(d.commands) ||
       d.source_mode !== "synthetic" ||
       !hash(d.auth_scope) ||
       !hash(d.snapshot) ||

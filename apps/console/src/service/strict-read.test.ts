@@ -70,7 +70,7 @@ test("self identity and session facts reject coercion while empty identities rem
   assert.deepEqual(await me(selfFixture), selfFixture);
   for (const patch of [{ identities: [{ method: 1, login: "l" }] }, { identities: [{ method: "local-password", login: null }] },
     { current_session: { ...selfFixture.current_session, current: "true" } }, { password_set: "false" }, { installation_administrator: "true" },
-    { idle_minutes: -1 }, { max_age_seconds: Number.MAX_SAFE_INTEGER + 1 }]) {
+    { idle_minutes: -1 }, { absolute_minutes: 0 }, { absolute_minutes: undefined }, { max_age_seconds: Number.MAX_SAFE_INTEGER + 1 }]) {
     await assert.rejects(me({ ...selfFixture, ...patch }), invalid);
   }
   for (const patch of [{ current_session:null }, { current_session:{ ...selfFixture.current_session,state:"future" } }, { recorded_session_count:1.5 }, { accepted_operation_count:"0" }]) {

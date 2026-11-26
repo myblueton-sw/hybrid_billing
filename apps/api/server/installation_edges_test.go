@@ -122,8 +122,8 @@ func TestInstallationProposalPageIsBounded(t *testing.T) {
 			Change: installer.Change{Kind: installer.ChangeDestination}}})
 	}
 	rows := f.installation(f.as(AdminLogin)).body["proposals"].([]any)
-	if len(rows) != installShown || fmt.Sprint(rows[0].(map[string]any)["number"]) != "159" || fmt.Sprint(rows[installShown-1].(map[string]any)["number"]) != "110" {
-		t.Errorf("page %d", len(rows))
+	if n, first, waiting, oldest := listedShape(rows); n != installShown || first != 159 || waiting == 0 || oldest != 110+waiting {
+		t.Errorf("page %d first %d waiting %d oldest closed %d", n, first, waiting, oldest)
 	}
 }
 
@@ -292,9 +292,23 @@ func TestInstallTargetsAndPlanChoiceBoundaries(t *testing.T) {
 	entries := f.s.install.entries
 	plan := &installEntry{view: installer.ProposalView{Number: 99, State: installer.ProposalPending, Change: installer.Change{Kind: installer.ChangePlan,
 		Acceptance: installer.Acceptance{Version: "0.9.0"}}}}
-	f.s.install.entries = []*installEntry{plan}
-	if got := f.s.planTarget(""); got != "0.9.0" {
-		t.Errorf("plan target %q", got)
+	hidden := []*installEntry{plan}
+	for n := 0; n < installShown+5; n++ {
+		hidden = append(hidden, &installEntry{view: installer.ProposalView{Number: uint64(100 + n), State: installer.ProposalApplied, Change: installer.Change{Kind: installer.ChangePlan,
+			Acceptance: installer.Acceptance{Version: "0.8.0"}}}})
 	}
+	f.s.install.entries = hidden
+	if got, basis := f.s.planTarget(""); got != "0.9.0" || basis != "pending_plan" {
+		t.Errorf("plan target %q basis %q with the pending plan older than the rows a read shows", got, basis)
+	}
+	f.s.install.entries = nil
+	if got, basis := f.s.planTarget(""); got == "" || basis != "newest_release" {
+		t.Errorf("plan target %q basis %q without a pending plan", got, basis)
+	}
+	f.s.install.releases = nil
+	if got, basis := f.s.planTarget(""); got != "" || basis != "" {
+		t.Errorf("plan target %q basis %q without releases", got, basis)
+	}
+	f.s.install.releases = saved
 	f.s.install.entries = entries
 }

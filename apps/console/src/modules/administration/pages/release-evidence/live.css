@@ -627,6 +627,11 @@
 .p05-hw {
   margin-block-end: 32px;
 }
+.p05-hw-item + .p05-hw-item {
+  margin-block-start: 16px;
+  padding-block-start: 16px;
+  border-block-start: 1px solid var(--border-row);
+}
 .p05-strip {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1090,4 +1095,93 @@
   .planning-main:has(.p05-live) .planning-tabs > :last-child:nth-child(odd) {
     grid-column: 1 / -1;
   }
+}
+.p05-live .p05-req-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px 16px;
+  margin-block-end: 16px;
+}
+.p05-live .p05-req-form .service-field {
+  margin: 0;
+  inline-size: min(100%, 240px);
+}
+.p05-live .p05-req-form input,
+.p05-live .p05-req-form select {
+  inline-size: 100%;
+  block-size: 44px;
+  box-sizing: border-box;
+}
+.p05-live .p05-req-form button {
+  inline-size: auto;
+  min-block-size: 44px;
+  white-space: nowrap;
+}
+.p05-live .p05-req-more {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin-block-start: 16px;
+}
+.p05-live .p05-req-more p {
+  margin: 0;
+  max-inline-size: 68ch;
+}
+.p05-live .p05-req-more .p05-req-more-button {
+  inline-size: auto;
+  min-block-size: 44px;
+}
+.p05-live .p05-req-count {
+  margin-block-start: 12px;
+}
+.p05-live .p05-list-foot:not(:empty) {
+  padding-block-start: 24px;
+  border-block-start: 1px solid var(--border-row);
+}
+.p05-live .p05-hw-foot:not(:empty) {
+  margin-block-start: 32px;
+}
+.p05-form .p05-replacement-status {
+  margin-block: 8px 0;
+}
+.p05-form .p05-replacement-search-label {
+  display: block;
+  margin-block: 12px 4px;
+  font-size: 14px;
+  font-weight: 400;
+}
+.p05-form .p05-replacement-search {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  max-inline-size: 560px;
+}
+.p05-form .p05-replacement-search input {
+  flex: 1 1 24ch;
+  min-inline-size: 0;
+  min-block-size: 44px;
+}
+.p05-form .p05-replacement-search input::-webkit-search-cancel-button {
+  appearance: none;
+}
+.p05-form .p05-replacement-search-button {
+  min-block-size: 44px;
+}
+.p05-form .p05-replacement-failed {
+  margin-block-start: 8px;
+}
+.p05-form .p05-replacement-failed p {
+  margin: 0 0 8px;
+  font-size: 16px;
+}
+.p05-live .p05-replacement-detail {
+  margin-block: 2px 0;
+}
+.p05-live .p05-form-title,
+.p05-live .p05-confirm .p05-confirm-title {
+  inline-size: fit-content;
+  max-inline-size: 100%;
 }

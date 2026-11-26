@@ -39,10 +39,19 @@ func (walk *serviceWalk) nextService() (identity.ServiceInfo, error) {
 	return batch[0], nil
 }
 
-func (s *Server) serviceCredentialView(service identity.ServiceInfo, info identity.CredentialInfo, reference time.Time) serviceCredentialRow {
+func (s *Server) serviceCredentialView(actor identity.Verifier, service identity.ServiceInfo, info identity.CredentialInfo, reference time.Time) serviceCredentialRow {
 	now := s.clock()
 	current := credentialState(info, now)
 	row := serviceCredentialRow{credentialRow: credentialRow{ID: info.ID, NotBefore: info.Validity.NotBefore.UTC().Format(time.RFC3339Nano), NotAfter: info.Validity.NotAfter.UTC().Format(time.RFC3339Nano), State: credentialState(info, reference), Usable: current == "active" && !now.Before(info.Validity.NotBefore) && service.State == identity.Active}, Service: service.ID, ServiceState: serviceState(service.State), CurrentState: current, Observed: now.UTC().Format(time.RFC3339Nano)}
+	row.Replaces, row.ReplacedBy = info.Replaces, info.ReplacedBy
+	switch {
+	case current == "active" && info.ReplacedBy != "":
+		row.Rotation = rotationEnding
+	case current == "active" && info.Replaces != "":
+		if _, replaced, err := s.identity.Workspace().Credential(actor, s.bootWorkspace, info.Replaces); err == nil && credentialState(replaced, now) == "active" {
+			row.Rotation = rotationReplacing
+		}
+	}
 	recorded, known := s.dir.collected[info.ID]
 	if current != "active" || !known || recorded.service != service.ID {
 		return row
@@ -124,7 +133,7 @@ func (walk *serviceWalk) credentials() ([]serviceCredentialRow, bool, error) {
 				if !walk.credentialMatches(service, info) {
 					continue
 				}
-				rows = append(rows, s.serviceCredentialView(service, info, walk.cursor.Reference))
+				rows = append(rows, s.serviceCredentialView(walk.actor, service, info, walk.cursor.Reference))
 				if err := walk.matched(); err != nil {
 					return nil, false, err
 				}

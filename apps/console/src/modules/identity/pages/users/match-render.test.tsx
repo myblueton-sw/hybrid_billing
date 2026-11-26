@@ -116,3 +116,67 @@ test("a fixed number below the counted lower bound says the count was a lower bo
   assert.ok(html.includes("(at least 11 when counted)"), html);
   for (const l of ["ko", "ar"] as Locale[]) assert.ok(renderToStaticMarkup(<FixedBar l={l} f={below} filters={noFilters} days={14} number="3" error={null} onPrepare={() => {}} onDiscard={() => {}} say={() => {}} />).includes("11"), l);
 });
+
+test("the fixed bar offers removal, shows the number removed, and in removal mode offers only removing and stopping", () => {
+  const off = { on: false, selected: 0, busy: false, note: "", onStart: () => {}, onCancel: () => {}, onRemove: () => {} };
+  const bar = (l: Locale, f: typeof fixed, removal: typeof off | undefined) =>
+    renderToStaticMarkup(<FixedBar l={l} f={f} filters={noFilters} days={14} number="3" error={null} onPrepare={() => {}} onDiscard={() => {}} say={() => {}} removal={removal} />);
+  for (const l of langs) {
+    const idle = bar(l, fixed, off);
+    assert.ok(idle.includes("m01-remove-open") && idle.includes(esc(m.removeMode(l))) && idle.includes("m01-prepare") && idle.includes("m01-discard-list"), l);
+    assert.ok(!idle.includes("m01-removed") && !idle.includes("m01-remove-send") && !idle.includes(esc(m.removeHint(l))), l);
+    assert.ok(idle.indexOf("m01-prepare") < idle.indexOf("m01-remove-open") && idle.indexOf("m01-remove-open") < idle.indexOf("m01-discard-list"), l);
+    assert.ok(!bar(l, fixed, undefined).includes("m01-remove-open"), l);
+    const some = bar(l, { ...fixed, chosen: 2 }, off);
+    assert.ok(some.includes(`<p class="m01-selnote m01-ink m01-removed" tabindex="-1">${esc(m.removedSoFar(l, 2))}</p>`), l);
+    const empty = bar(l, { ...fixed, chosen: 2 }, { ...off, on: true });
+    assert.ok(empty.includes(esc(m.removeHint(l))) && empty.includes(esc(m.removedSoFar(l, 2))) && empty.includes(esc(m.removeNone(l))) && !empty.includes(esc(m.removeSelected(l, 0))) && empty.includes(esc(m.removeCancel(l))), l);
+    assert.ok(/class="live-secondary m01-remove-send" aria-describedby="m01-remove-hint" aria-disabled="true"/.test(empty), l);
+    assert.ok(!empty.includes("m01-prepare") && !empty.includes("m01-discard-list") && !empty.includes("m01-remove-open"), l);
+    assert.ok(bar(l, fixed, { ...off, on: true }).includes(esc(m.removedSoFar(l, 0))), l);
+    const three = bar(l, fixed, { ...off, on: true, selected: 3 });
+    assert.ok(three.includes(esc(m.removeSelected(l, 3))) && !/m01-remove-send"[^>]*aria-disabled/.test(three), l);
+    const busy = bar(l, fixed, { ...off, on: true, selected: 3, busy: true });
+    assert.ok(busy.includes(esc(m.removing(l))) && /m01-remove-send"[^>]*aria-disabled="true"/.test(busy) && /m01-remove-cancel" aria-disabled="true"/.test(busy), l);
+    const told = bar(l, { ...fixed, chosen: 3 }, { ...off, note: `${m.removedNow(l, 3)} ${m.removedIgnored(l, 2)}` });
+    assert.ok(told.includes(`<p class="m01-selnote m01-removal-note">${esc(m.removedNow(l, 3))} ${esc(m.removedIgnored(l, 2))}</p>`) && !told.includes('m01-removal-note" role'), l);
+  }
+});
+
+test("the preview names people removed by choice as people who keep their access, and the reasons add up", () => {
+  for (const l of langs) {
+    const detail = detailOf({ job: { id: "bulk-revocation-7", state: "prepared", effect: "suspend_membership", preparer: "me", selection: "filter", matched: 10, chosen: 3, fixed_at: "2026-11-19T10:00:00Z",
+      fixed_revision: "r12", filter: { role: "member" }, counts: { targets: 6, excluded: 4 } }, impact: {}, exclusions: { self: 1, no_longer_matches: 1, chosen: 2 }, outside_scope: [] });
+    const html = renderToStaticMarkup(<PreviewBody l={l} api={api} prepared={{ detail, targets: null }} onMore={() => {}} />);
+    assert.ok(html.includes(`<dd>4<span class="m01-kept" data-kept="2">${esc(b.keptByYou(l, 2))}</span></dd>`), l);
+    assert.ok(html.includes(esc(b.reason(l, "chosen"))) && html.indexOf(esc(b.reason(l, "already_revoked"))) < html.indexOf(esc(b.reason(l, "chosen"))), l);
+    const none = detailOf({ job: { id: "bulk-revocation-8", state: "prepared", effect: "suspend_membership", preparer: "me", selection: "filter", matched: 10, fixed_at: "2026-11-19T10:00:00Z",
+      fixed_revision: "r12", filter: { role: "member" }, counts: { targets: 9, excluded: 1 } }, impact: {}, exclusions: { self: 1, chosen: 0 }, outside_scope: [] });
+    const plain = renderToStaticMarkup(<PreviewBody l={l} api={api} prepared={{ detail: none, targets: null }} onMore={() => {}} />);
+    assert.ok(!plain.includes("m01-kept") && plain.includes(esc(b.reason(l, "chosen"))), l);
+    const explicit = detailOf({ job: { id: "bulk-revocation-9", state: "prepared", effect: "suspend_membership", preparer: "me", counts: { targets: 2 } }, impact: {}, exclusions: {}, outside_scope: [] });
+    assert.ok(!renderToStaticMarkup(<PreviewBody l={l} api={api} prepared={{ detail: explicit, targets: null }} onMore={() => {}} />).includes(esc(b.reason(l, "chosen"))), l);
+    assert.notEqual(b.reason(l, "chosen"), "chosen");
+  }
+  const texts = (l: Locale) => [m.removeMode(l), m.removeSelected(l, 2), m.removeCancel(l), m.removeHint(l), m.removedSoFar(l, 2), m.removedNow(l, 2), m.removedAlready(l, 2), m.removedIgnored(l, 2), m.removeReason(l), m.removing(l),
+    m.blockedRemove(l), m.backToList(l), m.fixedNoChecks(l), b.keptByYou(l, 2), b.reason(l, "chosen"), m.removeNone(l), b.keepRow(l, "x"), b.keepLoaded(l, 2), b.selfKept(l)];
+  assert.equal(new Set(langs.flatMap(texts)).size, 57);
+  assert.deepEqual([m.removedNow("en", 1), m.removedAlready("en", 1), m.removedIgnored("en", 1), b.keptByYou("en", 1)],
+    ["1 person excluded; they keep their access.", "1 person was already excluded.", "1 person was not in the list and was left as is.", "including 1 you excluded, who keeps their access"]);
+  assert.ok(m.removedIgnored("en", 2).includes("people were") && m.removedNow("ar", 1) !== m.removedNow("ar", 2) && m.removedNow("ar", 2) !== m.removedNow("ar", 3) && m.removedNow("ar", 3) !== m.removedNow("ar", 11));
+});
+
+test("in removal mode the checkboxes say that the person keeps access, and the caller's own cell fits the mode", async () => {
+  const { CheckCell, HeaderCheck } = await import("./Selection");
+  const row = { user_id: "u-1", login: "ann@example.invalid" } as never;
+  for (const l of langs) {
+    const keep = renderToStaticMarkup(<table><tbody><tr><CheckCell l={l} u={row} self="me" selected={new Set()} atLimit={false} onToggle={() => {}} keeping /></tr></tbody></table>);
+    assert.ok(keep.includes(esc(b.keepRow(l, "ann@example.invalid"))) && !keep.includes(esc(b.selectRow(l, "ann@example.invalid"))) && keep.includes('data-keep="true"'), l);
+    const pick = renderToStaticMarkup(<table><tbody><tr><CheckCell l={l} u={row} self="me" selected={new Set()} atLimit={false} onToggle={() => {}} /></tr></tbody></table>);
+    assert.ok(pick.includes(esc(b.selectRow(l, "ann@example.invalid"))) && !pick.includes("data-keep"), l);
+    const mine = renderToStaticMarkup(<table><tbody><tr><CheckCell l={l} u={{ user_id: "me", login: "me@example.invalid" } as never} self="me" selected={new Set()} atLimit={false} onToggle={() => {}} keeping /></tr></tbody></table>);
+    assert.ok(mine.includes(esc(b.selfKept(l))) && !mine.includes(esc(b.selfReason(l))) && !mine.includes("checkbox"), l);
+    const head = renderToStaticMarkup(<table><thead><tr><HeaderCheck l={l} selected={new Set()} loaded={["u-1", "u-2"]} onAll={() => {}} cell keeping /></tr></thead></table>);
+    assert.ok(head.includes(esc(b.keepLoaded(l, 2))) && !head.includes(esc(b.selectLoaded(l, 2))), l);
+  }
+});

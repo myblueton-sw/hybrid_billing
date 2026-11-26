@@ -1,3 +1,4 @@
+import { keptFactsOf, type KeptFacts } from "./kept";
 import { count, hint } from "./integrations";
 
 export type Person = { id: string; login: string | null; directory: boolean | null } | null;
@@ -17,6 +18,7 @@ export type Columns = {
 };
 
 export type PathRow = {
+  number: number | null;
   id: string;
   provider: string;
   contract: string;
@@ -63,6 +65,7 @@ export type RequirementRow = {
   design: string;
   commit: string | null;
   retired: boolean | null;
+  state: string | null;
   replacement: string | null;
   states: Record<string, string> | null;
   builds_more: boolean | null;
@@ -85,6 +88,7 @@ export type Gate = {
 export type BuildRow = { build: string; commit: string; order: number | null };
 export type HarnessRow = { module: string; id: string; revocation: string };
 export type ResultRow = {
+  number: number | null;
   namespace: string;
   test: string;
   build: string;
@@ -98,7 +102,7 @@ export type ResultRow = {
   not_counted_reason: string | null;
 };
 
-export type HardwareRow = { id: string; cpus: number | null; memory_mib: number | null; disk_gib: number | null; storage: string; spec: string };
+export type HardwareRow = { number: number | null; id: string; cpus: number | null; memory_mib: number | null; disk_gib: number | null; storage: string; spec: string };
 
 export type Budget = {
   id: string;
@@ -125,6 +129,7 @@ export type RunRow = {
 };
 
 export type ProfileRow = {
+  number: number | null;
   target: string;
   id: string;
   gate: string;
@@ -169,11 +174,11 @@ export type EvidencePage = {
   now: string;
   state: string;
   candidate: Candidate;
-  matrix: { origin: string; paths: List<PathRow> };
-  requirements: { origin: string; requirements: List<RequirementRow>; gate: Gate };
-  artifacts: { origin: string; builds: List<BuildRow>; harnesses: List<HarnessRow>; results: List<ResultRow>; files: string; logs: string; environment: string; content: string };
-  load: { origin: string; hardware: List<HardwareRow>; profiles: List<ProfileRow>; readiness: Readiness; measurement: string; planning_targets: string };
-  decisions: { origin: string; proposals: List<Proposal>; support_decisions: string; activation_review: string; ledger: string };
+  matrix: { origin: string; paths: List<PathRow>; paths_next: string | null };
+  requirements: { origin: string; requirements: List<RequirementRow>; next: string; gate: Gate };
+  artifacts: { origin: string; builds: List<BuildRow>; builds_next: string | null; harnesses: List<HarnessRow>; results: List<ResultRow>; results_next: string | null; files: string; logs: string; environment: string; content: string };
+  load: { origin: string; hardware: List<HardwareRow>; hardware_next: string | null; profiles: List<ProfileRow>; profiles_next: string | null; readiness: Readiness; measurement: string; planning_targets: string };
+  decisions: { origin: string; proposals: List<Proposal>; proposal_history: KeptFacts | null; support_decisions: string; activation_review: string; ledger: string };
 };
 
 type Raw = Record<string, unknown>;
@@ -225,6 +230,7 @@ export function problemsOf(v: unknown): Problem[] | null {
 export function pathOf(r: Raw): PathRow {
   const c = obj(r.columns);
   return {
+    number: count(r.number),
     id: str(r.id),
     provider: str(r.provider),
     contract: str(r.contract),
@@ -280,6 +286,7 @@ export function requirementOf(r: Raw): RequirementRow {
     design: str(r.design),
     commit: opt(r.commit),
     retired: flag(r.retired),
+    state: opt(r.state),
     replacement: opt(r.replacement),
     states: statesOf(r.states),
     builds_more: flag(r.builds_more),
@@ -299,6 +306,7 @@ export function gateOf(v: unknown): Gate {
 
 export function resultOf(r: Raw): ResultRow {
   return {
+    number: count(r.number),
     namespace: str(r.namespace),
     test: str(r.test),
     build: str(r.build),
@@ -348,6 +356,7 @@ export function profileOf(r: Raw): ProfileRow {
   const retire = hint(r.can_retire, r.retire_blocked);
   const n = count(r.retire);
   return {
+    number: count(r.number),
     target: str(r.target),
     id: str(r.id),
     gate: str(r.gate),
@@ -431,13 +440,15 @@ export function evidenceOf(body: Raw): EvidencePage {
     now: str(body.now),
     state: str(body.state),
     candidate: candidateOf(body.candidate),
-    matrix: { origin: str(m.origin), paths: listOf(m.paths, pathOf) },
-    requirements: { origin: str(q.origin), requirements: listOf(q.requirements, requirementOf), gate: gateOf(q.gate) },
+    matrix: { origin: str(m.origin), paths: listOf(m.paths, pathOf), paths_next: typeof m.paths_next === "string" ? m.paths_next : null },
+    requirements: { origin: str(q.origin), requirements: listOf(q.requirements, requirementOf), next: str(q.next), gate: gateOf(q.gate) },
     artifacts: {
       origin: str(a.origin),
       builds: listOf(a.builds, (x) => ({ build: str(x.build), commit: str(x.commit), order: count(x.order) })),
+      builds_next: typeof a.builds_next === "string" ? a.builds_next : null,
       harnesses: listOf(a.harnesses, (x) => ({ module: str(x.module), id: str(x.id), revocation: str(x.revocation) })),
       results: listOf(a.results, resultOf),
+      results_next: typeof a.results_next === "string" ? a.results_next : null,
       files: str(a.files),
       logs: str(a.logs),
       environment: str(a.environment),
@@ -445,12 +456,102 @@ export function evidenceOf(body: Raw): EvidencePage {
     },
     load: {
       origin: str(ld.origin),
-      hardware: listOf(ld.hardware, (x) => ({ id: str(x.id), cpus: count(x.cpus), memory_mib: count(x.memory_mib), disk_gib: count(x.disk_gib), storage: str(x.storage), spec: str(x.spec) })),
+      hardware: listOf(ld.hardware, hardwareOf),
       profiles: listOf(ld.profiles, profileOf),
+      profiles_next: typeof ld.profiles_next === "string" ? ld.profiles_next : null,
+      hardware_next: typeof ld.hardware_next === "string" ? ld.hardware_next : null,
       readiness: readinessOf(ld.readiness),
       measurement: str(ld.measurement),
       planning_targets: str(ld.planning_targets),
     },
-    decisions: { origin: str(d.origin), proposals: listOf(d.proposals, proposalOf), support_decisions: str(d.support_decisions), activation_review: str(d.activation_review), ledger: str(d.ledger) },
+    decisions: { origin: str(d.origin), proposals: listOf(d.proposals, proposalOf), proposal_history: isRow(d.proposal_history) ? keptFactsOf(d.proposal_history) : null, support_decisions: str(d.support_decisions), activation_review: str(d.activation_review), ledger: str(d.ledger) },
   };
+}
+
+export type RequirementsQuery = { after?: string; q?: string; state?: string; retired?: string; targets?: string[] };
+export type RequirementsAnswer = { rows: RequirementRow[]; next: string; matching: number; total: number };
+
+export function requirementsPath(query: RequirementsQuery): string {
+  const q = new URLSearchParams();
+  if (query.targets) q.set("target", query.targets.join(","));
+  else {
+    if (query.after) q.set("after", query.after);
+    if (query.q) q.set("q", query.q);
+    if (query.state) q.set("state", query.state);
+    if (query.retired) q.set("retired", query.retired);
+  }
+  const text = q.toString();
+  return "/release-evidence/requirements" + (text ? "?" + text : "");
+}
+
+export function requirementsAnswerOf(body: Raw): RequirementsAnswer | null {
+  const whole = (v: unknown): number | null => (typeof v === "number" && Number.isInteger(v) && v >= 0 ? v : null);
+  const matching = whole(body.matching);
+  const total = whole(body.total);
+  if (!Array.isArray(body.requirements) || typeof body.next !== "string" || matching === null || total === null) return null;
+  return { rows: body.requirements.filter(isRow).map(requirementOf), next: body.next, matching, total };
+}
+
+export function resultsPageOf(body: Raw): { rows: ResultRow[]; next: string; total: number } | null {
+  const total = count(body.total);
+  if (!Array.isArray(body.results) || typeof body.next !== "string" || total === null) return null;
+  return { rows: body.results.filter(isRow).map(resultOf), next: body.next, total };
+}
+
+export function buildsPageOf(body: Raw): { rows: BuildRow[]; next: string; total: number } | null {
+  const total = count(body.total);
+  if (!Array.isArray(body.builds) || typeof body.next !== "string" || total === null) return null;
+  return { rows: body.builds.filter(isRow).map((x) => ({ build: str(x.build), commit: str(x.commit), order: count(x.order) })), next: body.next, total };
+}
+
+export function pathsPath(query: { after?: string; ids?: string[] }): string {
+  const q = new URLSearchParams();
+  if (query.ids) q.set("id", query.ids.join(","));
+  else {
+    q.set("limit", "50");
+    if (query.after) q.set("after", query.after);
+  }
+  return "/release-evidence/paths?" + q.toString();
+}
+
+export function pathsAnswerOf(body: Raw): { rows: PathRow[]; next: string; total: number } | null {
+  const total = count(body.total);
+  if (!Array.isArray(body.paths) || typeof body.next !== "string" || total === null) return null;
+  return { rows: body.paths.filter(isRow).map(pathOf), next: body.next, total };
+}
+
+export function hardwareOf(x: Raw): HardwareRow {
+  return { number: count(x.number), id: str(x.id), cpus: count(x.cpus), memory_mib: count(x.memory_mib), disk_gib: count(x.disk_gib), storage: str(x.storage), spec: str(x.spec) };
+}
+
+export function hardwarePath(after: string): string {
+  return "/release-evidence/hardware?" + new URLSearchParams({ limit: "50", after }).toString();
+}
+
+export function hardwareAnswerOf(body: Raw): { rows: HardwareRow[]; next: string; total: number } | null {
+  const total = count(body.total);
+  if (!Array.isArray(body.hardware) || typeof body.next !== "string" || total === null) return null;
+  return { rows: body.hardware.filter(isRow).map(hardwareOf), next: body.next, total };
+}
+
+export function profilesPath(query: { after?: string; targets?: string[] }): string {
+  const q = new URLSearchParams();
+  if (query.targets) q.set("target", query.targets.join(","));
+  else {
+    q.set("limit", "50");
+    if (query.after) q.set("after", query.after);
+  }
+  return "/release-evidence/profiles?" + q.toString();
+}
+
+export function replacementsAnswerOf(body: Raw): { rows: TargetRow[]; matching: number; more: boolean } | null {
+  const matching = count(body.matching);
+  if (!Array.isArray(body.replacements) || matching === null || typeof body.more !== "boolean") return null;
+  return { rows: body.replacements.filter(isRow).map((x) => ({ target: str(x.target), label: str(x.label) })), matching, more: body.more };
+}
+
+export function profilesAnswerOf(body: Raw): { rows: ProfileRow[]; next: string; total: number } | null {
+  const total = count(body.total);
+  if (!Array.isArray(body.profiles) || typeof body.next !== "string" || total === null) return null;
+  return { rows: body.profiles.filter(isRow).map(profileOf), next: body.next, total };
 }

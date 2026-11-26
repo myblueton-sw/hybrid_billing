@@ -40,13 +40,39 @@ func (r *Registry) current(class string) *PolicyView {
 	return &list[len(list)-1]
 }
 
-func dueUnder(a *artifact, days int, t time.Time) bool {
-	return !a.view.Anchor.Add(time.Duration(days) * day).After(t)
+func (r *Registry) anchor(a *artifact) (time.Time, bool) {
+	at := a.view.Anchor
+	for _, id := range r.guards[a.view.ID] {
+		x := r.artifacts[id]
+		if !x.deleted {
+			return time.Time{}, false
+		}
+		for _, when := range x.storeAt {
+			if when.After(at) {
+				at = when
+			}
+		}
+	}
+	return at, true
+}
+
+func (r *Registry) guarding(a *artifact) bool {
+	for _, id := range r.guards[a.view.ID] {
+		if x := r.artifacts[id]; !x.deleted || !r.complete(x) {
+			return true
+		}
+	}
+	return false
+}
+
+func (r *Registry) dueUnder(a *artifact, days int, t time.Time) bool {
+	at, settled := r.anchor(a)
+	return settled && !at.Add(time.Duration(days)*day).After(t)
 }
 
 func (r *Registry) due(a *artifact, t time.Time) bool {
 	p := r.current(a.view.Class)
-	return p != nil && dueUnder(a, p.Policy.Period+p.Policy.Grace, t)
+	return p != nil && r.dueUnder(a, p.Policy.Period+p.Policy.Grace, t)
 }
 
 func (r *Registry) shortening(c Change) bool {
@@ -69,7 +95,7 @@ func (r *Registry) impact(x Policy, at time.Time) ImpactView {
 	set := []string{}
 	for _, id := range r.ids(x.Class) {
 		a := r.artifacts[id]
-		if a.deleted || !dueUnder(a, x.Period+x.Grace, at) || cur != nil && dueUnder(a, cur.Policy.Period+cur.Policy.Grace, at) {
+		if a.deleted || !r.dueUnder(a, x.Period+x.Grace, at) || cur != nil && r.dueUnder(a, cur.Policy.Period+cur.Policy.Grace, at) {
 			continue
 		}
 		set = append(set, id)
@@ -79,6 +105,8 @@ func (r *Registry) impact(x Policy, at time.Time) ImpactView {
 		switch {
 		case r.held(a):
 			v.Held++
+		case r.guarding(a):
+			v.Guarding++
 		case r.requiredBy[id] > 0:
 			v.Referenced++
 		}
@@ -112,6 +140,8 @@ func (r *Registry) exclusion(a *artifact, t time.Time) string {
 	switch {
 	case r.held(a):
 		return OutcomeHeld
+	case r.guarding(a):
+		return OutcomeGuarding
 	case r.requiredBy[a.view.ID] > 0:
 		return OutcomeReferenced
 	case !r.due(a, t):

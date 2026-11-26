@@ -29,8 +29,16 @@
         "labelKo": "결정 이력"
       },
       {
+        "key": "drafts",
+        "labelKo": "발행 초안"
+      },
+      {
         "key": "recognition",
         "labelKo": "인식 주기·대사"
+      },
+      {
+        "key": "results",
+        "labelKo": "ERP 결과 근거"
       }
     ],
     "scopeKeys": [

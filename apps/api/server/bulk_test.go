@@ -41,7 +41,7 @@ func TestBulkRevocationFlow(t *testing.T) {
 	exclusions := detail.body["exclusions"].(map[string]any)
 	if impact["people"] != 2.0 || impact["administrators"] != 1.0 || impact["members"] != 1.0 || impact["installation_administrators"] != 1.0 ||
 		whole(impact["sessions"]) < 1 || impact["api_keys"] != "not_applicable" || impact["anchors_after"] != 2.0 || impact["other_workspaces"] != "not_changed" ||
-		len(impact["pending"].([]any)) != len(proposalStores) || exclusions["self"] != 1.0 || exclusions["not_found"] != 1.0 || exclusions["no_membership"] != 1.0 {
+		len(impact["pending"].([]any)) != len(proposalStores)+len(fallibleProposalStores) || exclusions["self"] != 1.0 || exclusions["not_found"] != 1.0 || exclusions["no_membership"] != 1.0 {
 		t.Errorf("detail %s", detail.raw)
 	}
 	targets := f.bulkRead(root, "/"+id+"/targets?limit=1")

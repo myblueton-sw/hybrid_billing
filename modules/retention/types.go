@@ -28,6 +28,7 @@ const (
 
 	Requires = "requires"
 	Mentions = "mentions"
+	Guards   = "guards"
 
 	ChangePolicy  = "policy"
 	ChangePlan    = "plan"
@@ -43,6 +44,7 @@ const (
 	OutcomeFailed     = "failed"
 	OutcomeHeld       = "held"
 	OutcomeReferenced = "referenced"
+	OutcomeGuarding   = "guarding"
 	OutcomeNotDue     = "not_due"
 	OutcomeStopped    = "stopped"
 
@@ -134,6 +136,7 @@ type ImpactView struct {
 	Tenants    map[string]int
 	Held       int
 	Referenced int
+	Guarding   int
 }
 
 type PolicyView struct {
@@ -231,6 +234,7 @@ type PreviewView struct {
 	More       bool
 	Held       int
 	Referenced int
+	Guarding   int
 }
 
 type Tombstone struct {

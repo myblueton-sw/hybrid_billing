@@ -106,18 +106,16 @@ export function proposeState(page: InstallationPage, me: string): ProposeState {
 }
 
 export function previewBasis(page: InstallationPage): "" | "pending" | "release" {
-  const v = page.preview.version;
-  if (!v) return "";
-  const newest = ordered(page.proposals).pending.find((x) => x.kind === "plan");
-  return newest && newest.summary.plan_version === v ? "pending" : "release";
+  if (!page.preview.version) return "";
+  return page.preview_basis === "pending_plan" ? "pending" : page.preview_basis === "newest_release" ? "release" : "";
 }
 
 export function latestAcceptance(list: InstallProposal[]): InstallProposal | null {
   return ordered(list).closed.find((x) => x.kind === "plan" && x.state === "applied") ?? null;
 }
 
-export function duplicateOf(before: InstallProposal[], number: string): boolean {
-  return /^[1-9][0-9]*$/.test(number) && before.some((x) => x.number !== null && String(x.number) === number);
+export function duplicateOf(existing: string | undefined): boolean {
+  return existing === "true";
 }
 
 export function showsEffects(state: string): boolean {

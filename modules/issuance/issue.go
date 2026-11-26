@@ -200,16 +200,9 @@ func (r *Registry) Issue(workspace, id string, actor Actor) (DocumentView, error
 		}
 		return DocumentView{}, refuse(ReasonAlreadyIssued)
 	}
-	v, err := r.seriesFor(s, k.view.Kind.ID)
+	v, a, err := r.internalAdmission(workspace, s, d, k, now)
 	if err != nil {
 		return DocumentView{}, err
-	}
-	a, err := r.admit(workspace, s, d, k, now)
-	if err != nil {
-		return DocumentView{}, err
-	}
-	if len(s.documents) >= r.limits.Documents {
-		return DocumentView{}, ErrLimit
 	}
 	n := d.reserved
 	if n == nil {
@@ -240,24 +233,9 @@ func (r *Registry) RecordExternal(workspace, id string, x External, actor Actor)
 		}
 		return DocumentView{}, refuse(ReasonAlreadyIssued)
 	}
-	switch {
-	case k.view.Kind.Class != ClassERP:
-		return DocumentView{}, refuse(ReasonNotERP)
-	case at.After(now):
-		return DocumentView{}, refuse(ReasonFutureInstant)
-	case d.current.Approver != "" && at.Before(d.current.At):
-		return DocumentView{}, refuse(ReasonBeforeApproval)
-	}
-	a, err := r.admit(workspace, s, d, k, at)
+	a, key, err := r.externalAdmission(workspace, s, d, k, x, now)
 	if err != nil {
 		return DocumentView{}, err
-	}
-	key := k.view.Kind.ID + "\x00" + x.Number
-	if s.external[key] {
-		return DocumentView{}, refuse(ReasonExternalInUse)
-	}
-	if len(s.documents) >= r.limits.Documents {
-		return DocumentView{}, ErrLimit
 	}
 	s.external[key] = true
 	return r.record(workspace, s, d, k, x.Number, a, true, actor, at), nil

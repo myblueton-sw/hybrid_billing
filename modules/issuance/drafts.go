@@ -278,6 +278,10 @@ func (r *Registry) lookupDraft(workspace, id string) (*space, *draft, error) {
 }
 
 func (r *Registry) Approve(workspace, id, digest string, actor Actor) (DraftView, error) {
+	return r.approve(workspace, id, digest, actor, nil)
+}
+
+func (r *Registry) approve(workspace, id, digest string, actor Actor, reviewed *reviewedApproval) (DraftView, error) {
 	now := r.enter()
 	defer r.leave()
 	if !validID(workspace) || !validID(id) || !validDigest(digest) || !actor.valid() {
@@ -307,6 +311,17 @@ func (r *Registry) Approve(workspace, id, digest string, actor Actor) (DraftView
 	refs, coverage, _, err := r.bind(workspace, k.view.Kind, v.Draft, now)
 	if err != nil {
 		return DraftView{}, err
+	}
+	if reviewed != nil {
+		if err := reviewed.matches(refs, coverage); err != nil {
+			return DraftView{}, err
+		}
+		if v.Approver != "" {
+			if err := reviewed.matches(v.References, v.Coverage); err != nil {
+				return DraftView{}, err
+			}
+			return viewDraft(v), nil
+		}
 	}
 	if v.Approver == "" || !sameReferences(v.References, refs) || !sameCoverage(v.Coverage, coverage) {
 		v.Approver, v.References, v.Coverage, v.At = actor.ID, refs, coverage, now

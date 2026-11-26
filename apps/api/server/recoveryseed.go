@@ -52,9 +52,10 @@ type recoveryEntry struct {
 type recoveryStore struct {
 	installs []*recoveryInstall
 	entries  []*recoveryEntry
+	dropped  map[string]int
 }
 
-func newRecoveryStore() *recoveryStore { return &recoveryStore{} }
+func newRecoveryStore() *recoveryStore { return &recoveryStore{dropped: map[string]int{}} }
 
 func (c *recoveryStore) install(id string) *recoveryInstall {
 	for _, i := range c.installs {
@@ -76,16 +77,30 @@ func (c *recoveryStore) entry(number uint64) *recoveryEntry {
 
 func (c *recoveryStore) keep(e *recoveryEntry) {
 	c.entries = append(c.entries, e)
-	if len(c.entries) <= installKept {
+	tenant := c.tenantOf(e)
+	if c.held(tenant) <= installKept {
 		return
 	}
 	for index, old := range c.entries {
-		if old.view.State != recovery.ProposalPending {
+		if old.view.State != recovery.ProposalPending && c.tenantOf(old) == tenant {
 			c.entries = append(c.entries[:index], c.entries[index+1:]...)
+			c.dropped[tenant]++
 			return
 		}
 	}
 }
+
+func (c *recoveryStore) of(tenant string) []*recoveryEntry {
+	out := []*recoveryEntry{}
+	for _, e := range c.entries {
+		if c.tenantOf(e) == tenant {
+			out = append(out, e)
+		}
+	}
+	return out
+}
+
+func (c *recoveryStore) held(tenant string) int { return len(c.of(tenant)) }
 
 func changeScope(c recovery.Change) string {
 	return firstOf(c.Installation.ID, c.Writer.Installation, c.External.Installation, c.Verifier.Installation, c.Begin.Installation, c.Unlock.Installation,

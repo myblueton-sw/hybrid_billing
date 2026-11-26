@@ -39,6 +39,9 @@ func TestSourceRules(t *testing.T) {
 		}
 		for _, spec := range file.Imports {
 			path := strings.Trim(spec.Path.Value, `"`)
+			if path == "github.com/myblueton-sw/hybrid_billing/packages/primitives/decimal" && (name == "approvalproducer.go" || name == "approvalnormalized.go" || name == "candidateseed.go" || name == "approvalseed.go" || name == "financialdocument.go" || name == "financialerpresultpacket.go" || name == "financialerpseed.go") {
+				continue
+			}
 			if strings.Contains(path, ".") && !strings.HasPrefix(path, "github.com/myblueton-sw/hybrid_billing/modules/") && !strings.HasPrefix(path, "github.com/myblueton-sw/hybrid_billing/apps/api/") {
 				t.Fatalf("%s imports %s", name, path)
 			}

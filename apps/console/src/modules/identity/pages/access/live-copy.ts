@@ -42,17 +42,17 @@ export const a = {
   noGrants: (l: Locale) =>
     t(
       l,
-      "No one has been granted access yet. Use Grant access to give a person access.",
-      "아직 권한을 부여받은 사용자가 없습니다. '권한 부여'로 사용자에게 권한을 주세요.",
-      "لم تُمنح أي صلاحية لأي شخص بعد. استخدم «منح الصلاحية» لمنح شخص صلاحية.",
+      "No one has been granted access yet. Use Request access to propose access for a person.",
+      "아직 권한을 부여받은 사용자가 없습니다. '권한 추가 요청'으로 사용자의 권한을 요청하세요.",
+      "لم تُمنح أي صلاحية لأي شخص بعد. استخدم «طلب صلاحية» لاقتراح منح صلاحية لشخص.",
     ),
   ceilingTitle: (l: Locale) => t(l, "Console ceiling", "콘솔 권한 상한", "الحد الأقصى لصلاحيات وحدة التحكم"),
   ceilingLead: (l: Locale) =>
     t(
       l,
-      "The console itself can use only these permissions. Grants to people can't go beyond them or run past their end date. They are set by the installation and can't be changed here.",
-      "콘솔 자체가 쓸 수 있는 권한은 이것뿐입니다. 사용자에게 주는 권한은 이 범위와 종료일을 넘을 수 없습니다. 설치 시 정해지며 이 화면에서 바꿀 수 없습니다.",
-      "لا تستطيع وحدة التحكم نفسها استخدام إلا هذه الصلاحيات، ولا يمكن أن تتجاوزها صلاحيات الأشخاص أو تمتد بعد تاريخ انتهائها. يحددها التثبيت ولا يمكن تغييرها هنا.",
+      "The console itself can use only these permissions. Access requested through this screen cannot exceed this scope or end date. Console permissions are set by the installation and cannot be changed here.",
+      "콘솔 자체가 쓸 수 있는 권한입니다. 이 화면에서 요청하는 권한은 이 범위와 종료일을 넘을 수 없습니다. 콘솔 권한은 설치 환경에서 정하며 여기에서 바꿀 수 없습니다.",
+      "هذه هي الصلاحيات التي تستطيع وحدة التحكم استخدامها. لا يمكن أن تتجاوز الصلاحيات المطلوبة عبر هذه الشاشة هذا النطاق أو تاريخ الانتهاء. يحدد التثبيت صلاحيات وحدة التحكم ولا يمكن تغييرها هنا.",
     ),
   colCustomer: (l: Locale) => t(l, "Customer", "고객", "العميل"),
   allCustomers: (l: Locale) => t(l, "All customers", "모든 고객", "جميع العملاء"),
@@ -78,8 +78,9 @@ export const a = {
       "لا يوجد شخص آخر يمكن منحه صلاحية. أضف عضوًا أولًا من «المستخدمون والوصول».",
     ),
   access: (l: Locale) => t(l, "Access", "권한", "الصلاحية"),
-  onlyPair: (l: Locale) =>
-    t(l, "The only access the console can grant in pre-launch.", "출시 전 서비스에서 콘솔이 부여할 수 있는 유일한 권한입니다.", "الصلاحية الوحيدة التي يمكن لوحدة التحكم منحها في خدمة ما قبل الإطلاق."),
+  accessGone: (l: Locale) => t(l, "The access you chose can no longer be granted. Choose access again.", "선택한 권한을 더 이상 부여할 수 없습니다. 권한을 다시 선택하세요.", "لم يعد بالإمكان منح الصلاحية التي اخترتها. اختر الصلاحية مجددًا."),
+  chooseDurationHint: (l: Locale) => t(l, "The maximum depends on the access you choose.", "최대 기간은 선택한 권한에 따라 다릅니다.", "يعتمد الحد الأقصى للمدة على الصلاحية المختارة."),
+  chooseAccess: (l: Locale) => t(l, "Choose access", "권한 선택", "اختر الصلاحية"),
   customer: (l: Locale) => t(l, "Customer", "고객", "العميل"),
   focusAll: (l: Locale) =>
     t(l, "Collected FOCUS data can't be limited to one customer.", "수집된 FOCUS 데이터는 특정 고객으로 제한할 수 없습니다.", "لا يمكن قصر بيانات FOCUS المجمّعة على عميل واحد."),
@@ -134,14 +135,15 @@ export const a = {
   customerOpt: (l: Locale) => t(l, "Customer ID (optional)", "고객 ID(선택)", "معرّف العميل (اختياري)"),
   customerOptHint: (l: Locale) =>
     t(l, "Leave empty to check data that isn't tied to one customer.", "특정 고객에 속하지 않는 데이터를 확인하려면 비워 두세요.", "اتركه فارغًا للتحقق من بيانات غير مرتبطة بعميل واحد."),
+  noKind: (l: Locale) => t(l, "No kind of data is listed, so an effect cannot be shown. Reload the page.", "데이터 종류가 목록에 없어 효력을 확인할 수 없습니다. 페이지를 다시 불러오세요.", "لا يوجد أي نوع بيانات مدرج، لذا لا يمكن عرض الأثر. أعد تحميل الصفحة."),
   showEffect: (l: Locale) => t(l, "Show effect", "효력 확인", "عرض الأثر"),
   previewLead: (l: Locale) => t(l, "This is a preview.", "미리 보기입니다.", "هذه معاينة فقط."),
   previewNote: (l: Locale) =>
     t(
       l,
-      "It checks only this person's grants and delegations. A real request also needs the console's own permission and a current sign-in by this person.",
-      "이 사용자의 권한 부여와 위임만 확인합니다. 실제 요청에는 콘솔 자체의 권한과 이 사용자의 유효한 로그인도 필요합니다.",
-      "تتحقق من صلاحيات هذا الشخص وتفويضاته فقط. يتطلب الطلب الفعلي أيضًا صلاحية وحدة التحكم نفسها وتسجيل دخول ساريًا لهذا الشخص.",
+      "It checks this person's grants and delegations for the console operations shown here. Those operations also need the console's own permission and a current sign-in. This preview does not determine whether the person can approve charges.",
+      "여기에 표시된 콘솔 작업에 대한 사용자의 권한 부여와 위임을 확인합니다. 실제 작업에는 콘솔 권한과 유효한 로그인도 필요합니다. 이 미리 보기로 청구 승인 가능 여부를 판단할 수는 없습니다.",
+      "تتحقق من صلاحيات هذا الشخص وتفويضاته لعمليات وحدة التحكم المعروضة هنا. تتطلب هذه العمليات أيضًا صلاحية وحدة التحكم وتسجيل دخول ساريًا. لا تحدد هذه المعاينة ما إذا كان الشخص يستطيع اعتماد الرسوم.",
     ),
   effectFor: (l: Locale, login: string) => t(l, `Effect for ${login}`, `${login}님의 효력`, `الأثر على ${login}`),
   noCustomer: (l: Locale) => t(l, "No customer", "고객 지정 없음", "دون عميل"),
@@ -219,7 +221,32 @@ export const a = {
 };
 
 const actions: Record<string, [string, string, string]> = {
+ propose_erp_result: ["Propose ERP result evidence", "ERP 결과 근거 제안", "اقتراح أدلة نتائج ERP"],
+ confirm_erp_result: ["Confirm ERP result evidence", "ERP 결과 근거 확인", "تأكيد أدلة نتائج ERP"],
+ revoke_erp_result: ["Revoke ERP result evidence", "ERP 결과 근거 철회", "إلغاء أدلة نتائج ERP"],
+ apply_erp_result: ["Apply ERP result evidence internally", "ERP 결과 근거 내부 반영", "تطبيق أدلة نتائج ERP داخلياً"],
+ register_issuance_channel: ["Register verification channel", "검증 채널 등록", "تسجيل قناة التحقق"],
+ admit_issuance_channel: ["Accept verification channel", "검증 채널 수락", "قبول قناة التحقق"],
+ request_issuance_protected_change: ["Request protected settings change", "보호된 설정 변경 요청", "طلب تغيير الإعدادات المحمية"],
+ verify_issuance_protected_change: ["Verify protected settings change", "보호된 설정 변경 검증", "التحقق من تغيير الإعدادات المحمية"],
+ approve_issuance_protected_change: ["Approve protected settings change", "보호된 설정 변경 승인", "اعتماد تغيير الإعدادات المحمية"],
+ record_issuance_term: ["Record payment terms", "납부 조건 기록", "تسجيل شروط الدفع"],
+ approve_issuance_term: ["Approve payment terms", "납부 조건 승인", "اعتماد شروط الدفع"],
+ bind_issuance_term: ["Apply payment terms to a contract", "계약에 납부 조건 적용", "تطبيق شروط الدفع على عقد"],
+ approve_issuance_term_binding: ["Approve applying payment terms to a contract", "계약에 납부 조건 적용 승인", "اعتماد تطبيق شروط الدفع على عقد"],
+ submit_issuance_draft: ["Submit issuance draft for approval", "발행 초안 승인 요청", "إرسال مسودة الإصدار للاعتماد"],
+ approve_issuance_draft: ["Approve issuance draft", "발행 초안 승인", "اعتماد مسودة الإصدار"],
+ propose_document_evidence: ["Propose document evidence", "문서 근거 제안", "اقتراح أدلة المستند"],
+ confirm_document_evidence: ["Confirm document evidence", "문서 근거 확인", "تأكيد أدلة المستند"],
+ revoke_document_evidence: ["Revoke document evidence", "문서 근거 철회", "إلغاء أدلة المستند"],
+ prepare_erp_record: ["Prepare internal ERP record", "내부 ERP 기록 준비", "إعداد سجل ERP داخلي"],
+ approve: ["Approve", "승인", "اعتماد"],
+ propose_pricing_policy: ["Propose pricing policy", "가격 정책 제안", "اقتراح سياسة التسعير"],
+ approve_pricing_policy: ["Approve pricing policy", "가격 정책 승인", "اعتماد سياسة التسعير"],
+ revoke_pricing_policy: ["Revoke pricing policy", "가격 정책 철회", "إلغاء سياسة التسعير"],
+ use_pricing_policy: ["Use pricing policy", "가격 정책 적용", "تطبيق سياسة التسعير"],
   view: ["View", "조회", "عرض"],
+  confirm_input: ["Confirm input data", "입력 데이터 확인", "تأكيد بيانات الإدخال"],
   view_cost: ["View cost", "원가 조회", "عرض التكلفة"],
   change_customer_policy: ["Change customer policy", "고객 정책 변경", "تغيير سياسة العميل"],
   change_selling_policy: ["Change selling policy", "판매 정책 변경", "تغيير سياسة البيع"],
@@ -228,9 +255,39 @@ const actions: Record<string, [string, string, string]> = {
   download: ["Download", "다운로드", "تنزيل"],
   deliver: ["Deliver", "전달", "تسليم"],
 };
-const kinds: Record<string, [string, string, string]> = { focus_data: ["Collected FOCUS data", "수집된 FOCUS 데이터", "بيانات FOCUS المجمّعة"] };
-const fields: Record<string, [string, string, string]> = { rows: ["Rows", "행", "الصفوف"] };
+const kinds: Record<string, [string, string, string]> = {
+ synthetic_erp_result_evidence: ["Synthetic ERP result evidence", "합성 ERP 결과 근거", "أدلة نتائج ERP اصطناعية"],
+ synthetic_issuance_protected: ["Synthetic protected issuance settings", "합성 보호된 발행 설정", "إعدادات إصدار محمية اصطناعية"],
+ synthetic_issuance_terms: ["Synthetic payment terms", "합성 납부 조건", "شروط دفع اصطناعية"],
+ synthetic_issuance_draft: ["Synthetic issuance drafts", "합성 발행 초안", "مسودات إصدار اصطناعية"],
+ synthetic_document_evidence: ["Synthetic document evidence", "합성 문서 근거", "أدلة مستند اصطناعية"],
+  erp_final_approval: ["ERP final-amount approval", "ERP 최종 금액 승인", "اعتماد المبلغ النهائي في ERP"],
+  charge_approval: ["Charge approval", "청구 승인", "اعتماد الرسوم"],
+  approval_review: ["Approval review records", "승인 검토 기록", "سجلات مراجعة الاعتمادات"],
+ synthetic_pricing_policy: ["Synthetic pricing policy", "합성 시험용 가격 정책", "سياسة تسعير اصطناعية"],
+  focus_data: ["Collected FOCUS data", "수집된 FOCUS 데이터", "بيانات FOCUS المجمّعة"],
+  synthetic_input_evidence: ["Synthetic input evidence", "합성 입력 데이터 근거", "أدلة بيانات الإدخال الاصطناعية"],
+  charge_candidate: ["Charge calculation candidates", "과금 계산 후보", "نتائج احتساب الرسوم المبدئية"],
+};
+const fields: Record<string, [string, string, string]> = {
+ erp_result_evidence: ["ERP result evidence", "ERP 결과 근거", "أدلة نتائج ERP"],
+ issuance_protected: ["Protected issuance settings evidence", "보호된 발행 설정 근거", "أدلة إعدادات الإصدار المحمية"],
+ issuance_terms: ["Payment terms evidence", "납부 조건 근거", "أدلة شروط الدفع"],
+ issuance_draft: ["Issuance draft evidence", "발행 초안 근거", "أدلة مسودة الإصدار"],
+ document_evidence: ["Document evidence", "문서 근거", "أدلة المستند"],
+  approval_evidence: ["Approval request and decision evidence", "승인 요청·결정 근거", "أدلة طلبات الاعتماد والقرارات"],
+ pricing_policy_evidence: ["Pricing policy evidence", "가격 정책 근거", "أدلة سياسة التسعير"],
+ input_review_evidence: ["Input comparison and reconciliation evidence", "입력 데이터 비교·대사 근거", "أدلة مقارنة بيانات الإدخال ومطابقتها"],
+  rows: ["Rows", "행", "الصفوف"],
+  charge_evidence: ["Source costs and calculation evidence", "원천 비용·계산 근거", "تكاليف المصدر وأدلة الاحتساب"],
+};
 const phrases: Record<string, [string, string, string]> = {
+  "view|approval_review|approval_evidence": ["view approval request and decision records", "승인 요청·결정 기록 조회", "عرض سجلات طلبات الاعتماد والقرارات"],
+  "approve|erp_final_approval|": ["Approve ERP final amounts", "ERP 최종 금액 승인", "اعتماد المبلغ النهائي في ERP"],
+  "request_approval|erp_final_approval|": ["Request approval for ERP final amounts", "ERP 최종 금액 승인 요청", "طلب اعتماد المبلغ النهائي في ERP"],
+  "approve|charge_approval|": ["approve charges", "청구 승인", "اعتماد الرسوم"],
+  "request_approval|charge_approval|": ["request approval for charges", "청구 승인 요청", "طلب اعتماد الرسوم"],
+  "view_cost|charge_candidate|charge_evidence": ["view source costs and evidence for charge calculation candidates", "과금 계산 후보의 원천 비용·계산 근거 조회", "عرض تكاليف المصدر وأدلة نتائج احتساب الرسوم المبدئية"],
   "view|focus_data|rows": ["view rows of collected FOCUS data", "수집된 FOCUS 데이터 행 조회", "عرض صفوف بيانات FOCUS المجمّعة"],
 };
 

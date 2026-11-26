@@ -141,7 +141,7 @@ function ScopedSessions({ l,api,self,params,onParams,onRefresh,onSignOut,onSigne
       <AccessHistory key={scopeKey(self)} l={l} api={api} self={self} reloadKey={refresh} say={setNotice} onSignedOut={onSignedOut} />
     </div>
     <aside className="live-panel mysec-session-limits" aria-labelledby="mysec-limits-title"><h2 id="mysec-limits-title">{m.limitsTitle(l)}</h2><dl className="live-facts">
-      {[[m.idle(l),m.minutes(l,self.idle_minutes)],[m.longest(l),m.longestValue(l)],[m.maxAge(l),self.max_age_seconds ? m.age(l,self.max_age_seconds) : m.noMaxAge(l)],[m.youSignedIn(l),whenSeconds(l,self.signed_in_at)],[m.lastConfirmed(l),whenSeconds(l,self.authenticated_at)]].map(([label,value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}
+      {[[m.idle(l),m.minutes(l,self.idle_minutes)],[m.longest(l),m.longestValue(l,self.absolute_minutes)],[m.maxAge(l),self.max_age_seconds ? m.age(l,self.max_age_seconds) : m.noMaxAge(l)],[m.youSignedIn(l),whenSeconds(l,self.signed_in_at)],[m.lastConfirmed(l),whenSeconds(l,self.authenticated_at)]].map(([label,value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}
     </dl></aside>
     {target && <SessionSelection key={target.handle ?? "others"} l={l} api={api} handle={target.handle} store={store} onClose={close} onSignedOut={onSignedOut} />}
   </div>;

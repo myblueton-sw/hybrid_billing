@@ -26,6 +26,35 @@ test("account actions follow the account state", () => {
   assert.deepEqual(offers("en", row({ state: "suspended" }), "x").account, ["reinstate_user", "depart_user"]);
 });
 
+test("an unrecognised account or membership state reads as unknown and offers no action", () => {
+  for (const l of ["en", "ko", "ar"] as const) {
+    assert.equal(accountName(l, "locked"), w.unknownState(l));
+    assert.notEqual(accountName(l, "locked"), w.active(l));
+    assert.equal(accountName(l, "active"), w.active(l));
+  }
+  const odd = offers("en", row({ state: "locked" as UserRow["state"] }), "x");
+  assert.deepEqual([odd.account, odd.membership, odd.sign, odd.blocked], [[], [], [], w.unknownStateReason("en")]);
+  const member = offers("en", row({ membership: { ...mem("member", "active", 1), state: "unknown" } }), "x");
+  assert.deepEqual(member.membership, []);
+  assert.ok(member.notes.includes(w.unknownStateReason("en")));
+  assert.deepEqual(member.account, ["suspend_user", "depart_user"]);
+  const ended = offers("en", row({ membership: { ...mem("member", "active", 1), state: "unknown", role_period: "ended" } }), "x");
+  assert.deepEqual(ended.membership, []);
+});
+
+test("an unrecognised role reads as unknown and offers no membership or sign-in link action", () => {
+  for (const l of ["en", "ko", "ar"] as const) {
+    assert.equal(roleName(l, "unknown"), w.unknownRole(l));
+    assert.equal(roleName(l, ""), w.noMembership(l));
+    assert.equal(roleName(l, "owner"), w.unknownRole(l));
+  }
+  const odd = offers("en", row({ membership: { ...mem("member", "active", 1), role: "unknown" } }), "x");
+  assert.deepEqual([odd.membership, odd.sign, odd.notes], [[], [], [w.unknownRoleReason("en")]]);
+  assert.deepEqual(odd.account, ["suspend_user", "depart_user"]);
+  const unset = offers("en", row({ password_set: false, membership: { ...mem("member", "active", 1), role: "unknown" } }), "x");
+  assert.deepEqual(unset.sign, []);
+});
+
 test("membership actions follow the membership state", () => {
   assert.deepEqual(offers("en", base, "x").membership, ["change_role", "set_role_period", "suspend_membership", "remove_membership"]);
   assert.deepEqual(offers("en", row({ membership: mem("member", "suspended", 2) }), "x").membership, ["reinstate_membership", "set_role_period", "remove_membership"]);

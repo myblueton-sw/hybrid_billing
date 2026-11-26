@@ -193,7 +193,9 @@ func (s *Server) currentServiceEligibility(actor identity.Verifier, user string,
 }
 
 func (s *Server) queryServiceLimits() serviceLimits {
-	return serviceLimits{CommandValueBytes: strconv.Itoa(s.cfg.Commands.Value), RationaleBytes: min(maxRationale, s.cfg.Commands.Rationale), BodyBytes: maxBodyBytes, CredentialDays: int(s.cfg.Identity.CredentialValidity / (24 * time.Hour)), CredentialsPerService: strconv.Itoa(s.cfg.Identity.CredentialsPerServiceUser), Services: maxServices, ReplaySeconds: int(s.cfg.Commands.Replay / time.Second)}
+	limits := serviceLimits{CommandValueBytes: strconv.Itoa(s.cfg.Commands.Value), RationaleBytes: min(maxRationale, s.cfg.Commands.Rationale), BodyBytes: maxBodyBytes, CredentialDays: int(s.cfg.Identity.CredentialValidity / (24 * time.Hour)), CredentialsPerService: strconv.Itoa(s.cfg.Identity.CredentialsPerServiceUser), Services: maxServices, ReplaySeconds: int(s.cfg.Commands.Replay / time.Second)}
+	limits.PickupMinutes, limits.OverlapMinutes, limits.OverlapMaxMinutes = s.overlapBounds()
+	return limits
 }
 
 func (s *Server) readServiceAccount(w http.ResponseWriter, r *http.Request) {
@@ -248,7 +250,7 @@ func (s *Server) readServiceCredential(w http.ResponseWriter, r *http.Request) {
 		serviceKnownFailure(w, r, err)
 		return
 	}
-	read.write(w, r, map[string]any{"workspace": s.bootWorkspace, "eligibility": s.currentCredentialEligibility(read.actor, read.user, id, info), "row": s.serviceCredentialView(service, info, read.now), "revision": s.Revision(), "observed_at": read.now.UTC().Format(time.RFC3339Nano), "limits": s.queryServiceLimits()})
+	read.write(w, r, map[string]any{"workspace": s.bootWorkspace, "eligibility": s.currentCredentialEligibility(read.actor, read.user, id, info), "row": s.serviceCredentialView(read.actor, service, info, read.now), "revision": s.Revision(), "observed_at": read.now.UTC().Format(time.RFC3339Nano), "limits": s.queryServiceLimits()})
 }
 
 func (s *Server) readServiceOwner(w http.ResponseWriter, r *http.Request) {

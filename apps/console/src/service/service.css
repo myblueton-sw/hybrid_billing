@@ -235,8 +235,8 @@
     gap: 8px;
   }
   .service-session-row {
-    flex-wrap: nowrap;
-    gap: 8px;
+    flex-wrap: wrap;
+    gap: 4px 12px;
   }
   .service-session-label {
     position: absolute;
@@ -248,12 +248,23 @@
   }
   .service-session-item,
   .service-session-user {
-    max-inline-size: none;
+    min-inline-size: 0;
+    max-inline-size: 100%;
     overflow: visible;
+  }
+  .service-session-item:not(.service-session-user) {
+    flex: 1 1 10rem;
+    text-align: end;
+  }
+  .service-session-user {
+    flex: 0 1 auto;
+  }
+  .service-signout {
+    flex: none;
   }
   .service-session-item bdi {
     display: inline-block;
-    max-inline-size: 120px;
+    max-inline-size: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -334,4 +345,33 @@
 }
 .service-reauth-actions button {
   min-block-size: 44px;
+}
+
+@media (max-width: 767px) {
+  .service-entry .entry-header {
+    flex-wrap: wrap;
+    gap: 8px var(--hb-sp-16);
+    padding-block: 8px;
+  }
+  .service-entry .entry-header .header-select {
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: 100%;
+    margin-inline-start: auto;
+  }
+  .service-entry .entry-header .header-select > .header-control {
+    min-width: 0;
+    padding-inline: 10px;
+    font-size: var(--ui-small);
+  }
+  .service-entry .entry-header .language-value {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+@media (max-width: 479px) {
+  .service-entry .entry-header .language-code {
+    display: none;
+  }
 }

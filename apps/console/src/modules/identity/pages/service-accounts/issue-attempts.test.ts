@@ -287,3 +287,19 @@ test("issuance accepts only a completed credential-issued result", async () => {
     assert.equal(store.open("u", "svc-a"), null);
   }
 });
+
+test("a held rotation remembers which credential and overlap it named, and an issue attempt carries none", async () => {
+  const { clocks: c } = clocks();
+  const store = issueAttempts(counter(), c);
+  const { exec } = scripted([fail("busy"), ok()]);
+  const rotate = { credential: "cred-00000000000000aa", overlap: "60" };
+  const given = { ...values, rotate };
+  assert.equal((await store.submit("u", "svc-a", given, "rev-1", 3600, exec)).kind, "unknown");
+  rotate.overlap = "999";
+  assert.deepEqual(store.get("u", "svc-a")?.rotate, { credential: "cred-00000000000000aa", overlap: "60" });
+  assert.equal((await store.submit("u", "svc-a", { ...values, rotate: { credential: "cred-00000000000000bb", overlap: "10" } }, "rev-2", 3600, exec)).kind, "issued");
+  assert.deepEqual(store.get("u", "svc-a")?.rotate, { credential: "cred-00000000000000aa", overlap: "60" });
+  const plain = issueAttempts(counter(), c);
+  await plain.submit("u", "svc-a", values, "rev-1", 3600, scripted([fail("busy")]).exec);
+  assert.equal(plain.get("u", "svc-a")?.rotate, undefined);
+});

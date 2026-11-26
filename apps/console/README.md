@@ -137,3 +137,16 @@ The existing loopback8810 proxy also serves this endpoint. Start the prepared re
 Run `node tools/retained-connections-qa.mjs --url <prepared-local-frontend> --expected-total <verified-current-count> --output <local-evidence-directory> --playwright-module <installed-module> --chromium <browser-executable>` from this directory. The optional expected-total is an explicit QA assertion, not a product assumption; use0 only for the verified empty retained environment. The runner distinguishes actual protected reads from isolated synthetic interception and never confirms owner review or issues commands. Source connection configuration, credentials, diagnostics and live CSP authentication remain unconnected.
 
 M04 held credential issue regression check ([HYB-316 verification](../../docs/features/HYB-316/verification.md)): start the API with `--seed sample` and a new data directory, serve this build with `/api/` proxied to it, then from this directory run `node tools/service-accounts-qa.mjs --url <console-origin> --activation <data-directory>/activation.txt --playwright-module <installed-module> --chromium <browser-executable>`. It needs a fresh data directory per run and exits non-zero on any failed check.
+
+M02 rendered check: start the API with `--seed sample` and a data directory that does not exist yet, serve this console with `/api/` proxied to it, then from this directory run `node tools/authentication-qa.mjs --url <console-origin> --activation <data-directory>/activation.txt --playwright-module <installed-module> --chromium <browser-executable>`. It proposes one trust change when none exists, needs a fresh data directory per run and exits non-zero on any failed check.
+
+O01 rendered check: the same setup as the M02 check, then `node tools/organizations-qa.mjs` with the same arguments. It sends no command and exits non-zero on any failed check. It opens the lazy tree node by node, injects one failed read under a node, and opens the tree on a day before any relationship.
+
+O02 rendered check: the same setup as the M02 check, then `node tools/organization-changes-qa.mjs` with the same arguments. It sends no command; when the service holds no plan it adds one to the read's answer in the browser for the arrival checks.
+
+M01 rendered check: the same setup as the M02 check, then `node tools/users-qa.mjs` with the same arguments. It sends no command and changes the users read's answer in the browser for the unknown role and state.
+
+Capped lists rendered check (P02 cut delivery list, P01 existing proposal): the same setup as the M02 check, then `node tools/capped-lists-qa.mjs` with the same arguments. It sends two plan proposals to the sample service.
+
+M04 credential rotation rendered check: the same setup as the M02 check, then `node tools/credential-rotation-qa.mjs` with the same arguments. It creates a service account, issues a credential and rotates it in the sample service.
+

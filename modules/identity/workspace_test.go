@@ -369,7 +369,7 @@ func TestServiceAccounts(t *testing.T) {
 	f.refusal("credentials of a human", second(f.w.Credentials(admin(), "w1", "ann")), ReasonUnknown)
 	f.refusal("credentials from another workspace", second(f.w.Credentials(admin(), "w2", "svc")), ReasonNotAdministrator)
 	f.want("credentials of an invalid identifier", second(f.w.Credentials(admin(), "w1", "")), ErrInvalid)
-	if fields := reflect.TypeOf(CredentialInfo{}); fields.NumField() != 3 {
+	if fields := reflect.TypeOf(CredentialInfo{}); fields.NumField() != 5 {
 		t.Errorf("credential metadata exposes %d fields", fields.NumField())
 	}
 	f.refusal("a revoked credential", second(f.b.AccessByCredential("c1", v("c1"))), ReasonUnknown)

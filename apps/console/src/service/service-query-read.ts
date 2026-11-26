@@ -42,7 +42,7 @@ const stepUp = choice("ready", "reauthentication_required", "prerequisite_failed
 const execution = choice("ready", "trust_hold", "dependency_unavailable");
 const eligible = choice("eligible", "ineligible", "unavailable");
 export const admissionOf = closed<ServiceAdmission>({ recorded: decimal, limit: decimal, certainty: choice("exact") });
-export const limitsOf = closed<ServiceLimits>({ command_value_bytes: (v) => { const n = decimal(v); requireRead(BigInt(n) > 0n); return n; }, rationale_bytes: (v) => { const n = positive(v); requireRead(n <= 256); return n; }, body_bytes: (v) => { const n = positive(v); requireRead(n === 1048576); return n; }, credential_days: integer, credentials_per_service: decimal, services: positive, replay_seconds: positive });
+export const limitsOf = closed<ServiceLimits>({ command_value_bytes: (v) => { const n = decimal(v); requireRead(BigInt(n) > 0n); return n; }, rationale_bytes: (v) => { const n = positive(v); requireRead(n <= 256); return n; }, body_bytes: (v) => { const n = positive(v); requireRead(n === 1048576); return n; }, credential_days: integer, credentials_per_service: decimal, services: positive, replay_seconds: positive, credential_overlap_minutes: positive, credential_overlap_max_minutes: positive, secret_pickup_minutes: positive });
 const scopeRef = closed({ audience: identifier, scope: identifier });
 const declaration = closed<ServiceDeclaration>({ state: choice("recorded", "missing", "unavailable"), recorded_at: emptyOr(timestamp), version: emptyOr(decimal), purpose: text, organization: emptyOr(identifier), organization_name: text, organization_name_state: nameState, catalog_version: emptyOr(digest), scopes: bounded(scopeRef, 64) });
 export const declarationOf: Parser<ServiceDeclaration> = (v) => {
@@ -67,7 +67,7 @@ const summaryOf: Parser<CredentialSummary> = (v) => {
   return r;
 };
 export const accountOf = closed<ServiceAccount>({ id: identifier, state, version: decimal, owner: identifier, owner_login: text, creator: identifier, creator_login: text, declaration: declarationOf, credential_summary: summaryOf, recent_use_state: choice("unavailable") });
-const credential = closed<ServiceCredential>({ id: identifier, service: identifier, service_state: state, not_before: timestamp, not_after: timestamp, state: credentialState, current_state: credentialState, usable: boolean, observed_at: timestamp, secret_pickup: optional(choice("open", "collected", "never_collected")), secret_pickup_until: optional(timestamp) });
+const credential = closed<ServiceCredential>({ id: identifier, service: identifier, service_state: state, not_before: timestamp, not_after: timestamp, state: credentialState, current_state: credentialState, usable: boolean, observed_at: timestamp, secret_pickup: optional(choice("open", "collected", "never_collected")), secret_pickup_until: optional(timestamp), replaces: optional(identifier), replaced_by: optional(identifier), rotation: optional(choice("replacing", "ending")) });
 export const credentialOf: Parser<ServiceCredential> = (v) => {
   const r = credential(v);
   requireRead(nanos(r.not_before) < nanos(r.not_after));
@@ -75,8 +75,12 @@ export const credentialOf: Parser<ServiceCredential> = (v) => {
   requireRead(r.secret_pickup === undefined || r.current_state === "active");
   requireRead(r.secret_pickup === "open" ? r.secret_pickup_until !== undefined : r.secret_pickup_until === undefined);
   if (r.secret_pickup_until !== undefined) requireRead(nanos(r.secret_pickup_until) > nanos(r.observed_at));
-  const { secret_pickup, secret_pickup_until, ...base } = r;
-  return { ...base, ...(secret_pickup === undefined ? {} : { secret_pickup }), ...(secret_pickup_until === undefined ? {} : { secret_pickup_until }) };
+  requireRead(r.rotation === undefined || r.current_state === "active");
+  requireRead(r.rotation !== "ending" || r.replaced_by !== undefined);
+  requireRead(r.rotation !== "replacing" || r.replaces !== undefined);
+  const { secret_pickup, secret_pickup_until, replaces, replaced_by, rotation, ...base } = r;
+  return { ...base, ...(secret_pickup === undefined ? {} : { secret_pickup }), ...(secret_pickup_until === undefined ? {} : { secret_pickup_until }),
+    ...(replaces === undefined ? {} : { replaces }), ...(replaced_by === undefined ? {} : { replaced_by }), ...(rotation === undefined ? {} : { rotation }) };
 };
 export const ownerOf = closed<ServiceOwner>({ id: identifier, login: text, role: choice("administrator", "member"), from: emptyOr(timestamp), until: emptyOr(timestamp), eligible_at_reference: boolean });
 const organization = closed<ServiceOrganization>({ id: identifier, name: text, name_state: nameState, kind: choice("legal_entity", "internal_unit"), parent: emptyOr(identifier) });

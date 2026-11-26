@@ -155,19 +155,19 @@ func TestRecoveryReadShape(t *testing.T) {
 		t.Errorf("standby set %s", s)
 	}
 	iso := sectionRow(t, got, "isolation", recoveryPrimary)
-	if s := fmt.Sprint(iso); s != "map[can_lock:false generation:2 installation:sample-primary lock_blocked:recovering locks:[] open_calls:[map[deadline:2026-11-16T09:01:00Z "+
-		"id:call-2 key:sample-invoice-2 number:2 series:sample-invoice-series writer:sample-erp-writer]] open_calls_source:recovery open_calls_total:1 other_scope_present:false "+
+	if s := fmt.Sprint(iso); s != "map[can_lock:false generation:2 installation:sample-primary lock_blocked:recovering lock_history:map[next: total:0] locks:[] open_calls:[map[deadline:2026-11-16T09:01:00Z "+
+		"id:call-2 key:sample-invoice-2 number:2 series:sample-invoice-series writer:sample-erp-writer]] open_calls_next: open_calls_source:recovery open_calls_total:1 other_scope_present:false "+
 		"permits:not_shown state:recovering stopped_at:2026-11-16T09:00:00Z verifier:sample-verifier writers:[sample-erp-writer sample-issuance-writer]]" {
 		t.Errorf("primary isolation %s", s)
 	}
-	if s := fmt.Sprint(sectionRow(t, got, "isolation", recoveryStandby)); s != "map[can_lock:false generation:2 installation:sample-standby lock_blocked:locked "+
-		"locks:[map[at:2026-11-16T09:00:00Z by:sample-admin by_login:admin@example.invalid rationale:Sample data]] open_calls:[] open_calls_source:not_shown open_calls_total:0 "+
+	if s := fmt.Sprint(sectionRow(t, got, "isolation", recoveryStandby)); s != "map[can_lock:false generation:2 installation:sample-standby lock_blocked:locked lock_history:map[next: total:1] "+
+		"locks:[map[at:2026-11-16T09:00:00Z by:sample-admin by_login:admin@example.invalid number:1 rationale:Sample data]] open_calls:[] open_calls_next: open_calls_source:not_shown open_calls_total:0 "+
 		"other_scope_present:false permits:not_shown state:locked stopped_at:2026-11-16T09:00:00Z verifier: writers:[sample-standby-writer]]" {
 		t.Errorf("standby isolation %s", s)
 	}
 	if s := fmt.Sprint(sectionRow(t, got, "reconciliation", recoveryPrimary)); s != "map[externals:[map[id:sample-erp-ledger kind:erp status:pending] "+
 		"map[id:sample-issuance-register kind:issuance status:pending]] installation:sample-primary other_scope_present:false reconciler:not_connected skipped:0 "+
-		"unknown_targets:[map[fenced:true high_water:2 key:sample-invoice-2 number:2 series:sample-invoice-series]] unknown_total:1]" {
+		"unknown_next: unknown_targets:[map[fenced:true high_water:2 key:sample-invoice-2 number:2 series:sample-invoice-series]] unknown_total:1]" {
 		t.Errorf("reconciliation %s", s)
 	}
 	if hasRow(got, "reconciliation", recoveryStandby) {
@@ -320,6 +320,14 @@ func TestRecoveryOtherTenantIsHidden(t *testing.T) {
 	for _, c := range []struct{ command, target string }{{"recovery.lock", installTargetOf("tenant-x")}, {"recovery.propose_unlock", installTargetOf("tenant-x")},
 		{"recovery.approve", proposalTargetOf(e.view.Number)}, {"recovery.approve", proposalTargetOf(pending.view.Number)}, {"recovery.withdraw", proposalTargetOf(pending.view.Number)}} {
 		f.code(t, c.command+" "+c.target, f.run(root, c.command, c.target, unlockFields(c.command)), 403, "permission_denied")
+	}
+	hidden := f.readAs(root, "/api/v1/recovery/locks?installation=tenant-x")
+	absent := f.readAs(root, "/api/v1/recovery/locks?installation=no-such-installation")
+	if hidden.status != 422 || absent.status != 422 || strings.Contains(hidden.raw, "tenant-x") || strings.Contains(hidden.raw, "other-tenant") || hidden.body["code"] != absent.body["code"] {
+		t.Errorf("another tenant's lock log: %d %s, a missing one: %d", hidden.status, hidden.raw, absent.status)
+	}
+	if own := f.readAs(root, "/api/v1/recovery/locks?installation="+recoveryStandby+"&limit=1"); own.status != 200 || len(keptNumbers(own.body["locks"])) != 1 {
+		t.Errorf("the reader's own installation: %d", own.status)
 	}
 	f.s.rec.installs = nil
 	if got := f.recoveryRead(root); got.body["state"] != "not_configured" {

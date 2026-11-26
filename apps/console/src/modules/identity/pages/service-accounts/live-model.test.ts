@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { AdminError, type CredentialRow } from "../../../../service/admin";
-import { attemptState, credentialState, formVisible, keepsHold, nextPhase, outsideWindow, panelShown, pickupLabel, pinIssue, returnFocus, serviceState, settleFailure, validName, wholeDays } from "./live-model";
+import { canRotate, rotationEnd, utcTime, wholeMinutes, attemptState, credentialState, formVisible, keepsHold, nextPhase, outsideWindow, panelShown, pickupLabel, pinIssue, returnFocus, serviceState, settleFailure, validName, wholeDays } from "./live-model";
 import { v } from "./live-copy";
 
 const cred = (change: Partial<CredentialRow>): CredentialRow => ({ id: "cred-1", not_before: "2026-11-16T00:00:00Z", not_after: "2026-12-16T00:00:00Z", state: "active", usable: true, ...change });
@@ -194,3 +194,37 @@ test("the issue form is visible only when all five conditions hold (N7)", () => 
     assert.equal(formVisible({ ...base, ...change }), false, JSON.stringify(change));
   }
 });
+
+test("the overlap is a whole number of minutes within the served bounds", () => {
+  assert.equal(wholeMinutes("1440", 10, 10080), 1440);
+  assert.equal(wholeMinutes("10", 10, 10080), 10);
+  assert.equal(wholeMinutes("10080", 10, 10080), 10080);
+  for (const bad of ["", "9", "10081", "010", "14.5", "-10", " 60", "1e3", "1000000"]) assert.equal(wholeMinutes(bad, 10, 10080), null, bad);
+});
+
+test("a rotation ends the current credential at the earlier of its present end and the overlap", () => {
+  const now = "2026-11-16T00:00:00Z";
+  assert.deepEqual(rotationEnd(now, "2026-12-16T00:00:00Z", 1440), { at: "2026-11-17T00:00:00.000Z", sooner: false });
+  assert.deepEqual(rotationEnd(now, "2026-11-16T06:00:00Z", 1440), { at: "2026-11-16T06:00:00.000Z", sooner: true });
+  assert.deepEqual(rotationEnd(now, "2026-11-17T00:00:00Z", 1440), { at: "2026-11-17T00:00:00.000Z", sooner: false });
+  assert.equal(rotationEnd("", "2026-11-17T00:00:00Z", 10), null);
+  assert.equal(rotationEnd(now, "x", 10), null);
+  for (const l of ["en", "ko", "ar"] as const) assert.ok(/UTC|협정 세계시|غرينتش|ت ع م|العالمي/.test(utcTime(l, "2026-11-17T00:00:00.000Z")), l + " " + utcTime(l, "2026-11-17T00:00:00.000Z"));
+  assert.equal(utcTime("en", "2026-11-17T00:30:00.000Z"), "Nov 17, 2026, 12:30 AM UTC");
+  assert.equal(utcTime("en", "x"), "");
+});
+
+test("only a live credential of an active account that no rotation has bounded can be rotated", () => {
+  const now = "2026-11-16T00:00:00Z";
+  const cred = (patch: Partial<CredentialRow> = {}): CredentialRow => ({ id: "cred-1", not_before: "2026-11-01T00:00:00Z", not_after: "2026-12-01T00:00:00Z", state: "active", usable: true, ...patch });
+  const svc = (state: "active" | "suspended" | "retired") => state;
+  assert.equal(canRotate(svc("active"), cred(), now), true);
+  assert.equal(canRotate(svc("active"), cred({ rotation: "replacing", replaces: "cred-0" }), now), true);
+  assert.equal(canRotate(svc("active"), cred({ rotation: "ending", replaced_by: "cred-2" }), now), false);
+  assert.equal(canRotate(svc("active"), cred({ state: "revoked" }), now), false);
+  assert.equal(canRotate(svc("active"), cred({ state: "expired" }), now), false);
+  assert.equal(canRotate(svc("active"), cred({ not_before: "2026-11-17T00:00:00Z" }), now), false);
+  assert.equal(canRotate(svc("suspended"), cred(), now), false);
+  assert.equal(canRotate(svc("retired"), cred(), now), false);
+});
+

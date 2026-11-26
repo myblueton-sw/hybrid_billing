@@ -247,6 +247,33 @@ func (s *Server) execute(command string, call commands.Call, caller identity.Ver
 	}
 	s.caller, s.answer = caller, call.Answer
 	defer func() { s.caller, s.answer = identity.Verifier{}, gate.Answer{} }()
+	if code := s.financialAuthorityBoundary(command, call); code != "" {
+		return boundaryResult(code, call.Request)
+	}
+	if code := s.financialPolicyBoundary(command, call); code != "" {
+		return boundaryResult(code, call.Request)
+	}
+	if code := s.financialPermissionBoundary(command, call); code != "" {
+		return boundaryResult(code, call.Request)
+	}
+	if code := s.financialFinalBoundary(command, &call); code != "" {
+		return boundaryResult(code, call.Request)
+	}
+	if code := s.financialChargeBoundary(command, &call); code != "" {
+		return boundaryResult(code, call.Request)
+	}
+	if code := s.documentBoundary(command, call); code != "" {
+		return boundaryResult(code, call.Request)
+	}
+	if code := s.resultBoundary(command, call); code != "" {
+		return boundaryResult(code, call.Request)
+	}
+	if code := s.issuanceDraftBoundary(command, call); code != "" {
+		return boundaryResult(code, call.Request)
+	}
+	if code := s.issuanceSetupBoundary(command, call); code != "" {
+		return boundaryResult(code, call.Request)
+	}
 	result := s.commands.Execute(call)
 	if changed(s.mutating[command], result) {
 		s.counter++

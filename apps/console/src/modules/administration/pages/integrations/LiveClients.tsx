@@ -1,6 +1,7 @@
 import type { Locale } from "../../../../shared/types";
 import type { ClientGrant, GrantScope } from "../../../../service/integrations";
 import { actionLabel, kindLabel } from "../../../identity/pages/access/live-copy";
+import { text as t } from "../../../../shared/copy";
 import { k } from "./live-copy";
 import { Code, Known, ListOr, Num, Who, fsi, ltr, stamp } from "./live-format";
 import type { Shared } from "./LiveCommand";
@@ -27,7 +28,7 @@ function Grants({ l, grants }: { l: Locale; grants: ClientGrant[] }) {
     <div className="live-table">
       <table className="p02-table">
         <colgroup>
-          <col className="p02-c16" /><col className="p02-c12" /><col className="p02-c14" /><col className="p02-c18" /><col className="p02-c16" /><col className="p02-c16" /><col className="p02-c8" />
+          <col className="p02-c16" /><col className="p02-c12" /><col className="p02-c14" /><col className="p02-c16" /><col className="p02-c15" /><col className="p02-c15" /><col className="p02-c12" />
         </colgroup>
         <thead>
           <tr>
@@ -38,7 +39,7 @@ function Grants({ l, grants }: { l: Locale; grants: ClientGrant[] }) {
         <tbody>
           {grants.map((g, i) => (
             <tr key={g.id || i}>
-              <td className="p02-first"><Known l={l} value={g.id} /></td>
+              <td className="p02-first p02-wrap"><Known l={l} value={g.id} /></td>
               <td data-label={k.colAction(l)}><Code l={l} value={g.action} say={(x, v) => actionLabel(x, v) ?? k.unknownCode(x, v)} /></td>
               <td data-label={k.colDataKind(l)}><Code l={l} value={g.kind} say={(x, v) => kindLabel(x, v) ?? k.unknownCode(x, v)} /></td>
               <td data-label={k.colScope(l)}><Scope l={l} s={g.scope} /></td>
@@ -92,6 +93,7 @@ export function ClientsView({ l, page }: Pick<Shared, "l" | "page">) {
         <section key={x.id || i} className="p02-section p02-grants" aria-labelledby={"p02-grants-title-" + i}>
           <h3 id={"p02-grants-title-" + i}>{k.grantsTitle(l)}</h3>
           <p className="live-meta">{k.colClient(l)} <Known l={l} value={x.id} /></p>
+          {x.id === "console" && <p><a href={`#/access?view=grants&area=result&client=console&lang=${l}`}>{t(l,"Manage ERP result permissions","ERP 결과 권한 관리","إدارة صلاحيات نتائج ERP")}</a></p>}
           <ListOr l={l} items={x.grants} empty={k.noGrants(l)}>
             {(grants) => <Grants l={l} grants={grants} />}
           </ListOr>

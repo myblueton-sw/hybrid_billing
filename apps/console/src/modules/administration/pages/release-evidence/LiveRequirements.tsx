@@ -1,16 +1,19 @@
+import { useEffect, useState } from "react";
 import type { Locale } from "../../../../shared/types";
 import type { Candidate, EvidencePage, Problem, RequirementRow, TestRow } from "../../../../service/release-evidence";
 import { blockerText, f, k } from "./live-copy";
-import { categoryWords, counted, has, outcomeWords, plurals, problemWords, reasonWords, requirementStateWords } from "./live-codes";
+import { categoryWords, counted, has, outcomeWords, plurals, problemWords, reasonWords, requirementStateWords, words } from "./live-codes";
 import {
   blockerPolicy, buildsMore, buildsOf, differences, duplicateIn, frozenValues, keptKey, pairOf, pendingNow, pendingRetire, problemUnexpected, reasonLine, refusedNow, replacementOptions,
-  requirementByTarget, requirementRetire, requirementState, requirementTarget, rowId, sortBuilds, stateAtCandidate, stateSentence, testCounts, type AlreadyProposed,
+  filtering, noFilter, requirementByTarget, requirementRetire, utf8Bytes, requirementState, requirementTarget, rowId, sortBuilds, stateAtCandidate, stateSentence, testCounts, type AlreadyProposed, type RequirementFilter,
 } from "./live-model";
 import { Absent, Code, Commit, DetailShell, Fixed, Known, State, Digest, EvidenceLink, Gap, Label, ListOr, MoreLine, Num, Template, Unexpected, gapOf, href, ltr } from "./live-format";
 import { CommandForm, RowNote, line, useOpen, type Blocker, type Shared } from "./LiveCommand";
-import { retireFields } from "./LiveRetireForm";
+import type { AdminClient } from "../../../../service/admin";
+import { retireFields, useReplacementDetail, useReplacementSearch } from "./LiveRetireForm";
 
 const command = "release_evidence.retire_requirement";
+const searchBytes = 64;
 
 export function StateText({ l, state, candidate, sample }: { l: Locale; state: string | null; candidate: Candidate; sample: boolean }) {
   const s = requirementState(state);
@@ -179,6 +182,7 @@ function CompareBlock({ l, page, from, to, requirement }: { l: Locale; page: Evi
         </div>
       </div>
       {buildsMore(page) && <p className="p05-small p05-muted">{k.compareMore(l)}</p>}
+      {page.requirements.requirements.more !== false && <p className="p05-small p05-muted">{k.compareLimited(l)}</p>}
       {diff.length === 0 ? (
         <p>{k.compareSame(l)}</p>
       ) : (
@@ -217,9 +221,9 @@ function testsText(l: Locale, r: RequirementRow): string {
   return lines.join("\n");
 }
 
-function RetireFacts({ l, page, ctx, draft }: { l: Locale; page: EvidencePage; ctx: Record<string, string>; draft: Record<string, string> }) {
+function RetireFacts({ l, page, api, ctx, draft }: { l: Locale; page: EvidencePage; api: AdminClient; ctx: Record<string, string>; draft: Record<string, string> }) {
   const sample = page.requirements.origin === "sample_seed";
-  const rep = ctx.replacement ? requirementByTarget(page, ctx.replacement) : undefined;
+  const rep = useReplacementDetail(api, page, ctx.replacement ?? "");
   return (
     <>
       <div className="p05-span">
@@ -238,7 +242,9 @@ function RetireFacts({ l, page, ctx, draft }: { l: Locale; page: EvidencePage; c
         <dd>
           {ctx.replacement ? (
             <>
-              <Label value={ctx.replacement_label || ctx.replacement} /> · {rep ? <StateText l={l} state={stateAtCandidate(rep, page.candidate)} candidate={page.candidate} sample={sample} /> : <Absent>{k.unknown(l)}</Absent>}
+              <Label value={ctx.replacement_label || ctx.replacement} />
+              {rep === "failed" ? <p className="p05-small p05-muted p05-replacement-detail">{f.replacementDetailFailed(l)}</p>
+                : rep === "loading" || rep === null ? null : <> · <StateText l={l} state={stateAtCandidate(rep, page.candidate)} candidate={page.candidate} sample={sample} /></>}
             </>
           ) : k.noReplacement(l)}
         </dd>
@@ -248,12 +254,12 @@ function RetireFacts({ l, page, ctx, draft }: { l: Locale; page: EvidencePage; c
   );
 }
 
-export function RetireImpact({ l, label, replacement, blockingUntested, approve = false }: { l: Locale; label: string; replacement: string; blockingUntested: boolean; approve?: boolean }) {
+export function RetireImpact({ l, label, replacement, blockingUntested, approve = false, unknown = false }: { l: Locale; label: string; replacement: string; blockingUntested: boolean; approve?: boolean; unknown?: boolean }) {
   return (
     <>
       <p className="p05-weight"><Template text={approve ? f.approvePermanent(l) : f.permanent(l)} slots={{ label: <Label value={label} /> }} /></p>
       {replacement ? <p><Template text={f.withReplacement(l)} slots={{ replacement: <Label value={replacement} /> }} /></p> : <p>{f.withoutReplacement(l)}</p>}
-      {blockingUntested && <p className="p05-weight">{f.blockingNote(l)}</p>}
+      {unknown ? <p className="p05-weight">{f.blockingUnknown(l)}</p> : blockingUntested && <p className="p05-weight">{f.blockingNote(l)}</p>}
     </>
   );
 }
@@ -266,6 +272,7 @@ export function blockingUntested(r: RequirementRow | undefined, candidate: Candi
 function RequirementBody({ r, reduced, ...shared }: Shared & { r: RequirementRow; reduced: boolean }) {
   const { l, page, selection, canCommand, mode } = shared;
   const { open, toggle, close, focusNote, mark, diagnostics } = useOpen<"retire">(requirementTarget(r));
+  const find = useReplacementSearch(shared.api, requirementTarget(r));
   const target = requirementTarget(r);
   const n = target ? target.slice("trace-requirement-".length) : "";
   const pending = target ? pendingNow(command, target) : undefined;
@@ -289,7 +296,7 @@ function RequirementBody({ r, reduced, ...shared }: Shared & { r: RequirementRow
   const candState = stateAtCandidate(r, page.candidate);
   const evidenceId = rowId("evidence-requirement", n);
   const frozen = frozenValues(pending);
-  const fields = retireFields(l, r, frozen?.replacement ?? "");
+  const fields = retireFields(l, r, frozen?.replacement ?? "", find);
   const cols = reduced ? 3 : 5;
   const head = (
     <>
@@ -331,13 +338,13 @@ function RequirementBody({ r, reduced, ...shared }: Shared & { r: RequirementRow
               title={f.confirmRetire(l)}
               context={(d) => {
                 const choice = d.replacement && d.replacement !== "none" ? d.replacement : "";
-                const opt = replacementOptions(r).find((o) => o.target === choice);
+                const opt = replacementOptions(r).find((o) => o.target === choice) ?? (find.seen[choice] ? { target: choice, label: find.seen[choice] } : undefined);
                 return {
                   view: "requirements", label: r.label, common: r.common ? "1" : "0", blocking: r.blocking ? "1" : "0", state: candState ?? "", tests: testsText(l, r),
                   replacement: choice, replacement_label: opt?.label ?? "", untested: blockingUntested(r, page.candidate) ? "1" : "0",
                 };
               }}
-              facts={(ctx, d) => <RetireFacts l={l} page={page} ctx={ctx} draft={d} />}
+              facts={(ctx, d) => <RetireFacts l={l} page={page} api={shared.api} ctx={ctx} draft={d} />}
               impact={(ctx) => <RetireImpact l={l} label={ctx.label ?? r.label} replacement={ctx.replacement ? ctx.replacement_label || ctx.replacement : ""} blockingUntested={ctx.untested === "1"} />}
               done={(fl, st, snapshot) => {
                 const num = fl.proposal ?? "";
@@ -388,9 +395,96 @@ function RequirementDetail({ l, page, r, mode }: { l: Locale; page: EvidencePage
   );
 }
 
-export function RequirementsView(shared: Shared) {
-  const { l, page, selection, mode } = shared;
+export type RequirementsTable = {
+  rows: RequirementRow[] | null;
+  filter: RequirementFilter;
+  total: number | null;
+  matching: number | null;
+  more: boolean;
+  status: "idle" | "loading" | "failed";
+  reset: boolean;
+  candidate: boolean;
+  onFilter: (f: RequirementFilter) => void;
+  onMore: () => void;
+};
+
+function TableControls({ l, table }: { l: Locale; table: RequirementsTable }) {
+  const [draft, setDraft] = useState(table.filter);
+  const [tooLong, setTooLong] = useState(false);
+  useEffect(() => { setDraft(table.filter); setTooLong(false); }, [table.filter]);
+  const apply = () => {
+    const q = draft.q.trim();
+    if (utf8Bytes(q) > searchBytes) { setTooLong(true); document.getElementById("p05-req-q")?.focus(); return; }
+    setTooLong(false);
+    table.onFilter({ ...draft, q });
+  };
+  const active = filtering(table.filter);
+  const whole = (table.total ?? 0) > 0 || active;
+  if (!whole) return null;
+  return (
+    <div className="p05-req-controls">
+      <form className="p05-req-form" role="search" onSubmit={(e) => { e.preventDefault(); apply(); }}>
+        <div className="service-field">
+          <label htmlFor="p05-req-q">{k.reqSearch(l)}</label>
+          <input id="p05-req-q" type="search" dir="auto" maxLength={64} value={draft.q} aria-invalid={tooLong || undefined} aria-describedby={tooLong ? "p05-req-q-error" : undefined} onChange={(e) => setDraft({ ...draft, q: e.target.value })} />
+          {tooLong && <p id="p05-req-q-error" className="service-field-error" role="alert">{k.reqTooLong(l)}</p>}
+        </div>
+        {table.candidate && (
+          <div className="service-field">
+            <label htmlFor="p05-req-state">{k.reqState(l)}</label>
+            <select id="p05-req-state" value={draft.state} onChange={(e) => setDraft({ ...draft, state: e.target.value })}>
+              <option value="">{k.reqAnyState(l)}</option>
+              {Object.keys(requirementStateWords).map((s) => <option key={s} value={s}>{words(l, requirementStateWords, s)}</option>)}
+            </select>
+          </div>
+        )}
+        <div className="service-field">
+          <label htmlFor="p05-req-retired">{k.reqRetired(l)}</label>
+          <select id="p05-req-retired" value={draft.retired} onChange={(e) => setDraft({ ...draft, retired: e.target.value })}>
+            <option value="">{k.reqRetiredAny(l)}</option>
+            <option value="no">{k.reqRetiredNo(l)}</option>
+            <option value="yes">{k.reqRetiredYes(l)}</option>
+          </select>
+        </div>
+        <button type="submit" className="live-secondary p05-req-apply">{k.reqApply(l)}</button>
+        {active && <button type="button" className="live-secondary p05-req-clear" onClick={() => table.onFilter(noFilter)}>{k.reqClear(l)}</button>}
+      </form>
+      {active && table.matching !== null && table.status !== "failed" && <p className="p05-small p05-muted p05-req-count">{k.reqMatching(l, table.rows?.length ?? 0, table.matching)}</p>}
+      {table.reset && <p className="p05-small p05-req-reset" role="status">{k.reqReset(l)}</p>}
+    </div>
+  );
+}
+
+function TableFoot({ l, table }: { l: Locale; table: RequirementsTable }) {
+  const active = filtering(table.filter);
+  const shown = table.rows?.length ?? 0;
+  const of = active ? table.matching : table.total;
+  const failed = table.status === "failed";
+  return (
+    <>
+      {!active && of !== null && (table.more || shown < of) && shown > 0 && <p className="p05-small p05-muted p05-req-count">{k.reqShown(l, shown, of)}</p>}
+      {(table.more || failed) && (
+        <div className="p05-req-more">
+          {failed && <p role="alert">{k.reqFailed(l)}</p>}
+          <button type="button" className="live-secondary p05-req-more-button" aria-disabled={table.status === "loading" || undefined} onClick={() => { if (table.status !== "loading") table.onMore(); }}>
+            {failed ? k.reqTryAgain(l) : table.status === "loading" ? k.reqLoading(l) : k.reqMore(l)}
+          </button>
+        </div>
+      )}
+    </>
+  );
+}
+
+export function wholeTable(page: EvidencePage): RequirementsTable {
   const list = page.requirements.requirements;
+  return { rows: list.rows, filter: noFilter, total: list.total, matching: null, more: false, status: "idle", reset: false, candidate: page.candidate !== null, onFilter: () => undefined, onMore: () => undefined };
+}
+
+export function RequirementsView(shared: Shared & { table?: RequirementsTable }) {
+  const { l, page, selection, mode } = shared;
+  const table = shared.table ?? wholeTable(page);
+  const list = { ...page.requirements.requirements, rows: table.rows };
+  const active = filtering(table.filter);
   const selected = selection.requirement ? requirementByTarget(page, "trace-requirement-" + selection.requirement) : undefined;
   if (selected && mode === "step") return <RequirementDetail l={l} page={page} r={selected} mode="step" />;
   const open = !!selected;
@@ -406,7 +500,9 @@ export function RequirementsView(shared: Shared) {
       <div className="p05-split" data-open={reduced ? "true" : "false"}>
         <div className="p05-list">
           <h3 className="visually-hidden">{k.requirementsCaption(l)}</h3>
-          <ListOr l={l} items={list.rows} empty={k.noRequirements(l)}>
+          <TableControls l={l} table={table} />
+          {selected && !(table.rows ?? []).some((r) => r.target === selected.target) && <p className="p05-small p05-req-unlisted" role="status">{k.reqNotListed(l)}</p>}
+          {!(active && table.status === "failed" && (table.rows ?? []).length === 0) && <ListOr l={l} items={list.rows} empty={active ? (table.status === "loading" ? k.reqLoading(l) : k.reqNoMatch(l)) : k.noRequirements(l)}>
             {(rows) => (
               <div className="live-table">
                 <table className={"p05-table p05-requirements" + (reduced ? " p05-reduced" : " p05-full")}>
@@ -432,8 +528,8 @@ export function RequirementsView(shared: Shared) {
                 </table>
               </div>
             )}
-          </ListOr>
-          <MoreLine l={l} more={list.more} total={list.total} forms={plurals.showing50} />
+          </ListOr>}
+          <TableFoot l={l} table={table} />
         </div>
         {reduced && selected && <RequirementDetail l={l} page={page} r={selected} mode="split" />}
       </div>

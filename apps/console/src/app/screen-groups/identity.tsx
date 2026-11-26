@@ -9,7 +9,7 @@ import ServiceAccounts from "../../modules/identity/pages/service-accounts/Scree
 import MySecurity from "../../modules/identity/pages/my-security/Screen";
 import LiveUsers from "../../modules/identity/pages/users/Live";
 import LivePolicy from "../../modules/identity/pages/authentication/Live";
-import LiveAccess from "../../modules/identity/pages/access/Live";
+import AccessArea from "../../modules/identity/pages/access/Area";
 import LiveServices from "../../modules/identity/pages/service-accounts/Live";
 import LiveMySecurity from "../../modules/identity/pages/my-security/Live";
 import { useService } from "../../service/context";
@@ -140,7 +140,10 @@ export default function RemainingSecurity(props: Props) {
         dir={props.locale === "ar" ? "rtl" : "ltr"}
         lang={props.locale}
       >
-        <LiveAccess
+        <AccessArea
+          params={props.params}
+          onState={props.onState}
+          onDirty={props.onDirty}
           locale={props.locale}
           view={props.view}
           session={service.session}

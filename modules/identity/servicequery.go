@@ -77,8 +77,7 @@ func (h *Workspace) ServiceUsers(actor Verifier, workspace, after string, limit 
 func (r *Registry) credentialInfos(ids []string) []CredentialInfo {
 	list := make([]CredentialInfo, 0, len(ids))
 	for _, id := range ids {
-		found := r.credentials[id]
-		list = append(list, CredentialInfo{ID: id, Validity: found.validity, Revoked: found.revoked})
+		list = append(list, r.credentialInfo(id))
 	}
 	return list
 }

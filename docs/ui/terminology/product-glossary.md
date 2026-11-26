@@ -11,6 +11,16 @@ The owner requested continuous TW review on 2026-11-04 and questioned `원가 �
 
 | Concept ID / canonical alias | Preferred KO | Preferred EN | AR candidate | Definition and forbidden implications | Current scope |
 | --- | --- | --- | --- | --- | --- |
+| read-recovery / explicit refresh | 데이터를 다시 불러왔습니다. | Data reloaded. | أُعيد تحميل البيانات. | Successful latest authorized read in the current session scope. Does not assert server mutation, guaranteed freshness or operation completion. | P01–P05; HYB-313 AI design/TW review, rendered verification tracked in feature evidence; native-language acceptance pending |
+| retained-issuance-settings / O03 documents | 발행 설정 이력 | Recorded issuance settings | إعدادات الإصدار المسجلة | Historical proposal/confirmation evidence, including unknown outcomes; not current issuance eligibility or an editable confirmed configuration. | HYB-341 Claude source TW review PASS; owner screen/native-language acceptance pending |
+| issuance-confirmation-attempt / O03 confirmer | 확인 시도자 | Confirmation attempted by | مَن حاول التأكيد | The actor of an unresolved confirmation attempt. Use Confirmed by only when retained confirmation publication completed; module observation alone is insufficient. | HYB-341 Claude source TW corrective review PASS; owner screen/native-language acceptance pending |
+| synthetic-issuance-preset / synthetic_erp_sample_v1 | 합성 ERP 샘플 | Synthetic ERP sample | نموذج ERP اصطناعي | An explicit sample adapter option. Region and synthetic tax references do not establish statutory tax applicability or real issuance readiness. | HYB-341 Claude source TW review PASS; owner screen/native-language acceptance pending |
+| decision-condition-check / B09 | 결정 조건 확인 | Check decision conditions | التحقق من شروط القرار | Explicit current observation for the selected financial request; not a decision, reservation or future authorization. | HYB-340 AI TW source review PASS; native-language acceptance pending |
+| unknown-decision-outcome / B09 | 처리 결과 미확인 | Outcome unknown | نتيجة العملية غير معروفة | A submission may have recorded a decision; only the identical submission can be retried. A retry refusal does not establish failure of its earlier effect. | HYB-340 AI TW source review PASS; native-language acceptance pending |
+| identical-decision-retry / B09 | 동일한 제출 다시 시도 | Retry the same submission | إعادة محاولة الإرسال نفسه | Resend the frozen action, target, evidence, rationale, reason and attempt identity; never create a fresh decision attempt automatically. | HYB-340 AI TW source review PASS; native-language acceptance pending |
+| charge-approval-limit-proposals / financial_authority_proposals | 청구 승인 한도 제안 | Charge approval limit proposals | مقترحات حدود اعتماد الرسوم | Pending StageCharge proposals binding a human recipient, currency, exact maximum absolute amount and inclusive UTC dates. Counts proposals, not amounts or effective decision permission. Separate from policy proposals, gate grants, payments and cancellation. | HYB-340 M01; independent AI TW source and rendered context review PASS; native-language acceptance pending |
+| charge-approval-policy-proposals / financial_policy_proposals | 청구 승인 정책 제안 | Charge approval policy proposals | مقترحات سياسة اعتماد الرسوم | Pending StageCharge policy proposals setting approval count, required evidence and validity. Not individual charge requests, pricing policies, permission grants, payments or automatic cancellation. | HYB-340 M01 bulk impact; independent AI TW source and rendered context review PASS; native-language acceptance pending |
+| input-confirmation-permission-requests / input_authority_proposals | 입력 데이터 권한 요청 | Input data permission requests | طلبات صلاحية بيانات الإدخال | Pending proposals and unresolved applications for separate console/human permissions to confirm synthetic input data or inspect its cost-protected evidence. The impact count is not data approval, financial approval, cancellation or proof of effective permission. | M01 bulk impact; independent AI TW/domain wording review PASS; rendered verification PASS; native-language acceptance pending |
 | infrastructure-composition / CostPool, B01 | 인프라 원가 구성 | Infrastructure cost composition | مكوّنات تكلفة البنية التحتية | Period-specific asset, lease/depreciation, license, power and facility cost composition and inclusion review. Not B03 allocation, sales pricing or a complete infrastructure ledger inferred from VMware rows. | B01 menu/title; AI TW design and scoped six-variant rendered review PASS; native-language acceptance pending |
 | billed-cost / BilledCost | 청구 비용 | Billed cost | التكلفة المفوترة | Collected billed source cost, not customer sales, cash payment or approved internal allocation. Preserve FOCUS alias in mapped fields/help. | U01/S04/B01 |
 | effective-cost / EffectiveCost | 실효 비용 | Effective cost | التكلفة الفعلية | Source cost with applicable amortization/discount treatment. Not merely discounted price, cash paid or financial approval. | U01/S04/B01 |
@@ -361,7 +371,7 @@ M01 can fix everyone who matches the current filters into one revocation list on
 | no-longer-matches / `no_longer_matches` | 더 이상 필터에 맞지 않음 / {k}명은 더 이상 필터에 맞지 않아 제외됩니다. | No longer matches the filters / {k} person no longer matches … and is excluded; {k} people no longer match … and are excluded. | لم يعد يطابق عوامل التصفية / (AR plural forms) | An exclusion reason found when the list is previewed. The person stays in the fixed list and is excluded; not a claim about the time of execution. |
 | selection-basis | 직접 선택 / 필터에 맞는 모든 사람 / 선택 기준 기록 없음 | Chosen people / Everyone matching filters / Selection basis not recorded | أشخاص مختارون / كل المطابقين لعوامل التصفية / أساس التحديد غير مسجّل | How a revocation list was built. A job rebuilt from the decision ledger after a restart shows "not recorded", because the ledger keeps no basis. |
 | search-applied / `search_masked` | 검색 조건 적용됨 | Search applied | تم تطبيق بحث | Shown to anyone but the preparer instead of the search text. A display rule, not secrecy; never described as private or protected. |
-| anchor-dead-end | 이 목록으로는 접근을 관리할 관리자가 남지 않습니다. 필터를 좁히세요. 예: {업무 공간 역할: 구성원} | This list would leave no administrator who can manage access. Narrow the filters, for example {Workspace role: Member}. | لن يبقى بهذه القائمة أي مسؤول يمكنه إدارة الوصول. ضيّق عوامل التصفية، مثل: {…} | A filter list cannot deselect people (HYB-324 is open), so the only ways forward are narrower filters or discarding the list. The example uses the rendered role option label. |
+| anchor-dead-end | 이 목록으로는 접근을 관리할 관리자가 남지 않습니다. 필터를 좁히세요. 예: {업무 공간 역할: 구성원} | This list would leave no administrator who can manage access. Narrow the filters, for example {Workspace role: Member}. | لن يبقى بهذه القائمة أي مسؤول يمكنه إدارة الوصول. ضيّق عوامل التصفية، مثل: {…} | Since HYB-324 the owner can also remove one such administrator from the filter list; the screen adds a second sentence saying so (`match-copy.ts` `blockedRemove`) and a way back to the list. Narrower filters and discarding the list remain. The example uses the rendered role option label. |
 | list-closed | 이 목록은 더 이상 준비할 수 없습니다. … | This list can no longer be prepared: it expired, or nobody in it can be revoked now. Discard it and select again. | لم يعد ممكنًا تحضير هذه القائمة … | The draft expired, or every person in it is excluded at preview. |
 | discard-list | 목록 버리기 | Discard list | تجاهل القائمة | Drops the fixed list; nothing was revoked. KO uses 버리기, as the module's other discard actions do. |
 | base-revision / `fixed_revision` | 기준 개정 번호 | Base revision | رقم التعديل الأساسي | The server revision when the list was fixed; part of the list's digest. |
@@ -412,6 +422,385 @@ Microsoft's [English notification-reference guidance](https://learn.microsoft.co
 
 Separate AI technical-writing review identified the API qualifier and build-term corrections. Native-language acceptance remains unverified. Executed screen checks are recorded in [HYB-327 verification](../../features/HYB-327/verification.md).
 
+## HYB-225 candidate access terminology
+
+M03 access management and P02 integration grants now include the synthetic candidate cost-read capability. The independent AI TW review accepted the distinction below as provisional product copy; scoped rendered review passed, while human native-language acceptance remains pending. Retain the existing View cost / 원가 조회 / عرض التكلفة action labels.
+
+| Canonical key | EN | KO | AR candidate | Meaning guard |
+| --- | --- | --- | --- | --- |
+| charge_candidate | Charge calculation candidates | 과금 계산 후보 | نتائج احتساب الرسوم المبدئية | Immutable computed rating records awaiting further eligibility and approval integration; not approved invoices, issuance authority or verified source ownership. |
+| charge_evidence | Source costs and calculation evidence | 원천 비용·계산 근거 | تكاليف المصدر وأدلة الاحتساب | Cost-protected source inputs and recorded calculation provenance; access requires ViewCost and does not approve the calculation. |
+
+On 2026-11-20, [AWS Korean billing guidance](https://docs.aws.amazon.com/ko_kr/awsaccountbilling/latest/aboutv2/billing-what-is.html) was inspected for its distinction between costs, calculated charges and invoices; [AWS Arabic cloud financial management](https://aws.amazon.com/ar/aws-cost-management/) was inspected for cost, usage, charge and invoice vocabulary. Neither source establishes a standard translation for this product's candidate record. Independent AI TW re-review replaced the ambiguous Arabic candidate/filter wording with provisional calculation results; contextual review remains required; no regional consensus or native approval is claimed. No permission or financial semantics change with language.
+
+## Approval read evidence (HYB-337)
+
+| Concept | Korean | English | Arabic | Meaning and exclusions |
+| --- | --- | --- | --- | --- |
+| approval-review-capability | 승인 검토 · 조회 전용 | Approval review · read only | مراجعة الاعتمادات · للقراءة فقط | Read-only inspection capability, not a claim of connection, freshness, approval or execution. |
+| approval-request-count | 전체 건수 | Exact request count | العدد الدقيق للطلبات | Exact number of matching requests, not an amount total across currencies or bases. |
+| approval-target-period | 기간 | Period | الفترة | The producer's target period if supplied. Does not infer billing, attribution or posting period when unknown. |
+| approval-producer-prerequisites | 원천 검증과 단계별 선행 조건이 연결되지 않았습니다. | Source validation and stage prerequisites are not connected. | التحقق من المصدر والمتطلبات المسبقة للمراحل غير مربوطين. | Known producer_unbound blocker. Does not relabel unrelated failure codes or assert that required checks passed. |
+
+These candidates follow the actual B09 contract and module/service mapping. Independent AI technical-writing review passed; no human practitioner or native-language acceptance is claimed. Existing financial-domain terminology and the screen specification remain authoritative. Visual reviews and their inspected scope are recorded in [HYB-337 verification](../../features/HYB-337/verification.md).
+
+
+## HYB-337 shared access capability terms
+
+M03 and P02 identify the read capability as Approval review records / 승인 검토 기록 / سجلات مراجعة الاعتمادات. Its evidence field is Approval request and decision evidence / 승인 요청·결정 근거 / أدلة طلبات الاعتماد والقرارات. The request phrase means viewing recorded requests and decisions, not granting approval authority, validating source prerequisites or checking current financial eligibility. Independent AI technical-writing review passed these scoped distinctions; native-language acceptance remains pending. See [the composed plan](../../features/HYB-337/plan.md) and [verification](../../features/HYB-337/verification.md).
+
+## Input confirmation permission request evidence
+
+HYB-225 adds the M01 bulk-impact label for input_authority_proposals. Regional pages read on 2026-11-20: [Microsoft Korean access-request approval](https://learn.microsoft.com/ko-kr/entra/id-governance/entitlement-management-request-approve) and [Microsoft Arabic access-request management](https://support.microsoft.com/ar-sa/sharepoint/sharepoint-sharing-and-permissions/set-up-and-manage-access-requests). They support distinguishing a permission request from the approval decision and assigned access level. They do not prescribe the product-specific compound or certify Arabic UAE/Saudi practitioner usage. The Entra ar-sa counterpart rendered English and was not used as Arabic wording evidence.
+
+Independent refusal_review performed the scoped AI TW/domain review against BulkPrepare and bulk-copy source, recommending explicit Korean data wording. Pending counts include unresolved grant applications; the existing recheck sentence describes current governance evaluation and does not promise cancellation or successful execution. Source research and AI review do not constitute human native-language acceptance. No layout, action or financial semantics changed.
+
+
+M03 and P02 also display confirm_input as **Confirm input data / 입력 데이터 확인 / تأكيد بيانات الإدخال**, and synthetic_input_evidence as **Synthetic input evidence / 합성 입력 데이터 근거 / أدلة بيانات الإدخال الاصطناعية**. The synthetic qualifier remains visible; neither label implies financial approval or production evidence. Independent AI TW/domain re-review passed. These are display labels only: the generic grant-request capability phrase/catalog is not expanded. Real sample-session browser checks passed for all three affected screens in EN/KO/AR at 1440, 1024 and 390 pixels; human native-language acceptance remains pending.
+
+
+## Separate input confirmation and evidence inspection
+
+HYB-225 now requires an explicit confirm or inspect capability in synthetic authority proposals. M01 uses the broader **Input data permission requests / 입력 데이터 권한 요청 / طلبات صلاحية بيانات الإدخال** because the impact count covers both. M03 labels input_review_evidence as **Input comparison and reconciliation evidence / 입력 데이터 비교·대사 근거 / أدلة مقارنة بيانات الإدخال ومطابقتها**. The existing View cost action stays separate from Confirm input data. Independent AI TW/domain review accepted these candidates; actual Claude visual review passed nine scoped captures. Neither capability is added to generic grant offerings. Native-language acceptance remains pending.
+
+The service field current_eligibility describes freshly checked synthetic input-evidence publication status only. It is not current financial authority, approved pricing, ERP readiness or downstream execution permission. Historical decision receipts remain explicitly historical after evidence changes.
+
+## S06 synthetic input review
+
+The authenticated S06 screen uses **Synthetic input review / 합성 입력 데이터 확인 / مراجعة بيانات الإدخال الاصطناعية**. The qualifier is mandatory: the screen publishes synthetic input eligibility internally and does not approve billing amounts or production use. **Confirm and publish / 확인·공개 / تأكيد ونشر** is explained at the point of decision; Korean 공개 does not mean public disclosure. **Reject input / 입력 거절 / رفض الإدخال** records rejection without publishing eligibility or deleting source data.
+
+Use the existing **Workspace / 업무 공간 / مساحة العمل** label. Arabic revision labels use نسخة to distinguish document/scope versions from review activity. Period ID remains an opaque identifier; UTC timestamps, currency codes and exact amounts are directionally isolated, while free-text decision reasons retain automatic natural-language direction. Current evidence and eligibility are separate from recorded decisions. Unknown request outcomes and later refusals remain distinct; a fresh read neither cancels nor proves failure of an earlier request. Independent AI domain/TW review passed these candidates. Human native-language acceptance remains pending.
+
+## Synthetic pricing permission provisioning
+
+HYB-225 uses the following domain-reviewed display candidates in M01 impact and M03/P02 grants. They identify permissions for synthetic sample calculations; this increment does not expose pricing-policy execution or approve calculated amounts. Independent AI domain/TW review and scoped actual Claude render review passed. Human native-language acceptance remains pending.
+
+| Concept / canonical alias | Preferred EN | Preferred KO | AR candidate | Definition and forbidden implication |
+| --- | --- | --- | --- | --- |
+| propose_pricing_policy | Propose pricing policy | 가격 정책 제안 | اقتراح سياسة التسعير | Propose terms for independent review; no effective-policy or financial approval implied. |
+| approve_pricing_policy | Approve pricing policy | 가격 정책 승인 | اعتماد سياسة التسعير | Approve a policy proposal under separate authority; distinct from approval of billing amounts. |
+| revoke_pricing_policy | Revoke pricing policy | 가격 정책 철회 | إلغاء سياسة التسعير | Stop future use while preserving history; do not imply deletion. |
+| use_pricing_policy | Use pricing policy | 가격 정책 적용 | تطبيق سياسة التسعير | Select and apply approved terms; not permission to issue or approve a bill. |
+| synthetic_pricing_policy | Synthetic pricing policy | 합성 시험용 가격 정책 | سياسة تسعير اصطناعية | Synthetic test policy, not a production commercial policy. |
+| pricing_policy_evidence | Pricing policy evidence | 가격 정책 근거 | أدلة سياسة التسعير | Cost-protected policy evidence; permission to inspect does not approve the policy. |
+| pricing_authority_proposals | Pricing policy permission requests | 가격 정책 권한 요청 | طلبات صلاحية سياسة التسعير | Pending/unresolved authority proposals for console ceilings and human grants; count is not a policy or amount approval. |
+
+Policy revocation and grant revocation are intentionally separate: the former stops use of a policy; the latter withdraws a person's permission. Korean 철회 versus 회수 and Arabic إلغاء versus إبطال preserve this difference. English Revoke is shared but names the distinct object. Use is translated as applying selected terms (적용 / تطبيق), never financial approval. M03 presents the evidence field; P02 preserves its existing action/kind/scope presentation.
+
+Regional wording evidence read on 2026-11-20: [Microsoft Korean policy configuration](https://learn.microsoft.com/ko-kr/azure/api-management/set-edit-policies) uses policy configuration/application vocabulary; [Microsoft Arabic API Management concepts](https://learn.microsoft.com/ar-sa/azure/api-management/api-management-key-concepts) uses policy terminology and distinguishes management configuration from gateway behavior. These support general IT vocabulary only, not an official translation of this product's pricing compounds. The Arabic policy-overview page appeared in search but direct retrieval failed, so it supplies no claimed inspected-page evidence. Existing access-request evidence above remains applicable to permission requests. No regional consensus or native approval is claimed.
+
+
+## Synthetic pricing policy proposal impact
+
+HYB-225 adds a distinct M01 impact category: `pricing_policy_proposals` → **Pricing policy proposals** / **가격 정책 제안** / **مقترحات سياسة التسعير**. This counts pending policy terms proposed by the selected users. It excludes approved/revoked policies and remains separate from permission requests for console ceilings and human grants. The recheck statement means the proposer’s current authority is checked at approval; it does not mean automatic cancellation or approval of billing amounts. Independent AI domain/TW review accepted these display candidates; native-language and owner acceptance remain pending.
+
+
+## B09 governed synthetic charge records
+
+HYB-340 distinguishes recorded calculation evidence from current financial eligibility. Independent AI terminology review accepted these candidates; native-language and owner acceptance remain pending.
+
+| Concept | EN | KO | AR candidate | Meaning |
+| --- | --- | --- | --- | --- |
+| rated_candidate_total | Rated candidate total | 과금 계산 후보 합계 | إجمالي نتيجة احتساب الرسوم المبدئية | Exact rated result, not inferred tax-inclusive gross, final invoice or payment. |
+| requester | Requester in source record | 요청자 (원천 기록) | مقدّم الطلب في سجل المصدر | Person who submitted the approval request, separate from original calculation author and decision actor. |
+| policy_revision | Recorded policy revision | 기록된 정책 버전 | نسخة السياسة المسجّلة | Policy revision bound to the recorded request, not an assertion of current policy applicability. |
+| synthetic row | Synthetic record | 합성 기록 | سجل اصطناعي | Actual record in a synthetic environment, not production billing. |
+
+For current_checks_unverified, use: **Current prerequisites and permission were not rechecked for this historical read.** / **이 이력 조회에서는 현재 선행 조건과 권한을 다시 확인하지 않았습니다.** / **لم تُعَد مراجعة المتطلبات المسبقة والصلاحية الحالية عند عرض هذا السجل التاريخي.** This is an unchecked condition, not a failed validation or permission grant. Keep the neutral warning separate from failed-validation blockers.
+
+
+## Synthetic document evidence and preparation permission
+
+HYB-340 separates grant-governor approval from actual document evidence confirmation. Confirming evidence does not approve invoice gross or establish tax policy. Revoking evidence stops future use, whereas revoking a grant removes a user's permission. Preparing an ERP record is internal preparation, not external submission, posting or issuance.
+
+| Identifier | English | Korean | Arabic |
+| --- | --- | --- | --- |
+| propose_document_evidence | Propose document evidence | 문서 근거 제안 | اقتراح أدلة المستند |
+| confirm_document_evidence | Confirm document evidence | 문서 근거 확인 | تأكيد أدلة المستند |
+| revoke_document_evidence | Revoke document evidence | 문서 근거 철회 | إلغاء أدلة المستند |
+| prepare_erp_record | Prepare internal ERP record | 내부 ERP 기록 준비 | إعداد سجل ERP داخلي |
+| synthetic_document_evidence | Synthetic document evidence | 합성 문서 근거 | أدلة مستند اصطناعية |
+| document_evidence | Document evidence | 문서 근거 | أدلة المستند |
+| document_authority_proposals | Document evidence and ERP preparation permission proposals | 문서 근거·ERP 준비 권한 제안 | مقترحات صلاحيات أدلة المستند وإعداد ERP |
+| document_evidence_proposals | Document evidence proposals | 문서 근거 제안 | مقترحات أدلة المستند |
+| issuance_protected_authority_proposals | Protected issuance settings permission proposals | 보호된 발행 설정 권한 제안 | مقترحات صلاحيات إعدادات الإصدار المحمية |
+| issuance_term_authority_proposals | Payment terms permission proposals | 납부 조건 권한 제안 | مقترحات صلاحيات شروط الدفع |
+| issuance_draft_authority_proposals | Issuance draft permission proposals | 발행 초안 권한 제안 | مقترحات صلاحيات مسودات الإصدار |
+
+M01 distinguishes permission proposals across all five capabilities from pending document-evidence packets counted by their original proposer. The document count excludes confirmed and revoked packets and all permission proposals. Confirmation rechecks the original proposer's current proposal authority; a count does not imply automatic cancellation, financial approval or ERP preparation. The document row says "The proposer’s permission is rechecked when the document evidence is confirmed." Its false/unknown fallback does not assert this safeguard. M03/P02 show actual human grants and console ceilings. The evidence field is protected as Cost; its name is not translated as document cost. Independent AI technical-writing review selected these terms from the actual contract and existing confirmation/revocation vocabulary; native-language and owner acceptance remain unverified.
+
+## Synthetic ERP result evidence permission
+
+HYB-341 introduces a separate result-evidence permission namespace. Existing document preparation permissions do not grant result recording or confirmation. Apply names internal ledger evidence ingestion, never external ERP submission/posting, financial approval, issuance or delivery. Provisioned rights alone do not establish an implemented result-consumer workflow.
+
+| Key | English | Korean | Arabic |
+| --- | --- | --- | --- |
+| propose_erp_result | Propose ERP result evidence | ERP 결과 근거 제안 | اقتراح أدلة نتائج ERP |
+| confirm_erp_result | Confirm ERP result evidence | ERP 결과 근거 확인 | تأكيد أدلة نتائج ERP |
+| revoke_erp_result | Revoke ERP result evidence | ERP 결과 근거 철회 | إلغاء أدلة نتائج ERP |
+| apply_erp_result | Apply ERP result evidence internally | ERP 결과 근거 내부 반영 | تطبيق أدلة نتائج ERP داخلياً |
+| synthetic_erp_result_evidence | Synthetic ERP result evidence | 합성 ERP 결과 근거 | أدلة نتائج ERP اصطناعية |
+| erp_result_evidence | ERP result evidence | ERP 결과 근거 | أدلة نتائج ERP |
+| result_authority_proposals | ERP result evidence permission proposals | ERP 결과 근거 권한 제안 | مقترحات صلاحيات أدلة نتائج ERP |
+
+M01 counts pending/unresolved permission proposals, excluding completed grants. Its shared recheck note refers to the proposer's authority at grant approval. M03 and P02 show explicit action/kind labels for already provisioned rights; these labels are not generic grant offers. Source terminology and initial M01 rendered review passed independent AI technical-writing review. Independent AI technical-writing review also passed eight representative actual M03/P02 grant-row/context captures under HYB-341; P02 shows the action and kind, not a separate Cost-field label. Native-language and owner acceptance remain pending. These compounds reuse the document-evidence and access-governance vocabulary above; no external vendor uses of the complete compounds are claimed.
+
+## Result evidence pending and unresolved impact
+
+HYB-341 M01 distinguishes pending result evidence proposals counted by the original proposer from unknown internal applications counted by the applying actor. These are separate work categories, not a deduplicated total. Revoked or superseded evidence does not erase unresolved application ownership. A count does not imply automatic cancellation or external ERP execution.
+
+| Key | English | Korean | Arabic |
+| --- | --- | --- | --- |
+| result_evidence_proposals | ERP result evidence proposals | ERP 결과 근거 제안 | مقترحات أدلة نتائج ERP |
+| result_applications_unknown | ERP result evidence applications with unknown outcome | ERP 결과 근거 내부 반영 결과 미확정 | عمليات تطبيق أدلة نتائج ERP داخلياً ذات نتيجة غير مؤكدة |
+
+The proposal note describes current proposer permission checks at evidence confirmation. The unknown-application note describes current applying-actor permission and evidence checks at recovery while preserving the possibility of earlier effects. False-recheck displays explicitly withhold assurance and retain that uncertainty. Separate read-only AI technical-writing review selected EN/KO/AR wording against the actual contract; native-language and owner acceptance are unverified. Existing layout and neutral separators remain unchanged. Rendered acceptance is recorded separately, not inferred from this glossary.
+
+## Owned ERP result replacement
+
+HYB-341 B09 distinguishes the reported result, its internal application and retained application history. A reserved latest application with an unknown outcome is not proof of current ledger application. A historical ancestor with an unresolved successor is not proof that replacement completed. Prospective targets describe the currently observed head; only an owned operation has a retained predecessor. Unknown-predecessor recovery requires the original actor and current permissions/evidence and may remain unavailable. These terms do not authorize ERP transmission, posting or final financial approval.
+
+| Concept | EN | KO | AR |
+| --- | --- | --- | --- |
+| Initial operation | Initial internal application | 최초 내부 반영 | التطبيق الداخلي الأول |
+| Replacement operation | Internal replacement | 내부 대체 반영 | الاستبدال الداخلي |
+| Prospective predecessor | Proposed replacement target | 대체 예정 대상 | الهدف المقترح للاستبدال |
+| Historical application | Historical record | 이전 처리 기록 | سجل سابق |
+| Internal receipt evidence | Internal processing record hash | 내부 처리 기록 해시 | بصمة سجل المعالجة الداخلية |
+
+Do not translate internal processing receipt as a payment receipt (영수증). Do not label an unknown reserved head as a completed application, and do not promise that retrying will recover a watermark-stranded predecessor. Independent technical-writing review inspected these strings in source and bounded actual EN/KO/AR renders; native-language/practitioner and owner acceptance remain unverified. See [replacement screen verification](../../features/HYB-341/result-replacement-screen-verification.md).
+
+## ERP final-amount approval policy impact
+
+HYB-341 M01 counts pending service-owned StageERPFinal approval-policy proposals by original proposer, separately from charge approval policies. Confirmation rechecks the proposer’s current governance authority. Confirming a policy neither approves a particular amount nor grants request/decision rights, consumes an approval, or transmits/posts to ERP.
+
+| Key | English | Korean | Arabic |
+| --- | --- | --- | --- |
+| erp_final_policy_proposals | ERP final-amount approval policy proposals | ERP 최종 금액 승인 정책 제안 | مقترحات سياسة اعتماد المبلغ النهائي في ERP |
+
+Independent read-only AI technical-writing review passed these source/domain labels and subsequently inspected six actual final/charge row crops in EN1440, KO390 and AR390. The wording and bounded rendered context passed; native-language and owner acceptance remain unverified. See the [ERP-final implementation plan](../../features/HYB-341/erp-final-approval-plan.md) for the exact verification boundary.
+
+## ERP final-amount approval limit impact
+
+HYB-341 M01 counts pending service-owned StageERPFinal amount-authority proposals binding a human recipient, currency, exact maximum absolute amount and inclusive UTC dates. Confirmation rechecks original proposer governance authority and recipient eligibility. These are distinct from policy proposals and request/decision gate permissions; confirmation does not approve a particular final amount or transmit/post to ERP.
+
+| Key | English | Korean | Arabic |
+| --- | --- | --- | --- |
+| erp_final_authority_proposals | ERP final-amount approval limit proposals | ERP 최종 금액 승인 한도 제안 | مقترحات حدود اعتماد المبلغ النهائي في ERP |
+
+Independent read-only source/domain technical-writing review passed these exact labels and subsequently passed wording in three actual EN1440/KO390/AR390 row crops. Native-language and owner acceptance remain unverified. The separate Claude CLI review covered those rows and two context captures; see the [ERP-final plan](../../features/HYB-341/erp-final-approval-plan.md) for bounded evidence.
+
+## ERP final-amount action permissions
+
+HYB-341 distinguishes approval-action permission from submission permission. The former is a direct human grant; the latter requires an independently governed console ceiling and human subgrant. Permission grants authorize the named actor action only. They do not supply amount authority, satisfy current evidence/policy checks, record a final decision, or authorize ERP transmission/posting. M01 counts pending/unresolved proposals; M03/P02 display provisioned action/resource labels.
+
+| Concept | English | Korean | Arabic |
+| --- | --- | --- | --- |
+| erp_final_permission_proposals | ERP final-amount approval permission proposals | ERP 최종 금액 승인 권한 제안 | مقترحات صلاحية اعتماد المبلغ النهائي في ERP |
+| erp_final_request_permission_proposals | ERP final-amount approval submission permission proposals | ERP 최종 금액 승인 요청 제출 권한 제안 | مقترحات صلاحية تقديم طلب اعتماد المبلغ النهائي في ERP |
+| erp_final_approval | ERP final-amount approval | ERP 최종 금액 승인 | اعتماد المبلغ النهائي في ERP |
+| approve | Approve ERP final amounts | ERP 최종 금액 승인 | اعتماد المبلغ النهائي في ERP |
+| request_approval | Request approval for ERP final amounts | ERP 최종 금액 승인 요청 | طلب اعتماد المبلغ النهائي في ERP |
+
+Independent source/domain technical-writing review passed these exact labels, then inspected six actual M01 crops and six M03/P02 crops with bounded rendered PASS. M03/P02 render action and kind separately. Native-language and owner acceptance remain unverified; see the [ERP-final plan](../../features/HYB-341/erp-final-approval-plan.md) for exact capture and test scope.
+
+## Issuance permission areas and capabilities (M03)
+
+HYB-341. Labels of the three issuance permission areas on M03 and of the capabilities provisioned in them. Source: `apps/console/src/modules/identity/pages/access/result-authority/areas.ts`. HYB-346 reuses the capability labels for the existing M03 and P02 grant rows.
+
+| Key | English | Korean | Arabic |
+| --- | --- | --- | --- |
+| issuance_protected_authority area | Protected issuance settings permissions | 보호된 발행 설정 권한 | صلاحيات إعدادات الإصدار المحمية |
+| issuance_term_authority area | Payment terms permissions | 납부 조건 권한 | صلاحيات شروط الدفع |
+| issuance_draft_authority area | Issuance draft permissions | 발행 초안 권한 | صلاحيات مسودات الإصدار |
+| protected `register_channel` | Register verification channel | 검증 채널 등록 | تسجيل قناة التحقق |
+| protected `admit_channel` | Accept verification channel | 검증 채널 수락 | قبول قناة التحقق |
+| protected `request_change` | Request protected settings change | 보호된 설정 변경 요청 | طلب تغيير الإعدادات المحمية |
+| protected `verify_change` | Verify protected settings change | 보호된 설정 변경 검증 | التحقق من تغيير الإعدادات المحمية |
+| protected `approve_change` | Approve protected settings change | 보호된 설정 변경 승인 | اعتماد تغيير الإعدادات المحمية |
+| protected `inspect` | Inspect protected settings evidence | 보호된 설정 근거 조회 | عرض أدلة الإعدادات المحمية |
+| term `record` | Record payment terms | 납부 조건 기록 | تسجيل شروط الدفع |
+| term `approve` | Approve payment terms | 납부 조건 승인 | اعتماد شروط الدفع |
+| term `bind` | Apply payment terms to a contract | 계약에 납부 조건 적용 | تطبيق شروط الدفع على عقد |
+| term `approve_binding` | Approve applying payment terms to a contract | 계약에 납부 조건 적용 승인 | اعتماد تطبيق شروط الدفع على عقد |
+| term `inspect` | Inspect payment terms evidence | 납부 조건 근거 조회 | عرض أدلة شروط الدفع |
+| draft `submit` | Submit issuance draft for approval | 발행 초안 승인 요청 | إرسال مسودة الإصدار للاعتماد |
+| draft `approve` | Approve issuance draft | 발행 초안 승인 | اعتماد مسودة الإصدار |
+| draft `inspect` | Inspect issuance draft evidence | 발행 초안 근거 조회 | عرض أدلة مسودة الإصدار |
+| verification channel | Verification channel | 검증 채널 | قناة التحقق |
+
+- "Accept" for the admit step is not an approval; it is kept apart from 승인 / اعتماد so one panel does not use one verb for four different acts.
+- Submitting a draft creates work awaiting approval and issues nothing.
+- "Apply to a contract" is the internal bind and is not a contract amendment.
+- A verification channel is distinct from the webhook subscriptions and notification channels named elsewhere in this glossary.
+- Open: 납부 조건 is used here, in the M01 labels, the drafts approval inbox and the planning fields, while the contracts, review-and-issue and credit case screens use 지급 조건; the contracts screen words "verification" as 확인 where these labels use 검증. Both need one terminology decision.
+- Review boundary: role-based technical-writing review only. Native-language and owner acceptance of the Korean and Arabic labels are pending.
+
+### Issuance grants in the M03 grant rows and P02 ceiling rows
+
+Once an issuance permission is granted it appears in the existing grant and ceiling rows by its action, resource kind and evidence field. The action labels repeat the capability names above. An inspect permission is stored as the `view_cost` action limited to one evidence field. Grant, ceiling and request rows on M03 show it as "View cost · <evidence field>"; P02 shows "View cost" with the resource kind. "View cost" is not an accurate name for reading settings, terms or draft evidence; the label predates these permissions and is left for a terminology decision. No request phrase is defined for these grants, so the generic access request form does not offer them (HYB-346).
+
+| Identifier | English | Korean | Arabic |
+| --- | --- | --- | --- |
+| register_issuance_channel | Register verification channel | 검증 채널 등록 | تسجيل قناة التحقق |
+| admit_issuance_channel | Accept verification channel | 검증 채널 수락 | قبول قناة التحقق |
+| request_issuance_protected_change | Request protected settings change | 보호된 설정 변경 요청 | طلب تغيير الإعدادات المحمية |
+| verify_issuance_protected_change | Verify protected settings change | 보호된 설정 변경 검증 | التحقق من تغيير الإعدادات المحمية |
+| approve_issuance_protected_change | Approve protected settings change | 보호된 설정 변경 승인 | اعتماد تغيير الإعدادات المحمية |
+| record_issuance_term | Record payment terms | 납부 조건 기록 | تسجيل شروط الدفع |
+| approve_issuance_term | Approve payment terms | 납부 조건 승인 | اعتماد شروط الدفع |
+| bind_issuance_term | Apply payment terms to a contract | 계약에 납부 조건 적용 | تطبيق شروط الدفع على عقد |
+| approve_issuance_term_binding | Approve applying payment terms to a contract | 계약에 납부 조건 적용 승인 | اعتماد تطبيق شروط الدفع على عقد |
+| submit_issuance_draft | Submit issuance draft for approval | 발행 초안 승인 요청 | إرسال مسودة الإصدار للاعتماد |
+| approve_issuance_draft | Approve issuance draft | 발행 초안 승인 | اعتماد مسودة الإصدار |
+| synthetic_issuance_protected | Synthetic protected issuance settings | 합성 보호된 발행 설정 | إعدادات إصدار محمية اصطناعية |
+| synthetic_issuance_terms | Synthetic payment terms | 합성 납부 조건 | شروط دفع اصطناعية |
+| synthetic_issuance_draft | Synthetic issuance drafts | 합성 발행 초안 | مسودات إصدار اصطناعية |
+| issuance_protected | Protected issuance settings evidence | 보호된 발행 설정 근거 | أدلة إعدادات الإصدار المحمية |
+| issuance_terms | Payment terms evidence | 납부 조건 근거 | أدلة شروط الدفع |
+| issuance_draft | Issuance draft evidence | 발행 초안 근거 | أدلة مسودة الإصدار |
+
+## Issuance pending work on M01 (HYB-343, HYB-344)
+
+M01 lists these rows under pending work when a person is about to lose access. Each count is the number of open items that person started; it does not cancel them. The note beside a count says whether that person is checked again at the next step. If so, the item fails once their access is removed.
+
+| Identifier | English | Korean | Arabic |
+| --- | --- | --- | --- |
+| issuance_setup_proposals | Issuance settings proposals | 발행 설정 제안 | مقترحات إعدادات الإصدار |
+| issuance_draft_submissions | Issuance drafts awaiting approval | 승인 대기 중인 발행 초안 | مسودات الإصدار بانتظار الموافقة |
+| issuance_protected_steps | Protected issuance settings steps awaiting another person | 다른 사람의 처리를 기다리는 보호된 발행 설정 단계 | خطوات إعدادات الإصدار المحمية بانتظار شخص آخر |
+| issuance_term_steps | Payment terms steps awaiting approval | 승인 대기 중인 납부 조건 단계 | خطوات شروط الدفع بانتظار الموافقة |
+
+The `issuance_setup_proposals` row counts issuance settings a person proposed that are not yet confirmed, including a proposal or a confirmation whose outcome is unknown. Confirmation rechecks that the proposer is still an installation administrator, so the row uses its own note: "The proposer’s installation administrator status is rechecked when the issuance settings are confirmed." / "발행 설정 확인 시 제안자의 설치 관리자 자격을 다시 확인합니다." / "تُعاد مراجعة صفة مقدّم المقترح كمسؤول تثبيت عند تأكيد إعدادات الإصدار." It replaces the general note "Rechecked when approved", because issuance settings are confirmed, not approved.
+
+The `issuance_draft_submissions` row of M01 counts, for the person who submitted them, issuance drafts whose submission is recorded or has an unknown outcome and that have no approved review; a refused submission is not counted. A new review and a new approval attempt recheck that the submitter still holds the submission permission; recovering an approval the module already recorded does not. The row uses the general recheck note. A reviewer whose prepared review is the last one has no row of their own (HYB-344).
+
+The `issuance_protected_steps` row of M01 counts, for the person who started each, a protected settings rules proposal not yet confirmed, a verification channel not yet accepted or whose acceptance has an unknown outcome, and a protected settings change requested or verified but not decided. A step whose own first request has an unknown outcome is counted too, although it waits for the same person's retry rather than for someone else. The next step rechecks that person's standing, so the row uses the note "Rechecked when the next step is sent". The `issuance_term_steps` row counts payment terms and their applications to a contract that are recorded but not approved, or whose recording or approval has an unknown outcome, for the person who recorded them; approval rechecks that person's permission. A change is counted by its recorded state, and ordinary reads do not write the lapse of its validity back, so a lapsed change can remain counted. Statements not yet used by a step and the people who must perform the next step have no row (HYB-344).
+
+## Issuance setup sections on O03
+
+HYB-341. Labels of the second-level navigation of the O03 documents view and of the selection of confirmed issuance settings that scopes protected settings and payment terms. Source: `apps/console/src/modules/organizations/pages/contracts/setup/part-copy.ts`. Composition and the remaining labels of these sections are in [the O03 screens plan](../../features/HYB-341/issuance-setup-screens-plan.md).
+
+| Key | English | Korean | Arabic |
+| --- | --- | --- | --- |
+| navigation label | Issuance setup sections | 발행 설정 하위 메뉴 | أقسام إعداد الإصدار |
+| part `settings` | Issuance settings | 발행 설정 | إعدادات الإصدار |
+| part `rules` | Protected settings rules | 보호된 설정 규칙 | قواعد الإعدادات المحمية |
+| part `channels` | Verification channels | 검증 채널 | قنوات التحقق |
+| part `changes` | Protected settings changes | 보호된 설정 변경 | تغييرات الإعدادات المحمية |
+| part `statements` | Statements | 진술 | الإفادات |
+| scope action | Use these settings | 이 설정 사용 | استخدام هذه الإعدادات |
+| chosen row | Selected | 선택됨 | محددة |
+| scope bar | Selected issuance settings | 선택한 발행 설정 | إعدادات الإصدار المحددة |
+| setup date | Setup date | 설정 기준일 | تاريخ الإعداد |
+
+Labels of the protected settings rules part, from `setup/rules-copy.ts`:
+
+| Key | English | Korean | Arabic |
+| --- | --- | --- | --- |
+| `rules_approvals` | Approvals required for a change | 변경에 필요한 승인 수 | عدد الاعتمادات المطلوبة للتغيير |
+| `rules_validity_seconds` | Time allowed between verification and decision | 검증 후 결정까지 허용 시간 | المدة المسموح بها بين التحقق والقرار |
+| `rules_max_lead_seconds` | Longest time from request to effective time | 요청부터 적용 시각까지 허용되는 최대 기간 | أطول مدة من الطلب إلى وقت السريان |
+| `rules_channel_age_seconds` | Minimum time after channel acceptance before a change request | 채널 수락 후 변경 요청까지 필요한 최소 시간 | أدنى مدة بعد قبول القناة قبل طلب تغيير |
+| retained state | Recorded state | 기록된 상태 | الحالة المسجَّلة |
+| observation | Observed now | 현재 관찰된 상태 | المرصود حالياً |
+| pinned confirmer | Confirmer pinned, not yet observed | 지정된 확인자, 아직 관찰되지 않음 | المؤكِّد المعيَّن، لم يُرصد بعد |
+| observation `absent` | No rules observed | 관찰된 규칙 없음 | لا توجد قواعد مرصودة |
+| observation `pending` | Proposal awaiting confirmation | 확인 대기 중인 제안 | اقتراح بانتظار التأكيد |
+| observation `active` | In effect | 적용 중 | سارية |
+| unconfirmed values | Proposed rule values — not confirmed | 제안된 규칙 값 — 확인 전 | قيم القواعد المقترحة — غير مؤكدة |
+
+Rule steps (slice 8): "Propose protected settings rules / 보호된 설정 규칙 제안 / اقتراح قواعد الإعدادات المحمية" and "Confirm protected settings rules / 보호된 설정 규칙 확인 / تأكيد قواعد الإعدادات المحمية". Confirm (확인, تأكيد) is used for rules and issuance settings; verify (검증, تحقق) for changes and channels. Units are "Hours / 시간 / ساعات" and "Days / 일 / أيام".
+
+"Recorded state" is what the service retained and may be an unknown outcome; "Observed now" is what is held at the time of the read; neither states that issuance is possible. The recorded states reuse the issuance settings labels (proposed, confirmed, proposal outcome unknown, confirmation outcome unknown).
+
+Labels of the verification channels part, from `setup/channels-copy.ts`:
+
+| Key | English | Korean | Arabic |
+| --- | --- | --- | --- |
+| state `registration_unknown` | Registration outcome unknown | 등록 처리 결과 미확인 | نتيجة التسجيل غير معروفة |
+| state `registered` | Registered, awaiting acceptance | 등록됨, 수락 대기 | مسجَّلة، بانتظار القبول |
+| state `admission_unknown` | Acceptance outcome unknown | 수락 처리 결과 미확인 | نتيجة القبول غير معروفة |
+| state `admitted` | Accepted | 수락됨 | مقبولة |
+| observation `absent` | No channel observed | 관찰된 채널 없음 | لا توجد قناة مرصودة |
+| observation `retired` | Retired | 사용 종료됨 | أُوقف استخدامها |
+| pinned admitter | Accepting person pinned, not yet observed | 지정된 수락자, 아직 관찰되지 않음 | المعيَّن للقبول، لم يُرصد بعد |
+| `request_not_before` | Earliest change request | 가장 이른 변경 요청 시각 | أبكر وقت لطلب تغيير |
+| rules `other` | Recorded under rules other than the current rules | 현재 규칙이 아닌 규칙에서 기록됨 | مسجلة وفق قواعد غير القواعد الحالية |
+| subject kinds | Customer, Issuing entity, Document kind | 고객, 발행 법인, 문서 종류 | العميل، الجهة المصدرة، نوع المستند |
+| channel kinds | Email, Phone, Portal, Postal mail | 이메일, 전화, 포털, 우편 | البريد الإلكتروني، الهاتف، البوابة، البريد العادي |
+
+Channel and statement steps (slice 9): the step labels are the M03 capability labels "Register verification channel" and "Accept verification channel"; the row action is the short "Accept channel / 채널 수락 / قبول القناة". Statement steps are "Record statement / 진술 기록 / تسجيل الإفادة" and "Withdraw statement / 진술 철회 / سحب الإفادة". The review groups are "Statement you will record / 기록할 진술 / الإفادة التي ستسجّلها", "Statement you recorded in this session / 이 세션에서 기록한 진술 / الإفادة التي سجّلتها في هذه الجلسة" and "Action it supports / 진술이 뒷받침하는 단계 / الإجراء الذي تدعمه". A statement "supports" an action only in the sense that the action names it; it is never called evidence or proof.
+
+"Accepted" is the admission step of a channel (수락, قبول) and never means valid or approved. The earliest change request time is shown only when the read states it and does not state that the user may request a change through the channel.
+
+Labels of the protected settings changes part, from `setup/changes-copy.ts`:
+
+| Key | English | Korean | Arabic |
+| --- | --- | --- | --- |
+| field `document_recipient` | Document recipient | 문서 수신자 | مستلم المستند |
+| field `document_template` | Document template | 문서 템플릿 | قالب المستند |
+| field `payment_account` | Payment account | 결제 계좌 | حساب الدفع |
+| unknown phase label | Step outcome | 단계 처리 결과 | نتيجة الخطوة |
+| phase `request_unknown` | Request outcome unknown | 요청 처리 결과 미확인 | نتيجة الطلب غير معروفة |
+| phase `verification_unknown` | Verification outcome unknown | 검증 처리 결과 미확인 | نتيجة التحقق غير معروفة |
+| phase `decision_unknown` | Decision outcome unknown | 결정 처리 결과 미확인 | نتيجة القرار غير معروفة |
+| state `requested` | Requested | 요청됨 | تم طلبه |
+| state `confirmed` | Verification recorded, awaiting decision | 검증 기록됨, 결정 대기 | سُجِّل التحقق، بانتظار القرار |
+| state `scheduled` | Scheduled | 예정됨 | مجدول |
+| state `rejected` | Rejected | 반려됨 | مرفوض |
+| state `lapsed` | Lapsed | 기한 경과 | انقضت المهلة |
+| observation `absent` | No change observed | 관찰된 변경 없음 | لا يوجد تغيير مرصود |
+| pinned verifier | Verifier pinned, not yet observed | 지정된 검증자, 아직 관찰되지 않음 | المتحقِّق المعيَّن، لم يُرصد بعد |
+| pinned decision actor | Deciding person pinned, not yet observed | 지정된 결정자, 아직 관찰되지 않음 | صاحب القرار المعيَّن، لم يُرصد بعد |
+| `effective` | Takes effect | 적용 시각 | وقت السريان |
+| provenance | Entered by staff, Customer document, Customer portal | 직원 입력, 고객 문서, 고객 포털 | إدخال من الموظف، مستند من العميل، بوابة العميل |
+
+Change steps (slice 10): "Request protected settings change" and "Verify protected settings change" are the M03 capability labels. The decision step is "Decide protected settings change / 보호된 설정 변경 결정 / البتّ في تغيير الإعدادات المحمية", because it may approve or reject, while the capability is labelled "Approve protected settings change"; its choices are "Approve / 승인 / اعتماد" and "Reject / 반려 / رفض". Verification outcomes read "The instruction was confirmed through the channel" and "The instruction was denied". Rejection reasons: Incorrect details / 내용 오류, Missing supporting material / 뒷받침 자료 누락, Suspected fraud / 사기 의심, Other / 기타. The reason code `missing_evidence` is not shown as "evidence".
+
+The change state `confirmed` is not shown as "confirmed" or "verified": it means that a verification was recorded and a decision is awaited. A verifier's outcome is shown as what the verifier stated. "Latest scheduled change" is recorded history and does not state that an invoice draft can use the change.
+
+Labels of the statements part and of the sample references, from `setup/statements-copy.ts`:
+
+| Key | English | Korean | Arabic |
+| --- | --- | --- | --- |
+| purpose `channel_registration` | Channel registration | 채널 등록 | تسجيل القناة |
+| purpose `channel_admission` | Channel acceptance | 채널 수락 | قبول القناة |
+| purpose `change_instruction` | Change instruction | 변경 지시 | تعليمات التغيير |
+| purpose `change_verification` | Change verification | 변경 검증 | التحقق من التغيير |
+| state `unconsumed` | Not used — supports no record | 미사용 — 어떤 기록도 뒷받침하지 않음 | غير مستخدمة — لا تدعم أي سجل |
+| state `consumed` | Used | 사용됨 | مستخدمة |
+| state `withdrawn` | Withdrawn — supports no record | 철회됨 — 어떤 기록도 뒷받침하지 않음 | مسحوبة — لا تدعم أي سجل |
+| `locator` | Where the source is kept | 원본 보관 위치 | مكان حفظ المصدر |
+| sample reference | Sample recipient A | 샘플 수신자 A | مستلم تجريبي A |
+| sample channel | Sample issuing entity channel A | 샘플 발행 법인 채널 A | قناة جهة مصدرة تجريبية A |
+| sample sender | Sample unregistered sender | 샘플 미등록 발신자 | مرسل تجريبي غير مسجل |
+
+Sample labels are built from the use and the letter of the catalog code; the code itself is not shown.
+
+Labels of the O03 payment terms view, from `setup/terms-copy.ts`. The Korean term is 납부 조건 on this view, as on M03, M01 and the draft inbox; the payer labels (지급 주체, 지급자) are a separate concept.
+
+| Key | English | Korean | Arabic |
+| --- | --- | --- | --- |
+| view | Payment terms | 납부 조건 | شروط الدفع |
+| `net_days` | Net days (calendar): 30 days | 납부 기한 일수(달력일): 30일 | أيام الاستحقاق (تقويمية): 30 يومًا |
+| part | Payment terms of these settings | 이 설정의 납부 조건 | شروط الدفع لهذه الإعدادات |
+| binding author | Applied by | 적용자 | طبّقه |
+| state `registration_unknown` | Recording outcome unknown | 기록 처리 결과 미확인 | نتيجة التسجيل غير معروفة |
+| state `pending` | Recorded, awaiting approval | 기록됨, 승인 대기 | مسجَّلة، بانتظار الاعتماد |
+| state `approval_unknown` | Approval outcome unknown | 승인 처리 결과 미확인 | نتيجة الاعتماد غير معروفة |
+| state `approved` | Approved | 승인됨 | معتمدة |
+| pinned approver | Approver pinned, not yet observed | 지정된 승인자, 아직 관찰되지 않음 | المعتمِد المعيَّن، لم يُرصد بعد |
+| bindings | Payment terms applied to this contract | 이 계약에 적용된 납부 조건 | شروط الدفع المطبَّقة على هذا العقد |
+| open-ended | No end date | 종료일 없음 | بلا تاريخ انتهاء |
+| reasons | Initial, Renegotiation, Correction | 최초 적용, 재협상, 정정 | أولي، إعادة تفاوض، تصحيح |
+| origins | These issuance settings, Other issuance settings, Billing profile | 이 발행 설정, 다른 발행 설정, 청구 프로필 | إعدادات الإصدار هذه، إعدادات إصدار أخرى، ملف الفوترة |
+
+Step and result labels of the payment terms view (slice 7): the four step labels reuse the M03 capability labels, with "this contract" for the two application steps (이 계약에 납부 조건 적용, 이 계약에 납부 조건 적용 승인; تطبيق شروط الدفع على هذا العقد, اعتماد تطبيق شروط الدفع على هذا العقد). The check button reads "Review before sending / 전송 전 검토 / المراجعة قبل الإرسال" because no permission is checked before sending. Results read "Refused. This request recorded nothing.", "Outcome unknown…", "Recorded. Current issuance eligibility was not checked." and "Settled by a matching recovery"; the retry and recovery labels are the merged "Retry exact request / 동일 요청 재시도" and "Recover recorded attempt / 기록된 시도 복구".
+
+"Approved" is the approval of the recorded terms or of their application by a second person. The view calculates no due date and states nothing as payable, due or overdue.
+
+A statement (진술, إفادة) is its author's accountable claim and is never labelled evidence, proof or verification. "Selected" states which confirmed settings the user chose as scope; it does not state that issuance is possible. Role-based AI review only; native-language and owner acceptance remain unverified.
 
 ## Bounded service-account management (HYB-304)
 
@@ -431,22 +820,10 @@ These candidate terms follow the actual declaration, bounded-query and command-r
 | service-match-lower-bound | 일치 항목 수, 최소 | Matching count, at least | عدد النتائج المطابقة، على الأقل | Cumulative matching lower bound at a fixed list reference; separate from exact recorded-account admission and current-page length. |
 
 Current command rationale help and counters use the actual effective rationale byte limit rather than a fixed256-byte UI assumption. Pickup end timestamps remain isolated LTR. An exact zero on an unfiltered first configured-audience page explains an empty catalog; a filtered empty page does not imply absent configuration.
-
 The M04 Reveal label Estimated validity end / 예상 유효 기간 종료 / نهاية الصلاحية التقديرية identifies the provisional browser-clock estimate only. A matching current credential observation replaces it with the actual validity end; a metadata failure cannot turn the estimate into a verified timestamp. This distinction neither grants pickup rights nor proves secret storage.
-
-
 The subsequent HYB-304 interaction checkpoint adds source/TW review and representative rendered hold/read-error checks. Credential lifecycle Active/Expired/Revoked remains separate from account Active/Suspended/Retired. On hold / 보류 / غير صالحة حاليًا denotes lifecycle-active metadata currently unusable because of validity or account state; it must not imply that every hold means a suspended account. Revoke required / 폐기 필요 / يلزم الإبطال identifies remaining active credentials on a retired account. Both validity endpoints are displayed; these labels establish neither effective grants nor successful service authentication.
-
 The authentication prerequisite notice explains the current unsupported multi-factor requirement: password confirmation cannot satisfy it. Unavailable authentication evidence is a separate uncertainty with passive Reload. M04 read errors describe service-account reads/permission and preserve safe server references; they must not inherit user-invitation or change-save explanations. Issuance Sending and lapsed request-recovery text uses the existing localized candidate copy; a lapsed request outcome does not mean current credential metadata is unavailable. Native/practitioner/Claude/owner acceptance remains unverified.
-
-
 The HYB-304 issuance-draft checkpoint uses “A credential issuance draft for another service account is retained.” / “다른 서비스 계정의 자격 증명 발급 초안이 보존되어 있습니다.” / “توجد مسودة محفوظة لإصدار بيانات اعتماد لحساب خدمة آخر.” This means one unsent memory-only target/days/rationale under the current authentication lease, not an issued credential, accepted command, persisted server draft or collected secret. Existing keep/discard actions respectively return to that exact canonical target or remove only the captured draft. Independent AI TW/source and representative actual KO/AR render review passed; native/practitioner and owner acceptance remain unverified. See [verification](../../features/HYB-304/m04-issue-draft.md).
-
-
 HYB-304 now also distinguishes one unsent state/revocation change draft (action, canonical target, rationale) from an already submitted frozen command intent. Its incompatible-target/action notice identifies the original action and target: reopening is manual; Cancel closes the current form while preserving the draft; Discard removes only that draft and does not undo a submitted command. Independent AI terminology and actual EN/KO/AR390 static-render review passed; native/practitioner acceptance remains unverified. See [action draft verification](../../features/HYB-304/m04-action-draft.md).
-
-
 For HYB-304 M04, “Command outcome unknown” / “명령 결과 확인 안 됨” / “نتيجة الأمر غير معروفة” concerns the original request, even when a later retry has a definitive revision refusal. A retry error code describes that attempt and cannot by itself establish that the original failed. Generic retained hadUnknown history preserves this meaning; validated matching completion may establish completion. “Command refused” is used for a first definitive refusal. Password confirmation failure is separate from user saving, and target-context refusal does not establish global authority loss. Existing sanitized code/request references identify errors rather than certify outcomes. Independent AI source/TW and representative rendered EN/KO/AR checks passed; independent producer/history review preserves documented issuance F2 execution and its delayed-original limitation, while native/practitioner acceptance remains open. See [verification](../../features/HYB-304/m04-command-errors.md).
-
-
 HYB-304 local form errors identify required input and current UTF8-byte/integer/scope limits without granting permission or rewriting a retained request. “선언된 범위” is used in the scope-error instructions. A rejected edit is explained separately as keeping the prior draft; it must not falsely invalidate that retained valid value. Known ineligible references differ from unavailable evidence. Keyboard error links focus the actual control or stable picker/scopes group. Credential used/limit and recorded-account/limit ratios keep their complete decimal reading order LTR, including Arabic;0 / 10 must not appear as10 / 0, and6 / 200 remains separate from zero filtered matches. Independent source/TW and representative EN/KO/AR static-render checks passed after correcting that reversal; native/practitioner and AT acceptance remain unverified. See [verification](../../features/HYB-304/m04-form-errors.md).

@@ -3,22 +3,23 @@ import { sessionQueryClient } from "./session-query";
 import { serviceQueryClient } from "./service-query";
 import { grantsOf, delegationsOf, catalogOf, subjectsOf, settingsOf as accessSettingsOf, requestsOf, revocationsOf, previewsOf } from "./access-read";
 import { credentialOf, selfPageOf } from "./account-read";
-import { organizationsPageOf } from "./organization-read";
+import { organizationsPageOf, organizationTreeOf } from "./organization-read";
 import { ReadParseError, text as readText } from "./strict-read";
 import { accessHistoryOf, HistoryParseError, type AccessHistoryPage, type AccessHistoryQuery } from "./access-history";
 import { contractDetailOf, contractsPageOf, type ContractDetail, type ContractsPage } from "./contracts";
-import { installationOf, type InstallationPage } from "./installation";
-import { integrationsOf, type IntegrationsPage } from "./integrations";
-import { recoveryOf, type RecoveryPage } from "./recovery";
-import { evidenceOf, type EvidencePage } from "./release-evidence";
-import { retentionOf, type RetentionPage } from "./retention";
+import { installationOf, proposalOf as installProposalOf, type InstallationPage, type InstallProposal } from "./installation";
+import { keptFactsOf, keptPageOf, type KeptFacts, type KeptPage } from "./kept";
+import { deliveriesPageOf, type Delivery as IntegrationDelivery, historyPageOf, integrationsOf, pluginProposalOf, type HistoryEntry, type IntegrationsPage, type PluginProposal } from "./integrations";
+import { recoveryRowsOf, type RecoveryList, locksPageOf, recoveryOf, recoveryProposalOf, type LocksPage, type RecoveryPage, type RecoveryProposal } from "./recovery";
+import { replacementsAnswerOf, type TargetRow as ReplacementRow, buildsPageOf, evidenceOf, hardwareAnswerOf, hardwarePath, pathsAnswerOf, pathsPath, profilesAnswerOf, profilesPath, proposalOf as evidenceProposalOf, resultsPageOf, requirementsAnswerOf, requirementsPath, type EvidencePage, type BuildRow, type HardwareRow, type PathRow, type ProfileRow, type Proposal as EvidenceProposal, type ResultRow, type RequirementsAnswer, type RequirementsQuery } from "./release-evidence";
+import { holdsPageOf, proposalOf as retentionProposalOf, artifactsPageOf, artifactsPath, outcomesPageOf, ownersPageOf, referencesPageOf, retentionOf, runItemsPageOf, runsPageOf, tombstonesPageOf, type ArtifactEntry, type HoldOutcome, type HoldRow, type Owner as HoldOwner, type Reference, type RunItem, type Proposal as RetentionProposal, type RetentionPage, type RunRow, type Tombstone } from "./retention";
 import { selfEndOf, type SelfEnd, type SelfSession } from "./self-end";
 
 export type RolePeriod = "open" | "bounded" | "ends_soon" | "ended";
 
 export type Membership = {
-  role: "administrator" | "member";
-  state: "active" | "suspended";
+  role: "administrator" | "member" | "unknown";
+  state: "active" | "suspended" | "unknown";
   version: number;
   role_from: string;
   role_until: string;
@@ -103,8 +104,8 @@ export function membershipOf(v: unknown): Membership | null {
   const suspended = String(m.suspended_for ?? "");
   const ledger = String(m.ledger ?? "");
   return {
-    role: m.role === "administrator" ? "administrator" : "member",
-    state: m.state === "suspended" ? "suspended" : "active",
+    role: m.role === "administrator" ? "administrator" : m.role === "member" ? "member" : "unknown",
+    state: m.state === "suspended" ? "suspended" : m.state === "active" ? "active" : "unknown",
     version: Number(m.version ?? 0),
     role_from: String(m.role_from ?? ""),
     role_until: String(m.role_until ?? ""),
@@ -270,6 +271,9 @@ export type CredentialRow = {
   usable: boolean;
   secret_pickup?: SecretPickup;
   secret_pickup_until?: string;
+  replaces?: string;
+  replaced_by?: string;
+  rotation?: "replacing" | "ending";
 };
 export type Secret = { secret: string; credential: string };
 export type { SelfSession, SelfEnd, SelfEndRow, SelfItem, SelfRef } from "./self-end";
@@ -288,6 +292,7 @@ export type SelfPage = {
   accepted_operation_count: number;
   sessions_generation: string;
   idle_minutes: number;
+  absolute_minutes: number;
   max_age_seconds: number;
   signed_in_at: string;
   authenticated_at: string;
@@ -316,16 +321,40 @@ export type OrgPage = {
   scan_stopped: boolean;
   scan_budget: number;
 };
+export type OrgTreeNode = { id: string; name: string; kind: "legal_entity" | "internal_unit" | "account" | "unknown"; state: string; source: "relationship" | "registry" | "none"; children: "some" | "none" | "unchecked" };
+export type OrgTreeQuery = { on?: string; revision?: number; parent?: string; group?: "detached"; after?: string; limit?: number };
+export type OrgTreePage = {
+  revision: string; relationship_revision: number; active_revision: number; on: string; parent: string; group: string;
+  nodes: OrgTreeNode[]; next: string; scan_stopped: boolean; registry_empty: boolean;
+};
 export type OrgSubject = "account" | "party" | "any";
 export type OrgFilters = { subject: string; entity: string; unattributed: boolean; q: string; member_count: number; target: string };
 export type OrgTargetRow = { id: string; name: string; members_on: number };
 export type TargetsQuery = { kind: RelationKind; on?: string; revision?: number; after?: string; limit?: number; q?: string };
 export type TargetsPage = { revision: string; relationship_revision: number; active_revision: number; on: string; kind: RelationKind; targets: OrgTargetRow[]; next: string; scan_stopped: boolean };
 export type PlanChange = { kind: string; member: string; action: string; target: string; from: string };
-export type PlanKind = { kind: string; changed: number; entries_before: number; entries_after: number; earliest: string };
+export type PlanKind = { kind: string; changed: number; entries_before: number; entries_after: number; earliest: string; next?: string };
 export type PlanViolation = { kind: string; member: string; rule: string };
 export type PlanRange = { from: string; until: string };
-export type PlanMember = { member: string; name: string; differs: PlanRange[]; before: string[]; after: string[] };
+export type PlanMember = { kind?: string; member: string; name: string; differs: PlanRange[]; before: string[]; after: string[] };
+
+export function planMemberOf(m: PlanMember | Record<string, unknown>): PlanMember {
+  const r = m as Record<string, unknown>;
+  const list = <T,>(x: unknown) => (Array.isArray(x) ? (x as T[]) : []);
+  return {
+    kind: typeof r.kind === "string" ? r.kind : undefined,
+    member: String(r.member ?? ""),
+    name: String(r.name ?? ""),
+    differs: list<PlanRange | null>(r.differs).filter((d): d is PlanRange => !!d && typeof d === "object").map((d) => ({ from: String(d.from ?? ""), until: String(d.until ?? "") })),
+    before: list<unknown>(r.before).map(String),
+    after: list<unknown>(r.after).map(String),
+  };
+}
+
+export function planMembersPageOf(body: Record<string, unknown>): { rows: PlanMember[]; next: string } | null {
+  if (!Array.isArray(body.members) || typeof body.next !== "string") return null;
+  return { rows: body.members.filter((m): m is Record<string, unknown> => !!m && typeof m === "object" && !Array.isArray(m)).map(planMemberOf), next: body.next };
+}
 export type ImpactState = "computed" | "not_computed" | "unknown";
 export type PlanImpact = { money: ImpactState; publication: ImpactState; erp: ImpactState };
 const impactState = (v: unknown): ImpactState => (v === "computed" || v === "not_computed" ? v : "unknown");
@@ -360,7 +389,11 @@ export type PlansPage = {
   open_limit: number;
   plans: PlanRow[];
   you: string;
+  closed: ClosedFacts;
 };
+export type ClosedFacts = KeptFacts;
+export type ClosedPlansQuery = { after?: string; limit?: number; q?: string };
+export type ClosedPlansPage = { plans: PlanRow[]; next: string; matching: number; closed: ClosedFacts; q: string };
 
 export function planOf(v: unknown): PlanRow {
   const r = (v ?? {}) as Record<string, unknown>;
@@ -386,13 +419,7 @@ export function planOf(v: unknown): PlanRow {
     truncated: r.truncated === true,
     members: list<PlanMember | null>(r.members)
       .filter((m): m is PlanMember => !!m && typeof m === "object")
-      .map((m) => ({
-        member: String(m.member ?? ""),
-        name: String(m.name ?? ""),
-        differs: list<PlanRange | null>(m.differs).filter((d): d is PlanRange => !!d && typeof d === "object").map((d) => ({ from: String(d.from ?? ""), until: String(d.until ?? "") })),
-        before: list<unknown>(m.before).map(String),
-        after: list<unknown>(m.after).map(String),
-      })),
+      .map(planMemberOf),
     impact: { money: impactState(impact.money), publication: impactState(impact.publication), erp: impactState(impact.erp) },
     can_activate: r.can_activate === true,
     blocked: String(r.blocked ?? ""),
@@ -503,7 +530,7 @@ export type TrustChange = {
   earlier_run: boolean;
   run_started_at: string;
   validation: TrustValidation | null;
-  impact: TrustImpact;
+  impact: TrustImpact | null;
   activation: TrustActivation | null;
   job: TrustJob | null;
   invalidation: TrustInvalidation | null;
@@ -554,7 +581,7 @@ const trustStates: TrustState[] = ["draft", "validated", "independently_approved
 export function trustChangeOf(v: unknown): TrustChange {
   const r = obj(v);
   const val = r.validation ? obj(r.validation) : null;
-  const imp = obj(r.impact);
+  const imp = r.impact && typeof r.impact === "object" && !Array.isArray(r.impact) ? obj(r.impact) : null;
   const act = r.activation ? obj(r.activation) : null;
   const job = r.job ? obj(r.job) : null;
   const inv = r.invalidation ? obj(r.invalidation) : null;
@@ -570,7 +597,7 @@ export function trustChangeOf(v: unknown): TrustChange {
       result: str(val.result), at: str(val.at), evidence_digest: str(val.evidence_digest), evidence_current: val.evidence_current === true,
       items: list(val.items).map((x) => { const i = obj(x); return { item: str(i.item), result: str(i.result), reason: str(i.reason), detail: str(i.detail) }; }),
     },
-    impact: { members: num(imp.members), sessions: num(imp.sessions), affected_ids: list(imp.affected_ids).map(String), weakens_mfa: imp.weakens_mfa === true, signs_out_everyone: imp.signs_out_everyone !== false },
+    impact: imp && { members: num(imp.members), sessions: num(imp.sessions), affected_ids: list(imp.affected_ids).map(String), weakens_mfa: imp.weakens_mfa === true, signs_out_everyone: imp.signs_out_everyone !== false },
     activation: act && { epoch: epochOf(act.epoch), ledger_sequence: num(act.ledger_sequence), watermark: str(act.watermark), at: str(act.at) },
     job: job && { id: str(job.id), state: str(job.state), reason: str(job.reason) },
     invalidation: inv && {
@@ -658,6 +685,9 @@ export class AdminError extends Error {
 }
 
 export type CommandId =
+  | "input.inspect"
+  | "input.confirm_publish"
+  | "input.reject"
   | "identity.create_user"
   | "identity.invite"
   | "identity.issue_set_link"
@@ -673,6 +703,7 @@ export type CommandId =
   | "identity.set_role_period"
   | "bulk_revocation.add_targets"
   | "bulk_revocation.add_matching"
+  | "bulk_revocation.remove_targets"
   | "bulk_revocation.prepare"
   | "bulk_revocation.execute"
   | "bulk_revocation.discard"
@@ -695,6 +726,7 @@ export type CommandId =
   | "service.retire"
   | "service.issue_credential"
   | "service.revoke_credential"
+  | "service.rotate_credential"
   | "relationship.propose"
   | "relationship.activate"
   | "relationship.discard"
@@ -832,6 +864,10 @@ const codes: Record<string, AdminFailure> = {
 
 export type StepUp = () => Promise<boolean>;
 
+export function pickupGone(error: unknown): boolean {
+  return error instanceof AdminError && error.failure === "denied";
+}
+
 export function failureOf(status: number, body: Record<string, unknown>): AdminError {
   const valid = body && typeof body === "object" && !Array.isArray(body) ? body : {};
   const code = typeof valid.code === "string" && /^[a-z][a-z0-9_]{0,127}$/.test(valid.code) ? valid.code : "";
@@ -877,6 +913,8 @@ export async function reauthenticate(csrf: string, password: string, f: Fetch = 
   }
   throw failureOf(r.status, body);
 }
+
+const closedFactsOf = keptFactsOf;
 
 export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis), stepUp?: StepUp) {
   let authenticationLost = false;
@@ -1045,6 +1083,18 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis), ste
       const body = await send("/organizations" + (qs ? "?" + qs : ""), { method: "GET" }, attempt().request);
       return validatedRead(() => organizationsPageOf(body));
     },
+    async tree(query: OrgTreeQuery = {}): Promise<OrgTreePage> {
+      const q = new URLSearchParams();
+      if (query.on) q.set("on", query.on);
+      if (query.revision !== undefined) q.set("revision", String(query.revision));
+      if (query.parent) q.set("parent", query.parent);
+      if (query.group) q.set("group", query.group);
+      if (query.after) q.set("after", query.after);
+      if (query.limit) q.set("limit", String(query.limit));
+      const qs = q.toString();
+      const body = await send("/organizations/tree" + (qs ? "?" + qs : ""), { method: "GET" }, attempt().request);
+      return validatedRead(() => organizationTreeOf(body));
+    },
     async targets(query: TargetsQuery): Promise<TargetsPage> {
       const q = new URLSearchParams({ kind: query.kind });
       if (query.on) q.set("on", query.on);
@@ -1073,7 +1123,23 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis), ste
         open_limit: Number(body.open_limit ?? 0),
         plans: (Array.isArray(body.plans) ? body.plans : []).map(planOf),
         you: String(body.you ?? ""),
+        closed: closedFactsOf(body.closed),
       };
+    },
+    async planMembers(plan: string, kind: string, after: string): Promise<{ rows: PlanMember[]; next: string }> {
+      const got = planMembersPageOf(await send("/organizations/plans/members?" + new URLSearchParams({ plan, kind, limit: "50", after }).toString(), { method: "GET" }, attempt().request));
+      if (!got) throw new AdminError("invalid");
+      return got;
+    },
+    async closedPlans(query: ClosedPlansQuery = {}): Promise<ClosedPlansPage> {
+      const q = new URLSearchParams();
+      if (query.after) q.set("after", query.after);
+      if (query.limit) q.set("limit", String(query.limit));
+      if (query.q) q.set("q", query.q);
+      const qs = q.toString();
+      const body = await send("/organizations/plans/closed" + (qs ? "?" + qs : ""), { method: "GET" }, attempt().request);
+      if (!Array.isArray(body.plans) || typeof body.next !== "string") throw new AdminError("invalid");
+      return { plans: body.plans.map(planOf), next: body.next, matching: Number(body.matching ?? 0), closed: closedFactsOf(body.closed), q: String(body.q ?? "") };
     },
     async viewGroupDrafts(after = "", limit = 0): Promise<DraftsPage> {
       const q = new URLSearchParams();
@@ -1123,6 +1189,88 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis), ste
     async installation(): Promise<InstallationPage> {
       return installationOf(await send("/installation", { method: "GET" }, attempt().request));
     },
+    async installationProposals(after: string): Promise<KeptPage<InstallProposal>> {
+      const got = keptPageOf(await send("/installation/proposals?limit=50&after=" + encodeURIComponent(after), { method: "GET" }, attempt().request), installProposalOf);
+      if (!got) throw new AdminError("invalid");
+      return got;
+    },
+    async integrationProposals(after: string): Promise<KeptPage<PluginProposal>> {
+      const got = keptPageOf(await send("/integrations/proposals?limit=50&after=" + encodeURIComponent(after), { method: "GET" }, attempt().request), pluginProposalOf);
+      if (!got) throw new AdminError("invalid");
+      return got;
+    },
+    async integrationDeliveries(subscription: string, after: string): Promise<{ rows: IntegrationDelivery[]; next: string }> {
+      const got = deliveriesPageOf(await send("/integrations/deliveries?" + new URLSearchParams({ subscription, limit: "50", after }).toString(), { method: "GET" }, attempt().request));
+      if (!got) throw new AdminError("invalid");
+      return got;
+    },
+    async subscriptionHistory(subscription: string, after: string): Promise<{ rows: HistoryEntry[]; next: string; total: number }> {
+      const got = historyPageOf(await send("/integrations/subscription-history?subscription=" + encodeURIComponent(subscription) + "&limit=50&after=" + encodeURIComponent(after), { method: "GET" }, attempt().request));
+      if (!got) throw new AdminError("invalid");
+      return got;
+    },
+    async retentionHolds(after: string): Promise<{ rows: HoldRow[]; next: string; total: number }> {
+      const got = holdsPageOf(await send("/retention/holds?limit=50&after=" + encodeURIComponent(after), { method: "GET" }, attempt().request));
+      if (!got) throw new AdminError("invalid");
+      return got;
+    },
+    async retentionArtifacts(query: { cls: string; after: string } | { ids: string[] }): Promise<{ rows: ArtifactEntry[]; next: string; total: number }> {
+      const got = artifactsPageOf(await send(artifactsPath(query), { method: "GET" }, attempt().request));
+      if (!got) throw new AdminError("invalid");
+      return got;
+    },
+    async retentionOwners(query: { q: string } | { id: string }): Promise<{ rows: HoldOwner[]; matching: number; more: boolean }> {
+      const q = new URLSearchParams("id" in query ? { id: query.id } : query.q ? { q: query.q } : {});
+      const qs = q.toString();
+      const got = ownersPageOf(await send("/retention/owners" + (qs ? "?" + qs : ""), { method: "GET" }, attempt().request));
+      if (!got) throw new AdminError("invalid");
+      return got;
+    },
+    async retentionRunArtifacts(run: string, after: string): Promise<{ rows: RunItem[]; next: string }> {
+      const got = runItemsPageOf(await send("/retention/run-artifacts?" + new URLSearchParams({ run, limit: "50", after }).toString(), { method: "GET" }, attempt().request));
+      if (!got) throw new AdminError("invalid");
+      return got;
+    },
+    async retentionHoldOutcomes(hold: string, after: string): Promise<{ rows: HoldOutcome[]; next: string }> {
+      const got = outcomesPageOf(await send("/retention/hold-outcomes?" + new URLSearchParams({ hold, limit: "50", after }).toString(), { method: "GET" }, attempt().request));
+      if (!got) throw new AdminError("invalid");
+      return got;
+    },
+    async retentionReferences(after: string): Promise<{ rows: Reference[]; next: string; total: number }> {
+      const got = referencesPageOf(await send("/retention/references?limit=50&after=" + encodeURIComponent(after), { method: "GET" }, attempt().request));
+      if (!got) throw new AdminError("invalid");
+      return got;
+    },
+    async retentionTombstones(after: string): Promise<{ rows: Tombstone[]; next: string; total: number }> {
+      const got = tombstonesPageOf(await send("/retention/tombstones?limit=50&after=" + encodeURIComponent(after), { method: "GET" }, attempt().request));
+      if (!got) throw new AdminError("invalid");
+      return got;
+    },
+    async retentionRuns(after: string): Promise<{ rows: RunRow[]; next: string; total: number }> {
+      const got = runsPageOf(await send("/retention/runs?limit=50&after=" + encodeURIComponent(after), { method: "GET" }, attempt().request));
+      if (!got) throw new AdminError("invalid");
+      return got;
+    },
+    async retentionProposals(kind: string, after: string): Promise<KeptPage<RetentionProposal>> {
+      const got = keptPageOf(await send("/retention/proposals?kind=" + encodeURIComponent(kind) + "&limit=50&after=" + encodeURIComponent(after), { method: "GET" }, attempt().request), retentionProposalOf);
+      if (!got) throw new AdminError("invalid");
+      return got;
+    },
+    async recoveryRows<T>(installation: string, list: RecoveryList, after: string, of: (r: Record<string, unknown>) => T): Promise<{ rows: T[]; next: string }> {
+      const got = recoveryRowsOf(await send("/recovery/rows?" + new URLSearchParams({ installation, list, limit: "50", after }).toString(), { method: "GET" }, attempt().request), of);
+      if (!got) throw new AdminError("invalid");
+      return got;
+    },
+    async recoveryLocks(installation: string, after: string): Promise<LocksPage> {
+      const got = locksPageOf(await send("/recovery/locks?installation=" + encodeURIComponent(installation) + "&limit=50&after=" + encodeURIComponent(after), { method: "GET" }, attempt().request));
+      if (!got) throw new AdminError("invalid");
+      return got;
+    },
+    async recoveryProposals(after: string): Promise<KeptPage<RecoveryProposal>> {
+      const got = keptPageOf(await send("/recovery/proposals?limit=50&after=" + encodeURIComponent(after), { method: "GET" }, attempt().request), recoveryProposalOf);
+      if (!got) throw new AdminError("invalid");
+      return got;
+    },
     async integrations(): Promise<IntegrationsPage> {
       return integrationsOf(await send("/integrations", { method: "GET" }, attempt().request));
     },
@@ -1134,6 +1282,47 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis), ste
     },
     async releaseEvidence(request = attempt().request): Promise<EvidencePage> {
       return evidenceOf(await send("/release-evidence", { method: "GET" }, request));
+    },
+    async evidenceReplacements(requirement: string, query: { q: string } | { id: string }): Promise<{ rows: ReplacementRow[]; matching: number; more: boolean }> {
+      const q = new URLSearchParams({ requirement, ...("id" in query ? { id: query.id } : query.q ? { q: query.q } : {}) });
+      const got = replacementsAnswerOf(await send("/release-evidence/replacements?" + q.toString(), { method: "GET" }, attempt().request));
+      if (!got) throw new AdminError("invalid");
+      return got;
+    },
+    async evidenceProfiles(query: { after?: string; targets?: string[] }): Promise<{ rows: ProfileRow[]; next: string; total: number }> {
+      const got = profilesAnswerOf(await send(profilesPath(query), { method: "GET" }, attempt().request));
+      if (!got) throw new AdminError("invalid");
+      return got;
+    },
+    async evidencePaths(query: { after?: string; ids?: string[] }): Promise<{ rows: PathRow[]; next: string; total: number }> {
+      const got = pathsAnswerOf(await send(pathsPath(query), { method: "GET" }, attempt().request));
+      if (!got) throw new AdminError("invalid");
+      return got;
+    },
+    async evidenceHardware(after: string): Promise<{ rows: HardwareRow[]; next: string; total: number }> {
+      const got = hardwareAnswerOf(await send(hardwarePath(after), { method: "GET" }, attempt().request));
+      if (!got) throw new AdminError("invalid");
+      return got;
+    },
+    async evidenceBuilds(after: string): Promise<{ rows: BuildRow[]; next: string; total: number }> {
+      const got = buildsPageOf(await send("/release-evidence/builds?limit=50&after=" + encodeURIComponent(after), { method: "GET" }, attempt().request));
+      if (!got) throw new AdminError("invalid");
+      return got;
+    },
+    async evidenceResults(after: string): Promise<{ rows: ResultRow[]; next: string; total: number }> {
+      const got = resultsPageOf(await send("/release-evidence/results?limit=50&after=" + encodeURIComponent(after), { method: "GET" }, attempt().request));
+      if (!got) throw new AdminError("invalid");
+      return got;
+    },
+    async evidenceProposals(after: string): Promise<KeptPage<EvidenceProposal>> {
+      const got = keptPageOf(await send("/release-evidence/proposals?limit=50&after=" + encodeURIComponent(after), { method: "GET" }, attempt().request), evidenceProposalOf);
+      if (!got) throw new AdminError("invalid");
+      return got;
+    },
+    async evidenceRequirements(query: RequirementsQuery, request = attempt().request): Promise<RequirementsAnswer> {
+      const got = requirementsAnswerOf(await send(requirementsPath(query), { method: "GET" }, request));
+      if (!got) throw new AdminError("invalid");
+      return got;
     },
     async collect(ref: string): Promise<string> {
       const body = await send("/identity/links/" + encodeURIComponent(ref), { method: "GET" }, attempt().request);

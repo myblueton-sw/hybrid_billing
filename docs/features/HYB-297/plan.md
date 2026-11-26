@@ -464,7 +464,7 @@ changes: [ {
   id, number, state, change_revision, change_digest, old_epoch, old_policy, old_digest, new_digest,
   candidate, proposer, validator, approver, activator, superseded_by,
   validation: { result, at, evidence_digest, evidence_current, items: [ { item, result, reason, detail } ] },
-  impact: { members, sessions, affected_ids (≤100), weakens_mfa, signs_out_everyone: true },
+  impact: { members, sessions, affected_ids (≤100), weakens_mfa, signs_out_everyone: true } | null,   (null when the change is not open or its facts could not be read; HYB-314)
   activation: { epoch, ledger_sequence, watermark, at } | null,
   job: null | { id, state: "waiting", reason: "activation_unknown" | "publish_failed" },
   invalidation: { state, items: [ { item, result, ended, remaining, reason } ] } | null,

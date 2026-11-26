@@ -62,6 +62,7 @@ const (
 	ExcludedNoMembership    = "no_membership"
 	ExcludedAlreadyRevoked  = "already_revoked"
 	ExcludedNoLongerMatches = "no_longer_matches"
+	ExcludedChosen          = "chosen"
 	HeldChanged             = "changed_since_preview"
 	HeldSelf                = "self"
 	RecordNotConfirmed      = "record_not_confirmed"
@@ -232,6 +233,7 @@ type View struct {
 	Selection       string
 	Filter          []FilterTerm
 	Matched         int
+	Chosen          int
 	FixedAt         time.Time
 	FixedRevision   string
 	Revision        string
@@ -279,3 +281,9 @@ const (
 	CleaningCancelled  = "cancelled"
 	CleaningNotCreated = ""
 )
+
+type Removal struct {
+	Removed int
+	Already int
+	Ignored int
+}

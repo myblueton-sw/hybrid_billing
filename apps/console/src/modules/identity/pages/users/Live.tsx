@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { diagnosticCopy } from "../../../../service/diagnostic-copy";
 import type { Locale } from "../../../../shared/types";
-import { AdminError, attempt, sequence, type AdminClient, type Attempt, type ClockState, type CommandId, type SettingRow, type UserRow, type UsersPage } from "../../../../service/admin";
+import { AdminError, attempt, pickupGone, sequence, type AdminClient, type Attempt, type ClockState, type CommandId, type SettingRow, type UserRow, type UsersPage } from "../../../../service/admin";
 import { useAdminClient } from "../../../../service/context";
 import type { Session } from "../../../../service/api";
 import { c } from "../../../../service/copy";
@@ -9,11 +10,11 @@ import { Summary, TextField, type Problems } from "../../../../service/Service";
 import { actionDone, actionLabel, impact, w, type Action } from "./live-copy";
 import { accountName, failureText, offers, roleName, setup, tags } from "./live-model";
 import { b } from "./bulk-copy";
-import { number, selectLoaded, toggle, without, type Selection } from "./bulk-model";
-import { bulkClient } from "../../../../service/identity-bulk";
+import { mayBeAdministrator, number, selectLoaded, toggle, without, type Selection } from "./bulk-model";
+import { batches, bulkClient } from "../../../../service/identity-bulk";
 import { FixedBar, MatchAction, plainFixedLine } from "./Matching";
 import { m } from "./match-copy";
-import { fixedOfJob, type Fixed } from "./match-model";
+import { fixedOfJob, removalOf, type Fixed, type RemovalSum } from "./match-model";
 import { dateParts } from "./period-model";
 import { BulkFlow } from "./BulkPrepare";
 import RevocationJobs from "./RevocationJobs";
@@ -263,7 +264,7 @@ function Pickup({ l, api, login, purpose, refId, expires, notice, onDone }: {
     setState("loading");
     api.collect(refId).then(
       (u) => { setUrl(u); setState("shown"); },
-      (e) => setState(e instanceof AdminError && e.failure === "unavailable" ? "retry" : "gone"),
+      (e) => setState(pickupGone(e) ? "gone" : "retry"),
     );
   }, [api, refId]);
   useEffect(() => {
@@ -351,8 +352,8 @@ function Detail({ l, user, self, notice, onAction, serverTime, onJob }: {
       ) : (
         <>
           {group(w.account(l), offer.account)}
-          {group(w.membershipTitle(l), offer.membership, offer.notes.filter((n) => n === w.promotionReason(l)))}
-          {group(w.sign(l), offer.sign, offer.notes.filter((n) => n !== w.promotionReason(l)))}
+          {group(w.membershipTitle(l), offer.membership, offer.notes.filter((n) => n === w.promotionReason(l) || n === w.unknownStateReason(l) || n === w.unknownRoleReason(l)))}
+          {group(w.sign(l), offer.sign, offer.notes.filter((n) => n !== w.promotionReason(l) && n !== w.unknownStateReason(l) && n !== w.unknownRoleReason(l)))}
         </>
       )}
     </section>
@@ -373,7 +374,7 @@ function Breakable({ text }: { text: string }) {
 function membershipWord(l: Locale, u: UserRow): string {
   if (!u.membership) return w.noMembership(l);
   if (membershipEnded(u)) return fc.membershipEnded(l);
-  return u.membership.state === "active" ? w.active(l) : w.membershipSuspended(l);
+  return u.membership.state === "active" ? w.active(l) : u.membership.state === "suspended" ? w.membershipSuspended(l) : w.unknownState(l);
 }
 
 function RoleBeside({ l, u }: { l: Locale; u: UserRow }) {
@@ -385,7 +386,7 @@ function Cell({ label, className, children }: { label: string; className?: strin
   return <td role="cell" data-label={label} className={className}>{children}</td>;
 }
 
-type Select = { on: boolean; selected: Selection; self: string; atLimit: boolean; loaded: string[]; onToggle: (id: string) => void; onAll: () => void };
+type Select = { on: boolean; keeping: boolean; selected: Selection; self: string; atLimit: boolean; loaded: string[]; onToggle: (id: string) => void; onAll: () => void };
 
 function Effect({ l, u }: { l: Locale; u: UserRow }) {
   if (!u.revocation || u.membership?.suspended_for !== "bulk_revocation" && u.state !== "suspended") return null;
@@ -412,13 +413,13 @@ export function Table({ l, view, users, selected, onOpen, sel, serverTime }: {
       <table role="table">
         <colgroup>{check && <col className="m01-col-check" />}<col className="live-col-user" />{head.slice(1).map((h, i) => <col key={h} className={folded(i + 1)} />)}</colgroup>
         <thead role="rowgroup"><tr role="row">
-          {check && <HeaderCheck l={l} selected={sel.selected} loaded={sel.loaded} onAll={sel.onAll} cell />}
+          {check && <HeaderCheck l={l} selected={sel.selected} loaded={sel.loaded} onAll={sel.onAll} cell keeping={sel.keeping} />}
           {head.map((h, i) => <th key={h} scope="col" role="columnheader" className={folded(i)}>{h}</th>)}
         </tr></thead>
         <tbody role="rowgroup">
           {users.map((u) => (
             <tr key={u.user_id} role="row" className={u.user_id === selected ? "live-selected" : undefined}>
-              {check && <CheckCell l={l} u={u} self={sel.self} selected={sel.selected} atLimit={sel.atLimit} onToggle={sel.onToggle} />}
+              {check && <CheckCell l={l} u={u} self={sel.self} selected={sel.selected} atLimit={sel.atLimit} onToggle={sel.onToggle} keeping={sel.keeping} />}
               <td role="cell" className="live-user">
                 <button type="button" className="live-open" data-user-id={u.user_id} aria-current={u.user_id === selected ? "true" : undefined} onClick={() => onOpen(u.user_id)}>
                   <bdi dir="ltr" className={u.login ? undefined : "live-mono"}>{u.login ? <Breakable text={u.login} /> : u.user_id}</bdi>
@@ -453,6 +454,7 @@ export function Table({ l, view, users, selected, onOpen, sel, serverTime }: {
                   <Cell label={head[2]} className="m01-l">
                     {roleName(l, u.membership?.role ?? "")}
                     {u.membership?.state === "suspended" && <span className="live-sub">{u.membership.suspended_for === "role_period_ended" ? p.ended(l) : w.membershipSuspended(l)}</span>}
+                    {u.membership?.state === "unknown" && <span className="live-sub">{w.unknownState(l)}</span>}
                     {u.membership?.suspended_for === "bulk_revocation" && <Effect l={l} u={u} />}
                     {u.installation_administrator && <span className="live-sub">{w.installationAdmin(l)}</span>}
                   </Cell>
@@ -461,6 +463,7 @@ export function Table({ l, view, users, selected, onOpen, sel, serverTime }: {
                   <Cell label={head[5]} className="m01-m">
                     {roleName(l, u.membership?.role ?? "")}{u.membership && <span className="live-sub"><PeriodCell l={l} u={u} serverTime={serverTime} /></span>}
                     {u.membership?.state === "suspended" && <span className="live-sub">{w.membershipSuspended(l)}</span>}
+                    {u.membership?.state === "unknown" && <span className="live-sub">{w.unknownState(l)}</span>}
                     {u.membership?.suspended_for === "bulk_revocation" && <Effect l={l} u={u} />}
                     {u.installation_administrator && <span className="live-sub">{w.installationAdmin(l)}</span>}
                   </Cell>
@@ -522,11 +525,18 @@ export default function LiveUsers({ locale: l, view, session, onSignOut, onView,
   const [selected, setSelected] = useState("");
   const [mode, setMode] = useState<Mode>({ kind: "none" });
   const [notice, setNotice] = useState("");
+  const [closedNote, setClosedNote] = useState(false);
   const [announce, setAnnounce] = useState("");
   const [focusTo, setFocusTo] = useState("");
   const [picked, setPicked] = useState<Selection>(() => (kept.user === session.user ? kept.selection : new Set()));
   useEffect(() => { kept = { user: session.user, selection: picked }; }, [picked, session.user]);
   const [fixed, setFixed] = useState<Fixed | null>(() => (keptFixed.user === session.user ? keptFixed.fixed : null));
+  const [removing, setRemoving] = useState(false);
+  const [removePicked, setRemovePicked] = useState<Selection>(new Set());
+  const [removeBusy, setRemoveBusy] = useState(false);
+  const [removeNote, setRemoveNote] = useState("");
+  const fixedDraft = fixed?.draft ?? "";
+  useEffect(() => { setRemoving(false); setRemovePicked(new Set()); setRemoveNote(""); setLimitHit(false); }, [fixedDraft]); // eslint-disable-line react-hooks/exhaustive-deps
   const [fixError, setFixError] = useState<unknown>(null);
   useEffect(() => { keptFixed = { user: session.user, fixed }; }, [fixed, session.user]);
   const [bulk, setBulk] = useState(false);
@@ -541,7 +551,7 @@ export default function LiveUsers({ locale: l, view, session, onSignOut, onView,
   noticeRef.current = notice;
   const dataRef = useRef<Loaded | null>(null);
   dataRef.current = data;
-  const pending = useRef<"" | "filter" | "removed">("");
+  const pending = useRef<"" | "filter" | "removed" | "reload">("");
   const shownQuery = useRef("");
   useEffect(() => {
     if (!focusTo) return;
@@ -560,8 +570,9 @@ export default function LiveUsers({ locale: l, view, session, onSignOut, onView,
   };
   const tell = (text: string) => { setNotice(text); say(text); };
   const countLine = (page: { next: string; users: UserRow[] }) => (page.users.length === 0 ? fc.noneShown(l) : page.next ? fc.shownMore(l, page.users.length) : fc.shownAll(l, page.users.length));
-  const load = useCallback((keepNotice = false) => {
+  const load = useCallback((keepNotice = false, userRefresh = false) => {
     const n = order.current.next();
+    if (pending.current === "reload") pending.current = "";
     const asked = queryRef.current;
     const key = JSON.stringify(asked);
     const fresh = shownQuery.current !== key;
@@ -575,6 +586,7 @@ export default function LiveUsers({ locale: l, view, session, onSignOut, onView,
       (page) => {
         if (!order.current.latest(n)) return page.revision;
         for (const u of page.users) names.current[u.user_id] = u.login || u.user_id;
+        if (userRefresh && !pending.current) pending.current = "reload";
         shownQuery.current = key;
         setFreshRead(false);
         setData({ ...page, at: new Date(), first: page.list_version });
@@ -591,6 +603,10 @@ export default function LiveUsers({ locale: l, view, session, onSignOut, onView,
       },
     );
   }, [api, queryKey]);
+  const refresh = (fromError = false) => {
+    if (fromError) document.querySelector<HTMLButtonElement>("#m01-reload")?.focus();
+    void load(false, true);
+  };
   useEffect(() => { void load(); }, [load]);
   const canBulk = !!data?.can_bulk_revoke;
   useEffect(() => {
@@ -603,7 +619,8 @@ export default function LiveUsers({ locale: l, view, session, onSignOut, onView,
     }, () => undefined);
     return () => { live = false; };
   }, [canBulk, api, session.user]);
-  useEffect(() => { setMode((m) => ({ kind: m.kind === "none" ? "none" : "detail" })); setNotice(""); setActionResult(null); setBulk(false); setBandOpen(false); }, [view]);
+  useEffect(() => { if (fixed || bulk) setClosedNote(false); }, [fixed, bulk]);
+  useEffect(() => { setMode((m) => ({ kind: m.kind === "none" ? "none" : "detail" })); setNotice(""); setClosedNote(false); setActionResult(null); setBulk(false); setBandOpen(false); }, [view]);
   const users = data?.users ?? [];
   const applied = appliedKeys(filters).length;
   useEffect(() => {
@@ -701,21 +718,66 @@ export default function LiveUsers({ locale: l, view, session, onSignOut, onView,
   const pendingLimit = setting(ctx.settings, "bulk_revocation_pending", 20);
   const fixedNow = selectable ? fixed : null;
   const reloadRevision = async () => (await load(true)) || dataRef.current?.revision || "";
+  const removeSelected = async () => {
+    if (!fixedNow || removePicked.size === 0 || removeBusy) return;
+    const draft = fixedNow.draft;
+    setRemoveBusy(true);
+    setFixError(null);
+    let sum: RemovalSum = { removed: 0, already: 0, ignored: 0, chosen: fixedNow.chosen };
+    let failed: unknown = null;
+    try {
+      for (const batch of batches([...removePicked])) {
+        const done = await api.command("bulk_revocation.remove_targets", draft, await reloadRevision(), m.removeReason(l), { users: batch.join("\n") }, attempt());
+        sum = removalOf(done.fields ?? {}, sum);
+      }
+    } catch (e) {
+      failed = e;
+    }
+    setRemoveBusy(false);
+    setFixed((was) => (was && was.draft === draft ? { ...was, chosen: sum.chosen } : was));
+    const note = [sum.removed > 0 ? m.removedNow(l, sum.removed) : "", sum.already > 0 ? m.removedAlready(l, sum.already) : "", sum.ignored > 0 ? m.removedIgnored(l, sum.ignored) : ""].filter(Boolean).join(" ");
+    setRemoveNote(note);
+    if (failed !== null) {
+      if (failed instanceof AdminError && failed.failure === "stage") { closedNow(); return; }
+      setFixError(failed);
+      if (note) say(note);
+      return;
+    }
+    setRemovePicked(new Set());
+    setRemoving(false);
+    setFocusTo(sum.chosen > 0 ? ".m01-removed" : ".m01-selcount");
+    say(note || m.removedNow(l, 0));
+  };
   const gone = (text: string) => { setFixed(null); setFixError(null); setFocusTo(".m01-match-open"); say(text); };
+  const closedNow = () => { setFixed(null); setFixError(null); setFocusTo(".m01-match-open"); setClosedNote(true); say(m.alreadyClosed(l)); };
   const discardFixed = async () => {
     if (!fixedNow) return;
     try {
       await api.command("bulk_revocation.discard", fixedNow.draft, await reloadRevision(), b.discardReason(l), {}, attempt());
     } catch (e) {
       if (!(e instanceof AdminError && e.failure === "stage")) { setFixError(e); return; }
+      closedNow();
+      return;
     }
     gone(m.discarded(l));
   };
   const loaded = selectableIds(status === "ready" ? "ready" : freshRead ? "fresh" : "reloading", users, session.user);
   const sel: Select = {
-    on: selectable && !fixedNow, selected: picked, self: session.user, atLimit: picked.size >= limit, loaded,
-    onToggle: (id) => { const out = toggle(picked, id, limit); setLimitHit(out.refused); if (out.refused) say(b.limit(l, limit)); else setPicked(out.next); },
-    onAll: () => { const out = selectLoaded(picked, loaded, limit); setLimitHit(out.refused); if (out.refused) say(b.limit(l, limit)); else setPicked(out.next); },
+    on: selectable && (!fixedNow || removing), keeping: !!fixedNow, selected: fixedNow ? removePicked : picked, self: session.user, atLimit: (fixedNow ? removePicked : picked).size >= limit, loaded,
+    onToggle: (id) => {
+      const out = toggle(fixedNow ? removePicked : picked, id, limit);
+      setLimitHit(out.refused);
+      if (out.refused) say(b.limit(l, limit));
+      else if (fixedNow) setRemovePicked(out.next);
+      else setPicked(out.next);
+    },
+    onAll: () => {
+      const out = selectLoaded(fixedNow ? removePicked : picked, loaded, limit);
+      setLimitHit(out.refused);
+      if (out.refused) say(b.limit(l, limit));
+      else if (fixedNow) setRemovePicked(out.next);
+      else setPicked(out.next);
+    },
   };
   const doneAction = (id: string, action: Action, ref: string) => {
     void load(true);
@@ -731,13 +793,13 @@ export default function LiveUsers({ locale: l, view, session, onSignOut, onView,
   };
   if (bulk && data && selectable) {
     const ids = fixedNow ? [] : [...picked];
-    const admins = ids.filter((id) => users.find((u) => u.user_id === id)?.membership?.role === "administrator");
+    const admins = ids.filter((id) => mayBeAdministrator(users.find((u) => u.user_id === id)));
     return (
       <div className="live-users m01-live" data-live={view} data-wide={wide ? "true" : "false"} data-bulk="effect">
         <p className="visually-hidden" role="status" aria-live="polite">{announce}</p>
         <Conditions l={l} data={data} />
         <BulkFlow l={l} api={api} ids={ids} names={names.current} admins={admins} rows={users} serverTime={ctx.clock.server_time} revision={data.revision}
-          fixed={fixedNow} days={days} onPrepared={() => setFixed(null)} onDiscarded={() => { setBulk(false); gone(m.discarded(l)); }}
+          fixed={fixedNow} days={days} onPrepared={() => setFixed(null)} onDiscarded={(closed) => { setBulk(false); if (closed) closedNow(); else gone(m.discarded(l)); }}
           onJobs={() => { setBulk(false); onView("revocation"); }} reload={reloadRevision}
           onBack={() => { setBulk(false); setFocusTo(".m01-prepare"); }} say={say}
           onDeselect={(id) => setPicked(without(picked, [id]))}
@@ -781,6 +843,7 @@ export default function LiveUsers({ locale: l, view, session, onSignOut, onView,
       {scope}
       {data && <Conditions l={l} data={data} />}
       {!stepping && badLink && <p className="service-status m01-badlink" role="status">{fc.badLink(l)}</p>}
+      {!stepping && closedNote && <p className="service-status m01-closed-note">{m.alreadyClosed(l)}</p>}
       {!stepping && filterViews.includes(view) && (
         <FilterBand l={l} view={view} wide={wide} open={bandOpen} filters={filters} days={days} auth={data?.auth_methods ?? { connected: [], not_connected: [] }} onToggle={() => setBandOpen((o) => !o)}
           onChange={(next) => apply(next)} onRemove={removeChip} onClearAll={clearAll} />
@@ -796,7 +859,7 @@ export default function LiveUsers({ locale: l, view, session, onSignOut, onView,
               {wide && !panel && <p className="live-meta">{w.pick(l)}</p>}
             </div>
             <div className="live-tools">
-              <button type="button" className="live-secondary" onClick={() => void load()}>{w.reload(l)}</button>
+              <button id="m01-reload" type="button" className="live-secondary" onClick={() => refresh()}>{w.reload(l)}</button>
               {view !== "membership" && !stranded && (
                 <button type="button" className="live-primary live-create" onClick={() => { setNotice(""); setMode({ kind: "create" }); }}>{w.create(l)}</button>
               )}
@@ -811,7 +874,11 @@ export default function LiveUsers({ locale: l, view, session, onSignOut, onView,
           )}
           {selectable && view !== "invitations" && fixedNow && (
             <FixedBar l={l} f={fixedNow} filters={filters} days={days} number={number(fixedNow.draft)} error={fixError} say={say}
-              onPrepare={() => setBulk(true)} onDiscard={() => void discardFixed()} />
+              onPrepare={() => setBulk(true)} onDiscard={() => void discardFixed()}
+              removal={{ on: removing, selected: removePicked.size, busy: removeBusy, note: removeNote,
+                onStart: () => { setRemoving(true); setRemoveNote(""); setFocusTo(".m01-remove-cancel"); },
+                onCancel: () => { setRemoving(false); setRemovePicked(new Set()); setFocusTo(".m01-remove-open"); },
+                onRemove: () => void removeSelected() }} />
           )}
           {selectable && view !== "invitations" && !fixedNow && (
             <SelectionBar l={l} selected={picked} loaded={loaded} limit={limit} atLimit={limitHit || picked.size >= limit} names={names.current}
@@ -829,7 +896,7 @@ export default function LiveUsers({ locale: l, view, session, onSignOut, onView,
               {error instanceof AdminError && error.failure === "unauthenticated" ? (
                 <button type="button" className="live-secondary" onClick={onSignOut}>{w.signInAgain(l)}</button>
               ) : (
-                <button type="button" className="live-secondary" onClick={() => void load()}>{c.tryAgain(l)}</button>
+                <button type="button" className="live-secondary" onClick={() => refresh(true)}>{c.tryAgain(l)}</button>
               )}
             </section>
           )}
@@ -851,6 +918,17 @@ export default function LiveUsers({ locale: l, view, session, onSignOut, onView,
         <aside className="live-panel" aria-label={title}>
           {stepping && (
             <button type="button" className="service-button-link live-back" onClick={close}>{w.back(l)}</button>
+          )}
+          {stepping && status === "error" && failure && (
+            <section className="live-error m01-panel-kept" role="alert">
+              <h2>{w.loadFailed(l)}</h2>
+              <p>{diagnosticCopy.kept(l)}</p>
+              {error instanceof AdminError && error.failure === "unauthenticated" ? (
+                <button type="button" className="live-secondary" onClick={onSignOut}>{w.signInAgain(l)}</button>
+              ) : (
+                <button type="button" className="live-secondary" onClick={() => void load()}>{c.tryAgain(l)}</button>
+              )}
+            </section>
           )}
           {stranded && panel ? <p className="live-unavailable">{b.recovery(l)}</p> : panel}
         </aside>

@@ -525,6 +525,8 @@ Bounded reads (HYB-304 increment C2, server only; the screen does not use them y
 
 **Revoke panel, what would stop (HYB-304 T5a):** `would_end` of `GET /identity/access/permissions/grant/{id}` or `/delegation/{id}`, read when the panel opens, with `observed_at` as the checked time. The console ceiling table was removed in the same change; the console's grants are rows of the permissions list.
 
+**Person picker (HYB-304 T5b):** the request form and the effect check search `GET /identity/access/subjects` (`q`, 25 a page) through `accessSubjects`; rows use `user_id`, `login` and `revocation_unconfirmed`. The whole read's `subjects`, `grants`, `delegations`, `requests` and `revocations` are no longer read by the M03 view.
+
 **Parsed but not displayed on M03:** `you`, grant and delegation `version`, `scope.legal_entity`/`contract`/`period`, request `grant` (used only to match), `result`, revocation `history`, `target_present`, `job_reason`, `requested_by`, `approved_by`, `deny_at`, `verified`, `completed_at`, ledger `replace_reason`, `replaced_file`; preview `revision`, `subject`, `kind`, `customer`.
 
 ## M04 Service accounts

@@ -312,3 +312,125 @@
   gap: 8px;
   justify-items: start;
 }
+.remaining-security .person-chosen {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  align-items: center;
+  margin-block: 4px 8px;
+}
+.remaining-security .person-name {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0 8px;
+  align-items: baseline;
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+.remaining-security .person-login {
+  font-size: 16px;
+}
+.remaining-security .person-name-chosen .person-login {
+  font-weight: 600;
+}
+.remaining-security .person-id {
+  font-family: var(--hb-font-mono);
+  font-size: 14px;
+  color: var(--hb-muted);
+}
+.remaining-security .person-toggle {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 44px;
+  inline-size: fit-content;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: 16px;
+  text-decoration: underline;
+  color: inherit;
+}
+.remaining-security .person-search {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  max-inline-size: 560px;
+}
+.remaining-security .person-search input {
+  flex: 1 1 24ch;
+  min-inline-size: 0;
+  min-block-size: 44px;
+}
+.remaining-security .person-search input::-webkit-search-cancel-button {
+  appearance: none;
+}
+.remaining-security .person-search-button {
+  min-block-size: 44px;
+}
+.remaining-security .person-status {
+  margin-block: 8px 4px;
+  min-block-size: 1lh;
+}
+.remaining-security .person-results {
+  list-style: none;
+  margin: 0 0 8px;
+  padding: 0;
+  max-inline-size: 560px;
+  max-block-size: 352px;
+  overflow-y: auto;
+  border: 1px solid var(--hb-line-row);
+}
+.remaining-security .person-results li + li {
+  border-block-start: 1px solid var(--hb-line-row);
+}
+.remaining-security .person-result {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  align-items: baseline;
+  gap: 0 8px;
+  inline-size: 100%;
+  min-inline-size: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  min-block-size: 44px;
+  padding: 8px 12px;
+  border: 0;
+  background: none;
+  text-align: start;
+  font: inherit;
+  color: inherit;
+}
+.remaining-security .person-result:hover {
+  background: var(--c-subtle);
+}
+.remaining-security .person-result[aria-current="true"] .person-login {
+  font-weight: 600;
+}
+.remaining-security .person-flag {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--hb-muted);
+}
+.remaining-security .person-failed {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+  max-inline-size: 560px;
+}
+.remaining-security .person-result .person-name,
+.remaining-security .person-result .person-login,
+.remaining-security .person-result .person-id {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.remaining-security .person-result .person-flag {
+  flex-basis: 100%;
+}
+.remaining-security .person-id:first-child {
+  font-size: 16px;
+  color: inherit;
+}

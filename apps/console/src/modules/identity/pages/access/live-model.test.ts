@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ledgerOf, type AccessGrant, type AccessPage } from "../../../../service/admin";
-import { accessText, closed, delegationsOf, maxDays, people, reasonText, revocable, scopeText, stateLine, wholeDays } from "./live-model";
+import { accessText, closed, maxDays, reasonText, revocable, scopeText, stateLine, wholeDays } from "./live-model";
 import { a, accessPhrase, actionLabel } from "./live-copy";
 
 const grant = (change: Partial<AccessGrant>): AccessGrant => ({
@@ -13,30 +13,8 @@ const page = (grants: AccessGrant[]): AccessPage => ({
   revision: "r1", grants, delegations: [], catalog: [], subjects: [], now: "2026-11-16T09:00:00Z", you: "", started_at: "", settings: [], requests: [], revocations: [], ledger: ledgerOf({ state: "ok" }),
 });
 
-test("grants split into current, ended and ceiling", () => {
-  const p = page([
-    grant({ id: "c", state: "pending" }), grant({ id: "b", effective: false }), grant({ id: "a" }),
-    grant({ id: "x", state: "revoked" }), grant({ id: "y", state: "expired" }), grant({ id: "k", subject: "", client: "console" }),
-    grant({ id: "k2", subject: "", client: "console", state: "expired" }),
-  ]);
-  const split = people(p);
-  assert.deepEqual(split.current.map((g) => g.id), ["a", "c", "b"]);
-  assert.deepEqual(split.ended.map((g) => g.id), ["x", "y"]);
-  const d = { ...grant({}), delegator: "a", delegate: "b", parent: "", redelegate: false };
-  const ds = delegationsOf({ ...p, delegations: [{ ...d, id: "d1" }, { ...d, id: "d2", state: "revoked" }, { ...d, id: "d3", state: "pending" }, { ...d, id: "d4", state: "ended" }] });
-  assert.deepEqual(ds.current.map((x) => x.id), ["d1", "d3"]);
-  assert.deepEqual(ds.ended.map((x) => x.id), ["d2", "d4"]);
-});
-
 test("unconfirmed revocations stay open for grants and delegations, and unknown states read unconfirmed", () => {
-  const p = page([grant({ id: "a" }), grant({ id: "r", state: "revocation_unconfirmed" }), grant({ id: "x", state: "revoked" }), grant({ id: "q", state: "future" as AccessGrant["state"] })]);
-  const split = people(p);
-  assert.deepEqual(split.current.map((g) => g.id), ["a", "q", "r"]);
-  assert.deepEqual(split.ended.map((g) => g.id), ["x"]);
   const d = { ...grant({}), delegator: "a", delegate: "b", parent: "", redelegate: false };
-  const ds = delegationsOf({ ...p, delegations: [{ ...d, id: "d1", state: "revocation_unconfirmed" }, { ...d, id: "d2", state: "revoked" }, { ...d, id: "d3", state: "odd" as "ended" }] });
-  assert.deepEqual(ds.current.map((x) => x.id), ["d1", "d3"]);
-  assert.deepEqual(ds.ended.map((x) => x.id), ["d2"]);
   const want = { en: "Revocation not confirmed", ko: "회수 미확정", ar: "الإبطال غير مؤكَّد" } as const;
   for (const l of ["en", "ko", "ar"] as const) {
     assert.equal(stateLine(l, grant({ state: "revocation_unconfirmed" }))[0], want[l]);

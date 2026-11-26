@@ -6,7 +6,7 @@ import { accessListClient } from "./access-lists";
 import { catalogOf, settingsOf as accessSettingsOf, previewsOf } from "./access-read";
 import { credentialOf, selfPageOf } from "./account-read";
 import { organizationsPageOf, organizationTreeOf } from "./organization-read";
-import { ReadParseError, text as readText } from "./strict-read";
+import { ReadParseError, boolean as readFlag, text as readText } from "./strict-read";
 import { accessHistoryOf, HistoryParseError, type AccessHistoryPage, type AccessHistoryQuery } from "./access-history";
 import { contractDetailOf, contractsPageOf, type ContractDetail, type ContractsPage } from "./contracts";
 import { installationOf, proposalOf as installProposalOf, type InstallationPage, type InstallProposal } from "./installation";
@@ -220,6 +220,7 @@ export type Ceiling = { action: string; kind: string; fields: string[]; until: s
 export type AccessPage = {
   revision: string;
   catalog: Ceiling[];
+  catalog_incomplete: boolean;
   now: string;
   you: string;
   started_at: string;
@@ -986,7 +987,7 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis), ste
     async access(): Promise<AccessPage> {
       const body = await send("/identity/access", { method: "GET" }, attempt().request);
       return validatedRead(() => ({
-        revision: readText(body.revision), catalog: catalogOf(body.catalog), now: readText(body.now), you: readText(body.you),
+        revision: readText(body.revision), catalog: catalogOf(body.catalog), catalog_incomplete: readFlag(body.catalog_incomplete), now: readText(body.now), you: readText(body.you),
         started_at: readText(body.started_at), settings: accessSettingsOf(body.settings), ledger: ledgerOf(body.ledger),
       }));
     },

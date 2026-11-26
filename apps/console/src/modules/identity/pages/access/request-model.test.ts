@@ -17,7 +17,7 @@ const rev = (change: Partial<Revocation>): Revocation => ({
   receipt: { sequence: 2, watermark: "2:ab", reason: "" }, verified: true, cleanup: [], completed_at: "", ...change,
 });
 const page = (change: Partial<AccessPage>): AccessPage => ({
-  revision: "r1", catalog: [], now: "", you: "me", started_at: "", settings: [], ledger: ledgerOf({ state: "ok" }),
+  revision: "r1", catalog: [], catalog_incomplete: false, now: "", you: "me", started_at: "", settings: [], ledger: ledgerOf({ state: "ok" }),
   ...change,
 });
 const grant = { id: "g1", subject: "u", client: "", action: "view", kind: "focus_data", fields: ["rows"], scope: { customer: "all", legal_entity: "all", contract: "all", period: "any" },

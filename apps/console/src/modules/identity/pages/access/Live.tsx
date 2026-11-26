@@ -130,9 +130,10 @@ function GrantForm({ l, api, page, self, onDone, onCancel, onReload, stepping }:
       <div className="service-field">
         <label htmlFor="access-capability">{a.access(l)}</label>
         <p className="service-hint" id="access-capability-hint">{a.accessHint(l)}</p>
+        {page.catalog_incomplete && <p className="service-hint" id="access-capability-short" data-catalog-short="true">{a.catalogShort(l)}</p>}
         {field("access-capability") && <p className="service-field-error" id="access-capability-error"><span className="visually-hidden">{c.errorPrefix(l)} </span>{field("access-capability")}</p>}
         <select id="access-capability" className="live-select" value={pair ? capability : ""} disabled={busy}
-          aria-invalid={field("access-capability") ? true : undefined} aria-describedby={field("access-capability") ? "access-capability-hint access-capability-error" : "access-capability-hint"}
+          aria-invalid={field("access-capability") ? true : undefined} aria-describedby={["access-capability-hint", page.catalog_incomplete ? "access-capability-short" : "", field("access-capability") ? "access-capability-error" : ""].filter(Boolean).join(" ")}
           onChange={(e) => changeCapability(e.target.value)}>
           <option value="">{a.chooseAccess(l)}</option>
           {capabilities.map((row) => <option key={capabilityKey(row)} value={capabilityKey(row)}>{accessText(l, row.action, row.fields)} · {kindLabel(l, row.kind)}</option>)}
@@ -298,7 +299,7 @@ function Effects({ l, api, page }: { l: Locale; api: AdminClient; page: AccessPa
           {kinds.length > 1 ? (
             <>
               <label htmlFor="effect-kind">{a.data(l)}</label>
-              <select id="effect-kind" className="live-select" value={kind} onChange={(e) => change(setKind)(e.target.value)}>
+              <select id="effect-kind" className="live-select" value={kind} aria-describedby={page.catalog_incomplete ? "effect-kind-short" : undefined} onChange={(e) => change(setKind)(e.target.value)}>
                 {kinds.map((k) => <option key={k} value={k}>{kindLabel(l, k) ?? k}</option>)}
               </select>
             </>
@@ -308,6 +309,7 @@ function Effects({ l, api, page }: { l: Locale; api: AdminClient; page: AccessPa
               <span className="live-fact-box">{kindLabel(l, kind) ?? kind}</span>
             </>
           )}
+          {page.catalog_incomplete && kind && <p className="service-hint live-hint-below" id="effect-kind-short" data-catalog-short="true">{a.kindsShort(l)}</p>}
         </div>
         <div className="service-field">
           <label htmlFor="effect-customer">{a.customerOpt(l)}</label>
@@ -315,7 +317,7 @@ function Effects({ l, api, page }: { l: Locale; api: AdminClient; page: AccessPa
           <p className="service-hint live-hint-below" id="effect-customer-hint">{a.customerOptHint(l)}</p>
         </div>
         <button type="submit" className="live-primary" disabled={!subject || !kind || state === "loading"} aria-describedby={kind ? undefined : "effect-no-kind"}>{a.showEffect(l)}</button>
-        {!kind && <p className="live-error" role="alert" id="effect-no-kind">{a.noKind(l)}</p>}
+        {!kind && <p className="live-error" role="alert" id="effect-no-kind">{page.catalog_incomplete ? a.kindsNone(l) : a.noKind(l)}</p>}
       </form>
       <p className="live-preview-note"><strong>{a.previewLead(l)}</strong> {a.previewNote(l)}</p>
       {state === "start" && kind && <p className="live-empty">{a.startHint(l)}</p>}
@@ -477,6 +479,7 @@ export default function LiveAccess({ locale: l, view, session, onSignOut, onView
               </div>
             </div>
             {notice && noticeAt === "list" && <p className="service-status">{notice}</p>}
+            {page && page.catalog_incomplete && grantCapabilities(page).length === 0 && <p className="live-note" data-catalog-none="true">{a.catalogNone(l)}</p>}
             {status === "loading" && !page && <p role="status" className="live-meta">{a.loading(l)}</p>}
             {loadError}
             <PermissionList l={l} api={api} self={self} params={params} onParams={onParams} generation={listed} selected={selected} onSignOut={onSignOut}

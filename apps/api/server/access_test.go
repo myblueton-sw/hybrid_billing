@@ -519,11 +519,62 @@ func TestTheWholeAccessReadCarriesNoPopulations(t *testing.T) {
 		keys = append(keys, key)
 	}
 	sort.Strings(keys)
-	if strings.Join(keys, " ") != "catalog ledger now revision settings started_at you" {
+	if strings.Join(keys, " ") != "catalog catalog_incomplete ledger now revision settings started_at you" || got.body["catalog_incomplete"] != false {
 		t.Errorf("the whole read's fields: %v", keys)
 	}
 	former := f.accessRead(root, "")
 	if len(former.body["requests"].([]any)) != 2 || len(former.body["revocations"].([]any)) != 1 || len(former.body["grants"].([]any)) == 0 || len(former.body["subjects"].([]any)) == 0 {
 		t.Error("the test-side reference of the former populations is empty; the equality tests would prove nothing")
+	}
+}
+
+func TestTheCatalogIsReadFromTheConsolesGrantsWithALimit(t *testing.T) {
+	f := setup(t, SeedSample).ready()
+	root := f.as(AdminLogin)
+	want := []string{}
+	consoles := 0
+	for _, g := range f.s.admin.Grants() {
+		if g.ClientID == ConsoleClient {
+			consoles++
+		}
+		if g.ClientID == ConsoleClient && g.Active && !gate.InstallationAction(g.Terms.Action) && !governedGrantTerms(g.Terms.Action, g.Terms.Kind, g.Terms.Fields) && g.Terms.Scope.WorkspaceID == f.s.bootWorkspace && fullScope(g.Terms) {
+			want = append(want, fmt.Sprint(string(g.Terms.Action), "|", g.Terms.Kind, "|", g.Terms.Fields, "|", stamp(g.Validity.NotAfter)))
+		}
+	}
+	listed := func(got reply) []string {
+		out := []string{}
+		for _, raw := range got.body["catalog"].([]any) {
+			row := raw.(map[string]any)
+			fields := []string{}
+			for _, x := range row["fields"].([]any) {
+				fields = append(fields, fmt.Sprint(x))
+			}
+			out = append(out, fmt.Sprint(row["action"], "|", row["kind"], "|", fields, "|", row["until"]))
+		}
+		return out
+	}
+	whole := f.accessWire(root, "")
+	if len(want) < 2 || consoles <= len(want) && consoles < 2 || strings.Join(listed(whole), " ") != strings.Join(want, " ") || whole.body["catalog_incomplete"] != false {
+		t.Fatalf("the catalog %v, want %v as the walk over every grant gave", listed(whole), want)
+	}
+	scan := f.s.cfg.Access.ServiceQueryScan
+	f.s.cfg.Access.ServiceQueryScan = consoles
+	if got := f.accessWire(root, ""); got.body["catalog_incomplete"] != false || len(listed(got)) != len(want) {
+		t.Errorf("a limit equal to the console's grants: %v incomplete %v", listed(got), got.body["catalog_incomplete"])
+	}
+	f.s.cfg.Access.ServiceQueryScan = 1
+	short := f.accessWire(root, "")
+	if short.status != 200 || short.body["catalog_incomplete"] != true || len(listed(short)) > 1 {
+		t.Errorf("a limit of one: status %d, %v, incomplete %v", short.status, listed(short), short.body["catalog_incomplete"])
+	}
+	for _, row := range listed(short) {
+		if !strings.Contains(strings.Join(want, " "), row) {
+			t.Errorf("a short catalog lists %s, which the whole catalog does not", row)
+		}
+	}
+	f.s.cfg.Access.ServiceQueryScan = scan
+	f.s.fault = func(at string) bool { return at == "roster" || at == "users" }
+	if got := f.accessWire(root, ""); got.status != 200 || len(listed(got)) != len(want) {
+		t.Errorf("the catalog without the roster and the user pages: %d %v", got.status, listed(got))
 	}
 }

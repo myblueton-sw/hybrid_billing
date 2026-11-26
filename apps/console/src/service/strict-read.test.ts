@@ -33,6 +33,8 @@ test("access rejects malformed nested permission facts", async () => {
     assert.equal(Object.keys(ignored)[0] in got, false, Object.keys(ignored)[0]);
   }
   await assert.rejects(access({ ...accessFixture, settings: [{ ...accessFixture.settings[0], value: "24" }] }), invalid);
+  for (const flag of ["true", 1, null, undefined]) await assert.rejects(access({ ...accessFixture, catalog_incomplete: flag }), invalid, `catalog_incomplete ${String(flag)}`);
+  assert.equal((await access({ ...accessFixture, catalog_incomplete: true })).catalog_incomplete, true);
 });
 
 test("preview never infers an allowed decision", async () => {

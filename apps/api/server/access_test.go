@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sort"
 	"strings"
 	"sync"
 	"testing"
@@ -21,6 +22,15 @@ import (
 )
 
 func (f world) accessRead(a actor, path string) reply {
+	f.t.Helper()
+	got := f.accessWire(a, path)
+	if path == "" {
+		return f.withFormerPopulations(a, got)
+	}
+	return got
+}
+
+func (f world) accessWire(a actor, path string) reply {
 	f.t.Helper()
 	return f.do("GET", "/api/v1/identity/access"+path, "", func(r *http.Request) {
 		if a.cookie != nil {
@@ -223,8 +233,8 @@ func TestRevokeRules(t *testing.T) {
 	if err := f.s.admin.AddDelegation(gate.Delegation{ID: "del-1", DelegatorID: SampleAdmin, DelegateID: SampleMember, Terms: terms, Validity: gate.Validity{NotBefore: now, NotAfter: now.Add(time.Hour)}}); err != nil {
 		t.Fatal(err)
 	}
-	read := f.accessRead(root, "")
-	if !strings.Contains(read.raw, `"delegator":"sample-admin"`) || !strings.Contains(read.raw, `"effective":true`) {
+	read := f.permissions(root, "/delegation/del-1")
+	if row, _ := read.body["row"].(map[string]any); read.status != 200 || row["delegator"] != SampleAdmin || row["effective"] != true {
 		t.Errorf("delegation listed %s", read.raw)
 	}
 	got := f.run(root, "access.revoke_delegation", "del-1", nil)
@@ -423,7 +433,9 @@ func TestAccessFailurePaths(t *testing.T) {
 	f.code(t, "module refusal", f.approveRequest(second, asked), 422, string(commands.PrerequisiteFailed))
 	revision := f.revision(root)
 	f.s.fault = func(at string) bool { return at == "roster" }
-	f.code(t, "read", f.accessRead(root, ""), 503, string(commands.DependencyUnavailable))
+	if got := f.accessWire(root, ""); got.status != 200 {
+		t.Errorf("the whole read without the roster: %d; it no longer lists people", got.status)
+	}
 	f.code(t, "preview", f.accessRead(root, "/preview?subject="+SampleMember+"&kind=usage"), 503, string(commands.DependencyUnavailable))
 	fields := asked.body["fields"].(map[string]any)
 	f.code(t, "approve without roster", f.runWith(second, revision, "access.approve_request", fields["request"].(string), map[string]string{"digest": fields["digest"].(string)}),
@@ -483,5 +495,35 @@ func TestCeilingNeedsFullScopeAndGranteesNeedActiveState(t *testing.T) {
 	raw, _ := json.Marshal(doc)
 	if !strings.Contains(string(raw), `"required":["action","customer","days","kind","subject"]`) || !strings.Contains(string(raw), `"required":["digest"]`) {
 		t.Error("access.request_grant and access.approve_request required fields")
+	}
+}
+
+func TestTheWholeAccessReadCarriesNoPopulations(t *testing.T) {
+	f := setup(t, SeedSample).ready()
+	f.setPassword(MemberLogin, pw)
+	root, second := f.as(AdminLogin), f.as(Admin2Login)
+	if got := f.revokeVia(root, second, f.grantVia(root, second, SampleMember, nil)); got.status != 202 {
+		t.Fatalf("revoke %s", got.raw)
+	}
+	got := f.accessWire(root, "")
+	if got.status != 200 {
+		t.Fatalf("the whole read: %s", got.raw)
+	}
+	for _, gone := range []string{"grants", "delegations", "subjects", "requests", "revocations"} {
+		if _, present := got.body[gone]; present {
+			t.Errorf("the whole read still carries %s", gone)
+		}
+	}
+	keys := []string{}
+	for key := range got.body {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	if strings.Join(keys, " ") != "catalog ledger now revision settings started_at you" {
+		t.Errorf("the whole read's fields: %v", keys)
+	}
+	former := f.accessRead(root, "")
+	if len(former.body["requests"].([]any)) != 2 || len(former.body["revocations"].([]any)) != 1 || len(former.body["grants"].([]any)) == 0 || len(former.body["subjects"].([]any)) == 0 {
+		t.Error("the test-side reference of the former populations is empty; the equality tests would prove nothing")
 	}
 }

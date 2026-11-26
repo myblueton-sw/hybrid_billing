@@ -20,7 +20,7 @@ func TestRetentionOwnersAreTheListThePlaceHoldCommandChecks(t *testing.T) {
 		return out
 	}
 	want := func() []string {
-		access := f.readAs(root, "/api/v1/identity/access")
+		access := f.accessRead(root, "")
 		if access.status != 200 {
 			t.Fatalf("the access read: %d", access.status)
 		}

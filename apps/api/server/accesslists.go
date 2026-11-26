@@ -304,9 +304,9 @@ func accessListPaths() map[string]any {
 	}
 	return map[string]any{
 		"/identity/access/requests": entry("identity.access.requests", requestsOrder,
-			"access change requests of the caller's workspace as GET /identity/access lists them: every pending request and the most recent ended ones up to the installation's shown limit; each row as there, with the sign-in names of the subject, the proposer and the decider",
+			"access change requests of the caller's workspace: every pending request and the most recent ended ones up to the installation's shown limit; each row with the sign-in names of the subject, the proposer and the decider",
 			"state is pending or ended; q matches the request identifier or the subject's user id without regard to case", []string{"q", "state", "limit", "after"}),
 		"/identity/access/revocations": entry("identity.access.revocations", revocationsOrder,
-			"kept revocations of the caller's workspace, each row as GET /identity/access lists it; target_subject, target_subject_login, target_action, target_resource_kind and target_fields describe the revoked grant (its holder) or delegation (its delegate) as the record is now, and are empty when it is no longer present", "q matches the revocation identifier or the target identifier without regard to case", []string{"q", "limit", "after"}),
+			"kept revocations of the caller's workspace; target_subject, target_subject_login, target_action, target_resource_kind and target_fields describe the revoked grant (its holder) or delegation (its delegate) as the record is now, and are empty when it is no longer present", "q matches the revocation identifier or the target identifier without regard to case", []string{"q", "limit", "after"}),
 	}
 }

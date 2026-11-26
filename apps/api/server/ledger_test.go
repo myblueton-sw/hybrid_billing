@@ -542,11 +542,13 @@ func TestStartFailsAfterTheLedgerWhenTheLinkCannotBeWritten(t *testing.T) {
 	s.Close()
 }
 
-func TestAccessReadNeedsTheUserList(t *testing.T) {
+func TestAccessReadNoLongerNeedsTheUserList(t *testing.T) {
 	f := setup(t, SeedSample).ready()
 	root := f.as(AdminLogin)
 	f.s.fault = func(at string) bool { return at == "users" }
-	f.code(t, "read without users", f.accessRead(root, ""), 503, string(commands.DependencyUnavailable))
+	if got := f.accessWire(root, ""); got.status != 200 {
+		t.Errorf("the whole read without the user pages: %d; it no longer lists people", got.status)
+	}
 	f.s.fault = nil
 	if _, err := (delegationCommand{s: f.s}).Apply(commands.Context{User: "nobody"}); err.(*commands.Failure).Code != commands.PrerequisiteFailed {
 		t.Errorf("a delegation revocation by an unknown actor %v", err)

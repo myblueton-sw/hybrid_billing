@@ -164,8 +164,8 @@ func TestRequestsReadDoesNotLoadThePopulation(t *testing.T) {
 	}
 	f.manyPermissions()
 	f.s.fault = func(at string) bool { return at == "roster" || at == "users" }
-	if got := f.accessRead(root, ""); got.status != 503 {
-		t.Fatalf("the whole read without the roster and the user pages: %d", got.status)
+	if _, err := f.s.accessFacts(root.verifier(f)); err == nil {
+		t.Fatal("the whole-population facts were built without the roster and the user pages; the fault proves nothing")
 	}
 	if got := f.readAs(root, requestsPath+"?limit=50"); got.status != 200 || len(listIDs(got)) != 1 {
 		t.Errorf("the requests read without the roster and the user pages: %d %s", got.status, got.raw[:min(len(got.raw), 160)])

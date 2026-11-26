@@ -150,14 +150,6 @@ func (h delegationCommand) Apply(ctx commands.Context) (commands.Outcome, error)
 	return commands.Outcome{Accepted: true, JobID: v.ID, Fields: map[string]string{"revocation": v.ID}}, nil
 }
 
-func (s *Server) revocationRows() []revocationRow {
-	out := []revocationRow{}
-	for _, v := range s.changes.Revocations(s.bootWorkspace) {
-		out = append(out, s.revocationRow(v))
-	}
-	return out
-}
-
 func (s *Server) revocationRow(v accesschange.RevocationView) revocationRow {
 	row := revocationRowOf(v)
 	var terms gate.Terms

@@ -69,7 +69,7 @@ func (r *Registry) delegationView(id string, at time.Time) DelegationView {
 	stored := r.delegations[id]
 	d := stored.value
 	d.Terms = copyTerms(d.Terms)
-	return DelegationView{Delegation: d, Version: stored.version, Closed: stored.closed, Active: !stored.closed && d.Validity.at(at), Effective: r.effective(stored, at)}
+	return DelegationView{Delegation: d, Version: stored.version, Closed: stored.closed, Active: !stored.closed && d.Validity.at(at), Effective: r.effective(stored, at, "")}
 }
 
 func (r *Registry) Grants() []GrantView {
@@ -154,16 +154,16 @@ func (r *Registry) Generation() uint64 {
 	return r.generation
 }
 
-func (r *Registry) linkHolds(stored versioned[Delegation], now time.Time) bool {
+func (r *Registry) linkHolds(stored versioned[Delegation], now time.Time, except string) bool {
 	d := stored.value
 	return !stored.closed && d.Validity.at(now) && r.activeHuman(d.DelegatorID) && r.activeHuman(d.DelegateID) &&
 		r.memberWith(d.Terms.Scope.WorkspaceID, d.DelegatorID, r.chainJoined[d.ID][0]) &&
 		r.memberWith(d.Terms.Scope.WorkspaceID, d.DelegateID, r.chainJoined[d.ID][1]) &&
-		r.holdsInWorkspace(d.DelegateID, d.Terms.Scope.WorkspaceID, now)
+		r.holdsInWorkspace(d.DelegateID, d.Terms.Scope.WorkspaceID, now, except)
 }
 
-func (r *Registry) rootBacked(d Delegation, now time.Time) bool {
-	if !r.backedDirectly(d.DelegatorID, d.Terms, now) {
+func (r *Registry) rootBacked(d Delegation, now time.Time, except string) bool {
+	if !r.backedDirectly(d.DelegatorID, d.Terms, now, except) {
 		return false
 	}
 	if d.Terms.Action != Download {
@@ -172,20 +172,20 @@ func (r *Registry) rootBacked(d Delegation, now time.Time) bool {
 	for _, field := range d.Terms.Fields {
 		view := d.Terms
 		view.Action, view.Fields = r.classView(field), []string{field}
-		if !r.backedDirectly(d.DelegatorID, view, now) {
+		if !r.backedDirectly(d.DelegatorID, view, now, except) {
 			return false
 		}
 	}
 	return true
 }
 
-func (r *Registry) effective(stored versioned[Delegation], now time.Time) bool {
+func (r *Registry) effective(stored versioned[Delegation], now time.Time, except string) bool {
 	for {
-		if !r.linkHolds(stored, now) {
+		if !r.linkHolds(stored, now, except) {
 			return false
 		}
 		if stored.value.ParentID == "" {
-			return r.rootBacked(stored.value, now)
+			return r.rootBacked(stored.value, now, except)
 		}
 		stored = r.delegations[stored.value.ParentID]
 	}

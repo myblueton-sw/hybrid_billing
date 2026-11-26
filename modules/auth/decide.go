@@ -37,7 +37,7 @@ func (r *Registry) covers(delegation versioned[Delegation], action Action, kind 
 		r.activeHuman(d.DelegatorID) && r.activeHuman(d.DelegateID) &&
 		r.memberWith(d.Terms.Scope.WorkspaceID, d.DelegatorID, r.chainJoined[d.ID][0]) &&
 		r.memberWith(d.Terms.Scope.WorkspaceID, d.DelegateID, r.chainJoined[d.ID][1]) &&
-		r.holdsInWorkspace(d.DelegateID, d.Terms.Scope.WorkspaceID, now)
+		r.holdsInWorkspace(d.DelegateID, d.Terms.Scope.WorkspaceID, now, "")
 }
 
 func (r *Registry) through(id string, action Action, kind string, resource Resource, field string, now time.Time) ([]string, bool) {

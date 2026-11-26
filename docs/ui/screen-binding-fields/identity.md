@@ -389,149 +389,142 @@ Read: `GET /api/v1/identity/policy` (`boundary.go:31`), client `admin.ts:883-885
 
 ## M03 Access grants and delegations
 
-> **Superseded tables, 2026-11-27 (HYB-304 C5b).** The tables of this section were written for the earlier screen, which read one whole page. `GET /api/v1/identity/access` now answers only `revision`, `catalog`, `now`, `you`, `started_at`, `settings` and `ledger`. "People with access" and "Ceiling and delegations" describe tables that no longer exist: grants and delegations are one list read from `GET /identity/access/permissions`. In "Request access form and revoke step", "Approval requests", "Revocations and decision ledger" and "Effects preview view", every source given as `grants`, `delegations`, `subjects`, `requests` or `revocations` of the whole read, and every line reference, is out of date; the current sources are in the HYB-304 entries at the end of this section. The section is rewritten against the bounded reads in the next HYB-304 increment (C5c).
+Rewritten on 2026-11-27 for HYB-304 after the grants view moved to bounded reads. Paths under `access/` are `apps/console/src/modules/identity/pages/access/`; `service/` is `apps/console/src/service/`; server files are under `apps/api/server/`. A reference names a function and the line it starts at. Routes are registered at `boundary.go:34-41`.
 
-Read: `GET /api/v1/identity/access` (`boundary.go:32`), client and parser `admin.ts:886-909`, called at `access/Live.tsx:383` for the grants and effects views (`:388`). Server shape `accessPage` (`access.go:72-85`) with `grantRow` (`access.go:28-41`), `delegationRow` (`access.go:43-58`), `ceilingRow` (`access.go:60-65`), `subjectRow` (`access.go:67-70`), `changeRequestRow` (`accessrequests.go:343-369`), `revocationRow` (`revocations.go:29-53`) and `ledgerRow` (`ledger.go:20-35`, parsed by `ledgerOf`, `admin.ts:712-733`). Preview read: `GET /api/v1/identity/access/preview` (`boundary.go:33`), `admin.ts:910-915`, response key `decisions` (`access.go:275`, rows `access.go:87-93`). The grants, delegations and subjects arrays are cast without per-field normalisation (`admin.ts:891-894`).
+Reads:
 
-Bounded reads (HYB-304 increment C2, server only; the screen does not use them yet): `GET /api/v1/identity/access/permissions` lists grants and delegations as one list in source-then-identifier order with the filters `q`, `subject`, `action`, `customer`, `legal_entity`, `source`, `state`, `expires_before`, a page size and a signed cursor; `GET /api/v1/identity/access/permissions/grant/{id}` and `…/delegation/{id}` read one (`apps/api/server/accessquery.go`). `GET /api/v1/identity/access/requests` and `/revocations` page the change requests and kept revocations with the whole read's rows (`accesslists.go`, increment C4b; strict client `accessRequests`, `accessRevocations`, `accessSubjects` in `apps/console/src/service/access-lists.ts`, increment C4c-1; no screen yet; request rows add `subject_login`, `proposer_login`, `decided_by_login`). `GET /api/v1/identity/access/subjects` pages the people a grant can be requested for (`accesssubjects.go`, increment C4a; server only). Screen: the grants view lists them through `PermissionList` in `access/Permissions.tsx` (increment C3c; filters in the address as `acc_*`). Strict client: `accessPermissions`, `accessPermission` and the parsers `permissionPageOf`, `permissionDetailOf` in `apps/console/src/service/access-query.ts` (increment C3a). See [the design](../../features/HYB-304/m03-query-design.md).
+| Read | Server | Client and parser | Used for |
+| --- | --- | --- | --- |
+| `GET /api/v1/identity/access` | `listAccess` (`access.go:134`), shape `accessPage` (`access.go:40`): `revision`, `catalog`, `now`, `you`, `started_at`, `settings`, `ledger` | `access()` (`service/admin.ts:986`), `catalogOf`, `settingsOf` (`service/access-read.ts:4-5`), `ledgerOf` (`service/admin.ts:756`) | the command revision, the request form's choices, the settings disclosure, the ledger line; it carries no list of grants, delegations, people, requests or revocations |
+| `GET /api/v1/identity/access/permissions` | `queryPermissions` (`accessquery.go:278`), row `permissionRow` (`accessquery.go:54`) | `accessPermissions` (`service/access-query.ts:70`), `permissionOf` (`:34`) | the one list of grants and delegations |
+| `GET /api/v1/identity/access/permissions/grant/{id}`, `/delegation/{id}` | `readPermission` (`accessquery.go:401`), shape `permissionDetail` (`accessquery.go:120`) | `accessPermission` (`service/access-query.ts:102`) | the revoke panel's list of delegations that would stop |
+| `GET /api/v1/identity/access/requests` | `queryAccessRequests` (`accesslists.go:198`), row `listedRequest` (`accesslists.go:50`) over `changeRequestRow` (`accessrequests.go:359`) | `accessRequests` (`service/access-lists.ts:118`), `listedRequestOf` (`:35`) | waiting and ended requests, the decision panel |
+| `GET /api/v1/identity/access/revocations` | `queryAccessRevocations` (`accesslists.go:254`), row `revocationRow` (`revocations.go:29`) built by `revocationRow` (`revocations.go:153`) | `accessRevocations` (`service/access-lists.ts:123`), `listedRevocationOf` (`:55`) | revocation records |
+| `GET /api/v1/identity/access/subjects` | `queryAccessSubjects` (`accesssubjects.go:142`), row `listedSubject` (`accesssubjects.go:46`) | `accessSubjects` (`service/access-lists.ts:128`) | the person picker |
+| `GET /api/v1/identity/access/preview` | `previewAccess` (`access.go:166`), row `decisionRow` (`access.go:50`) | `preview()` (`service/admin.ts:993`), `previewsOf` (`service/access-read.ts:6`) | the effect check's result |
+
+Every list read answers `rows`, `next`, `count` (`value` with `certainty` `exact` or `lower_bound`), `reference_at`, `observed_at` and the echoed `query`.
 
 ### Views and page states
 
-| View/area | Displayed field, column or state | Source | Parser | Rendered at |
-| --- | --- | --- | --- | --- |
-| Roles view | Not available in pre-launch, go to grants | fixed copy | none | `access/Live.tsx:391` |
-| Support view | Not available in pre-launch, go to grants | fixed copy | none | `access/Live.tsx:392` |
-| Grants view | Denied | access read refused `permission_denied` | `admin.ts:755` | `access/Live.tsx:393-397` |
-| Grants view | Load failed, Try again or Sign in again | failed access read; body from `describeFor("load")` (`access/Live.tsx:25-38`) | `admin.ts:776-783` | `access/Live.tsx:398-406, 457` |
-| Grants view | Loading | derived: no page yet | none | `access/Live.tsx:456` |
-| Effects view | Loading or load failed | as above | as above | `access/Live.tsx:408` |
-| Grants view | Done notice | derived: command copy | none | `access/Live.tsx:379, 455` |
+| View/area | Displayed field, column or state | Source | Rendered at |
+| --- | --- | --- | --- |
+| Roles view, Support view | Not available in pre-launch, go to grants | fixed copy | `LiveAccess` (`access/Live.tsx:381`), `Unavailable` (`:369`) |
+| Grants view | Denied | the whole read refused `permission_denied` | `LiveAccess` |
+| Grants view | Load failed, Try again or Sign in again | the whole read failed; wording from `describeFor("load")` (`access/Live.tsx:31`) | `LiveAccess` |
+| Grants view | Loading | no whole page yet | `LiveAccess` |
+| Grants view | Done notice, under the list heading or the requests heading | command copy; the place follows the command | `LiveAccess`; `RequestSection` (`access/Requests.tsx:163`) |
+| Effects view | Loading or load failed | as above | `LiveAccess` |
 
-### People with access
+The requests section, the revocations section and the request form are drawn only while the whole read is present, because they take `started_at`, `settings`, `ledger`, `catalog`, `now` and `revision` from it.
 
-| View/area | Displayed field, column or state | Source | Parser | Rendered at |
-| --- | --- | --- | --- | --- |
-| Header | Active grants count | derived: current grants with `state = "active"` and `effective` | `admin.ts:891` | `access/Live.tsx:447` |
-| Header | Loaded at | `now` (`access.go:78`) | `admin.ts:895` | `access/Live.tsx:448` |
-| Header | Request access button (narrow) | derived: first `catalog` entry has days left (`access/live-model.ts:46-49`) | `admin.ts:893` | `access/Live.tsx:451` |
-| Grants | No grants | derived: no current person grant (`access/live-model.ts:29-33`) | none | `access/Live.tsx:458` |
-| Grants table | Column headings | fixed copy | none | `access/Live.tsx:207-212` |
-| Grants table | Person | `grants[].subject` (`access.go:30`) shown as `subjects[].login` (`access.go:68-69`) via `loginOf` (`access/who.tsx:4-6`) | `admin.ts:891, 894` | `access/Live.tsx:219` |
-| Grants table | Access, data and customer | `grants[].action`, `fields`, `kind`, `scope.customer` (`access.go:32-35`) via `accessText`, `scopeText` (`access/live-model.ts:57-64`) | `admin.ts:891` | `access/Live.tsx:220` |
-| Grants table | Status and until/starts/ended | `state`, `effective`, `not_before`, `not_after` (`access.go:36-39`) via `stateLine` (`access/live-model.ts:14-27`) | `admin.ts:891` | `access/Live.tsx:215, 221` |
-| Grants table | Your grant | derived: `subject` equals the session user | none | `access/Live.tsx:224` |
-| Grants table | Revocation requested | derived: pending request with `change = "revoke"` and `grant` equal to the row (`access/request-model.ts:9-11`) | `admin.ts:899` | `access/Live.tsx:216, 225` |
-| Grants table | Request revocation button | derived: `state` `active` or `pending` (`access/live-model.ts:12`) | none | `access/Live.tsx:226-227` |
-| Grants | Ended grants disclosure | derived: `state` `revoked`, `expired` or `ended` (`access/live-model.ts:8-10`) | none | `access/Live.tsx:459-461` |
+### Grants and delegations list
 
-### Request access form and revoke step
+Component `PermissionList` (`access/Permissions.tsx:228`); rows `Rows` (`:162`); filters `Filters` (`:103`) from `permissionFilters` (`:25`), kept in the address as `acc_*`; composition in `docs/features/HYB-304/m03-list-composition.md`.
 
-| View/area | Displayed field, column or state | Source | Parser | Rendered at |
-| --- | --- | --- | --- | --- |
-| Request form | Shown | first `catalog` entry with at least one day left before `until` (`access.go:60-65`) | `admin.ts:893` | `access/Live.tsx:43-45, 63, 430` |
-| Request form | Additions paused | `ledger.state` not `ok` or `recovered` (`access/request-model.ts:13-15`) | `admin.ts:907, 718` | `access/Live.tsx:61, 98, 129-130` |
-| Request form | No eligible person | derived: `subjects` minus self is empty | `admin.ts:894` | `access/Live.tsx:44, 101` |
-| Request form | Person choice | `subjects[].user_id`, `login`, excluding self | `admin.ts:894` | `access/Live.tsx:103-109` |
-| Request form | Access and data kind | `catalog[0].action`, `fields`, `kind` | `admin.ts:893` | `access/Live.tsx:113` |
-| Request form | Customer: all customers | fixed: the form always sends `customer = "all"` | none | `access/Live.tsx:80, 114` |
-| Request form | Duration days, hint with maximum and ceiling end | typed `days`; maximum derived from `catalog[0].until` and `now` | `admin.ts:893, 895` | `access/Live.tsx:116-125` |
-| Request form | Impact sentence | derived from chosen person, catalog entry and days | none | `access/Live.tsx:126` |
-| Request form | Command | `access.request_grant` with `subject`, `action`, `kind`, `fields`, `customer`, `days` | `admin.ts:871` | `access/Live.tsx:79-80` |
-| Request form | Days refused, failure box | `invalid_request` with field `days`; others via `describeRequest` (`access/Requests.tsx:21-32`) | `admin.ts:754, 778` | `access/Live.tsx:83-84, 100` |
-| Revoke step | Person | grant `subject` via `loginOf`, or delegate login | `admin.ts:891-894` | `access/Live.tsx:150, 176` |
-| Revoke step | Access, customer, status | grant `action`, `fields`, `kind`, `scope.customer`, `stateLine`; delegation access and status text passed from the row | `admin.ts:891-892` | `access/Live.tsx:179-183` |
-| Revoke step | Delegations ended below | derived from `delegations[].parent` and `state` (`access/request-model.ts:113-122`) | `admin.ts:892` | `access/Live.tsx:172, 185-190` |
-| Revoke step | Command | `access.request_revoke` (grant) or `access.revoke_delegation` (delegation) | `admin.ts:871` | `access/Live.tsx:160` |
-| Revoke step | Failure box | `describeRequest` or `describeFor("revoke")` | `admin.ts:776-783` | `access/Live.tsx:178` |
+| Area | Displayed field, column or state | Source |
+| --- | --- | --- |
+| Filters | Search, holder user ID, action, customer ID, legal entity ID, source, state, ends before | sent as `q`, `subject`, `action`, `customer`, `legal_entity`, `source`, `state`, `expires_before`; action choices are the distinct `catalog[].action` of the whole read |
+| Count line | Matching count, exact or at least; list reference time | `count.value`, `count.certainty`, `reference_at` |
+| Column Holder | sign-in name and user ID; "Console" with "Console ceiling" for a console-client grant; "Delegated by" for a delegation | `subject_login`, `subject` (empty for a console grant), `delegator_login`, `delegator` |
+| Column Access | action and fields, the resource kind below | `action`, `fields`, `kind` |
+| Column Scope | customer, legal entity, and contract and period when restricted | `scope.customer`, `scope.legal_entity`, `scope.contract` (each `any` or `id`), `scope.period` |
+| Column Source | Grant or Delegation; can delegate further; the parent when folded | `source`, `redelegate`, `parent` |
+| Column Original delegation | the parent delegation or None | `parent` |
+| Column Validity | from and until | `not_before`, `not_after` |
+| Column Effective permission | the state with its reason; "Revocation requested" | `state`, `effective`, `revocation_requested`; wording from `effectiveLines` (`access/Permissions.tsx:94`) |
+| Column Actions | Request revocation; Your grant; Set by the installation; Revoke | `source`, `subject` against the session user, an empty `subject`, `state` through `revocable`, `revocation_requested` |
+| Paging | First, Previous, Next | `next`; 50 a page |
+| States | Loading, no match, no match yet with more to scan, failed with Reload and First, filters that cannot be read | the read's state; `readFailure` (`access/Permissions.tsx:80`) |
 
-### Approval requests
+Not displayed from a row: `id` (used as the row's key and in its action's target), `client` (a console grant is recognised by an empty `subject`), `version`.
 
-| View/area | Displayed field, column or state | Source | Parser | Rendered at |
-| --- | --- | --- | --- | --- |
-| Requests | Waiting count, none waiting | derived: `requests[].state = "pending"` (`access/request-model.ts:5-7`) | `admin.ts:899` | `access/Requests.tsx:166, 169` |
-| Requests table | Column headings | fixed copy | none | `access/Requests.tsx:117-122` |
-| Requests table | Add or revoke, person | `change`, `subject` (`accessrequests.go:345-346`) | `admin.ts:899` | `access/Requests.tsx:129-130` |
-| Requests table | Proposed by and at | `proposer`, `proposed_at` (`accessrequests.go:356-357`) | `admin.ts:899` | `access/Requests.tsx:131` |
-| Requests table | Request ID and short digest | `id`, `digest` first 12 (`access/request-model.ts:40-42`) | `admin.ts:899` | `access/Requests.tsx:132` |
-| Requests table | Access, data, customer, days | `action`, `fields`, `kind`, `customer`, `days` (`accessrequests.go:348-352`) via `scopeLine` (`access/Requests.tsx:34-37`) | `admin.ts:899` | `access/Requests.tsx:134` |
-| Requests table | State | `state` (`accessrequests.go:354`) via `requestState` (`access/request-model.ts:64-66`) | `admin.ts:899` | `access/Requests.tsx:136` |
-| Requests table | Expires | `expires_at` (`accessrequests.go:358`) | `admin.ts:899` | `access/Requests.tsx:137` |
-| Requests table | Eligible approvers, no approver | `eligible_approvers` (`accessrequests.go:364`) | `admin.ts:899` | `access/Requests.tsx:138, 140` |
-| Requests table | Out of date | `current` false (`accessrequests.go:355`) | `admin.ts:899` | `access/Requests.tsx:139` |
-| Requests table | Decided by and at, decision reason | `decided_by`, `decided_at`, `decision_reason` (`accessrequests.go:360-362`) | `admin.ts:899` | `access/Requests.tsx:141-142` |
-| Requests table | Approve, Reject, Withdraw | `can_approve`, `can_reject`, `can_withdraw` (`accessrequests.go:365-367`) | `admin.ts:899` | `access/Requests.tsx:145-149` |
-| Requests | Requests before this start not kept | `started_at` (`access.go:80`) | `admin.ts:897` | `access/Requests.tsx:170` |
-| Requests | Ended requests disclosure | derived: non-pending requests | `admin.ts:899` | `access/Requests.tsx:171-173` |
-| Settings disclosure | Setting, value, range and default, source | `settings[].name`, `value`, `unit`, `min`, `max`, `default`, `source` (`access.go:81`; row `settings.go:145-153`) | `admin.ts:898` | `access/Settings.tsx:7-35`, used at `access/Requests.tsx:174` |
-| Decide panel | Facts: change, person, access, days, request, expires, reason, revision digest | `change`, `subject`, `action`, `fields`, `kind`, `customer`, `days`, `proposer`, `proposed_at`, `expires_at`, `reason`, `digest` | `admin.ts:899` | `access/Requests.tsx:39-49, 96` |
-| Decide panel | May end (approve a revoke) | `may_end[]` (`accessrequests.go:368`) | `admin.ts:899` | `access/Requests.tsx:97-102` |
-| Decide panel | Command | `access.approve_request` (with `digest`), `access.reject_request`, `access.withdraw_request` | `admin.ts:871` | `access/Requests.tsx:68, 77` |
-| Decide panel | Failure box | `describeRequest` | `admin.ts:776-783` | `access/Requests.tsx:95` |
+### Request access form
+
+Component `GrantForm` (`access/Live.tsx:46`).
+
+| Area | Displayed field or state | Source |
+| --- | --- | --- |
+| Shown | the form | a `catalog` entry of the whole read with at least a day before `until`, counted from `now`, whose access has wording; in the narrow layout only after Request access is pressed |
+| Additions paused | warning; the button disabled | `ledger.state` not `ok` or `recovered` |
+| Person | search, results, chosen line, the unconfirmed-revocation sentence | `PersonPicker` (`access/PersonPicker.tsx:12`) over the subjects read: `q`, 25 a page; rows `user_id`, `login`, `revocation_unconfirmed`; the signed-in person is left out here |
+| Person | No eligible person | the first page of the subjects read holds no one else and has no `next` |
+| Access | choice, and the hint about the console's own limits | `catalog[].action`, `fields`, `kind` |
+| Customer | all customers | fixed: the form sends `customer = "all"` |
+| Days | value, hint with the maximum | typed; the maximum from the chosen entry's `until` and `now` |
+| Impact sentence | derived from the chosen person, entry and days | none |
+| Command | `access.request_grant` with `subject`, `action`, `kind`, `fields`, `customer`, `days`, and `revision` | `command()` (`service/admin.ts:971`) |
+| Failure | days refused; other refusals | `invalid_request` with field `days`; `describeRequest` (`access/Requests.tsx:24`) |
+
+### Revoke panel
+
+Component `Revoke` (`access/Live.tsx:206`), opened from a row of the list.
+
+| Area | Displayed field or state | Source |
+| --- | --- | --- |
+| Person, access, customer, status | the row's facts | the permissions row the panel was opened from |
+| Delegations that would stop applying | count, lead for a grant or a delegation, checked time, up to ten identifiers and the rest behind a disclosure; none; checking; could not be checked with Try again | `would_end` and `observed_at` of the detail read of that grant or delegation; `WouldStop` (`access/Live.tsx:166`) |
+| Command | `access.request_revoke` for a grant, `access.revoke_delegation` for a delegation, with the identifier and `revision` | `command()`; the button does not wait for the detail read |
+| Failure | refusals | `describeRequest` or `describeFor("revoke")` |
+
+### Access change requests
+
+Component `RequestSection` (`access/Requests.tsx:163`); rows `Rows` (`:115`); composition in `docs/features/HYB-304/m03-requests-composition.md`. Two lists, each through `usePagedList` (`access/paged.tsx:17`): `state=pending` 50 a page, `state=ended` 25 a page.
+
+| Area | Displayed field or state | Source |
+| --- | --- | --- |
+| Heading | waiting count, exact or at least | the pending read's `count` |
+| Row | add or revoke, the person | `change`, `subject_login` or `subject` |
+| Row | proposed by and at | `proposer_login` or `proposer`, `proposed_at` |
+| Row | request ID and short digest | `id`, `digest` |
+| Row | access, data, customer, days | `action`, `fields`, `kind`, `customer`, `days` through `scopeLine` (`access/Requests.tsx:37`) |
+| Row | state; expires; eligible approvers, none; out of date | `state`, `expires_at`, `eligible_approvers`, `current` |
+| Row | decided by and at, the decision's reason | `decided_by_login` or `decided_by`, `decided_at`, `decision_reason` |
+| Row | Approve, Reject, Withdraw | `can_approve`, `can_reject`, `can_withdraw` |
+| Under each list | list reference time; First, Previous, Next when there is more than a page | `reference_at`, `next`; `Reference` (`access/paged.tsx:78`), `Paging` (`:66`) |
+| Note | requests before this start are not kept | `started_at` of the whole read |
+| Ended list | collapsed, the summary with the count exact, at least, or could not be loaded; hidden when its first page is empty and has no `next` | the ended read's `count` or failure |
+| States | loading, none waiting, failed with Reload and First; one list's failure leaves the other | `ListFailure` (`access/paged.tsx:49`) |
+| Settings disclosure | setting, value, range and default, source | `settings[]` of the whole read; `SettingsDisclosure` (`access/Settings.tsx:7`) |
+| Decision panel | change, person, access, days, request, expires, reason, digest; what may end when approving a revocation | the request row the panel was opened from, with `may_end[]`; `DecidePanel` (`access/Requests.tsx:54`), `Facts` (`:42`) |
+| Decision panel | command | `access.approve_request` with `digest`, `access.reject_request`, `access.withdraw_request`, with `revision` |
+
+Not displayed from a row: `grant`, `result`.
 
 ### Revocations and decision ledger
 
-| View/area | Displayed field, column or state | Source | Parser | Rendered at |
-| --- | --- | --- | --- | --- |
-| Ledger | Status lines: ok with records, isolated, stopped, full, unknown, not durable, recovered, replaced, still available | `ledger.state`, `isolation_reason`, `problem_line`, `records`, `watermark`, `not_durable`, `recovery.at`, `recovery.truncated_bytes`, `replaces` (`ledger.go:15-34`) via `ledgerLines` (`access/request-model.ts:82-107`) | `admin.ts:712-733` | `access/Revocations.tsx:10-15` |
-| Ledger | Details: ledger ID, created, watermark, checked, file | `ledger_id`, `created_at`, `watermark`, `checked_at`, `file` (`ledger.go:23-24, 29-30, 34`) | `admin.ts:720-731` | `access/Revocations.tsx:16-25` |
-| Revocations | None | derived: empty `revocations` | `admin.ts:900` | `access/Revocations.tsx:97` |
-| Revocation record | Target | `target_kind`, `target` (`revocations.go:33-34`); grant person and access looked up in `grants` and `subjects` | `admin.ts:900-906` | `access/Revocations.tsx:32-38, 64` |
-| Revocation record | State name and job | `state`, `job_state` (`revocations.go:38, 42`) via `stateWords`, `jobWords` (`access/request-model.ts:44-51`) | `admin.ts:900-906` | `access/Revocations.tsx:65-66` |
-| Revocation record | Decision unconfirmed in this process | `state = "decision_unconfirmed"` | `admin.ts:900-906` | `access/Revocations.tsx:67` |
-| Revocation record | Earlier run, recorded at, replay; or received at | `origin`, `recorded_at`, `replay`, `received_at` (`revocations.go:31-32, 37, 47`) | `admin.ts:900-906` | `access/Revocations.tsx:68-70` |
-| Revocation record | Delegations ended | `ended_delegations[]` (`revocations.go:40`) | `admin.ts:903` | `access/Revocations.tsx:71` |
-| Revocation record | Cleanup progress and groups | `cleanup[].item`, `state`, `reason`, `refs` (`revocations.go:11-16`) via `cleanupGroups`, `settled`, `itemWords` (`access/request-model.ts:30-38, 58-62`) | `admin.ts:904` | `access/Revocations.tsx:40-57, 72-73` |
-| Revocation record | Details: ID, request, sequence, watermark, deny revision, failure | `id`, `request`, `receipt.sequence`, `receipt.watermark`, `deny_generation`, `receipt.reason` (`revocations.go:19-21, 30, 41, 46`) | `admin.ts:900-906` | `access/Revocations.tsx:74-84` |
+Component `RevocationSection` (`access/Revocations.tsx:102`); composition in `docs/features/HYB-304/m03-revocations-composition.md`. Ten records a page.
 
-### Ceiling and delegations
+| Area | Displayed field or state | Source |
+| --- | --- | --- |
+| Heading | revocation count, exact or at least | the read's `count` |
+| Ledger line | status lines and details | `ledger` of the whole read; `LedgerLine` (`access/Revocations.tsx:14`) |
+| Record heading | "Grant: access for person" or "Delegation to person: access"; the resource kind and identifier below; the identifier alone when the target is gone | `target_kind`, `target`, `target_subject_login` or `target_subject`, `target_action`, `target_fields`, `target_resource_kind`; `Target` (`access/Revocations.tsx:36`) |
+| Record | state name and job | `state`, `job_state` |
+| Record | decision not confirmed in this process | `state = "decision_unconfirmed"` |
+| Record | earlier run, recorded at, replay; or received at | `origin`, `recorded_at`, `replay`, `received_at` |
+| Record | delegations ended | `ended_delegations[]` |
+| Record | cleanup progress and groups | `cleanup[].item`, `state`, `reason`, `refs`; `Cleanup` (`access/Revocations.tsx:49`) |
+| Record | details: ID, request, sequence, watermark, deny revision, failure | `id`, `request`, `receipt.sequence`, `receipt.watermark`, `deny_generation`, `receipt.reason` |
+| Under the list | list reference time; paging when there is more than a page | `reference_at`, `next` |
+| States | loading, none, failed with Reload and First; the ledger line stays above a failed list | the read's state |
 
-| View/area | Displayed field, column or state | Source | Parser | Rendered at |
-| --- | --- | --- | --- | --- |
-| Delegations | Active count, none | derived: delegations not in a closed state (`access/live-model.ts:39-44`) | `admin.ts:892` | `access/Live.tsx:489, 491` |
-| Delegations table | Delegator → delegate | `delegator`, `delegate` (`access.go:45-46`) via `loginOf` | `admin.ts:892, 894` | `access/Live.tsx:506` |
-| Delegations table | From parent, may redelegate | `parent`, `redelegate` (`access.go:47-48`) | `admin.ts:892` | `access/Live.tsx:507` |
-| Delegations table | Access, data and customer | `action`, `fields`, `kind`, `scope.customer` (`access.go:49-52`) | `admin.ts:892` | `access/Live.tsx:508` |
-| Delegations table | Status | `state`, `not_before`, `not_after` (`access.go:53-55`) via `stateLine` | `admin.ts:892` | `access/Live.tsx:502, 509` |
-| Delegations table | Revoke | derived: `state` `active` or `pending` | none | `access/Live.tsx:510-511` |
-| Delegations | Ended disclosure: ID, ended by chain or state | `id`, `state` | `admin.ts:892` | `access/Live.tsx:519-527` |
+Not displayed from a row: `history`, `target_present`, `target_version`, `job_reason`, `requested_by`, `approved_by`, `deny_at`, `verified`, `completed_at`.
 
 ### Effects preview view
 
-| View/area | Displayed field, column or state | Source | Parser | Rendered at |
-| --- | --- | --- | --- | --- |
-| Form | Person | `subjects[]` of the access read | `admin.ts:894` | `access/Live.tsx:270-274` |
-| Form | Data kind (choice when more than one) | derived: distinct `catalog[].kind` | `admin.ts:893` | `access/Live.tsx:240, 276-290` |
-| Form | Customer (optional) | typed; sent as `customer` | none | `access/Live.tsx:291-295` |
-| Preview | Unconfirmed revocation for this person | derived: a revocation in `received` or `decision_unconfirmed` whose target belongs to the person (`access/request-model.ts:17-26`) | `admin.ts:900` | `access/Live.tsx:299` |
-| Preview | Start hint, cleared after a change | derived | none | `access/Live.tsx:300-301` |
-| Preview | Loading | derived | none | `access/Live.tsx:303` |
-| Preview | Preview failed | failed preview read | `admin.ts:776-783` | `access/Live.tsx:304-309` |
-| Preview | Stale result dropped | derived: only the latest request is shown (`access/Live.tsx:247-248, 256, 260`) | none | `access/Live.tsx:256` |
-| Result | Title with person | derived: chosen subject login | none | `access/Live.tsx:313` |
-| Result | Data kind, customer, checked at | request values; checked at is browser time (`access/Live.tsx:257`) | none | `access/Live.tsx:315` |
-| Result | Allowed count | derived from `decisions[].allowed` | `admin.ts:914` | `access/Live.tsx:302, 316` |
-| Result table | Action | `decisions[].action` (`access.go:88`) | `admin.ts:914` | `access/Live.tsx:332` |
-| Result table | Field | `decisions[].field` (`access.go:89`) | `admin.ts:914` | `access/Live.tsx:333` |
-| Result table | Allowed or not allowed | `decisions[].allowed` (`access.go:90`) | `admin.ts:914` | `access/Live.tsx:334` |
-| Result table | Why | `decisions[].reason`, `delegations[]` (`access.go:91-92`) via `reasonText` (`access/live-model.ts:66-83`) | `admin.ts:914` | `access/Live.tsx:335` |
+Component `Effects` (`access/Live.tsx:263`).
 
-**Revocation rows, target facts (HYB-304 T1, additive, on `GET /identity/access` `revocations[]` and `GET /identity/access/revocations` rows):** `target_subject` (a grant's holder, a delegation's delegate), `target_subject_login`, `target_action`, `target_resource_kind`, `target_fields`; empty when the target is not present. Not displayed yet; the revocations section will use them in T4.
+| Area | Displayed field or state | Source |
+| --- | --- | --- |
+| Person | the person picker; the unconfirmed-revocation sentence under the chosen person | the subjects read; `revocation_unconfirmed` of the chosen row |
+| Data kind | choice when there is more than one | distinct `catalog[].kind` of the whole read |
+| Customer | optional, sent as `customer` | typed |
+| States | start hint, cleared after a change, loading, failed; only the latest request is shown | derived |
+| Result | title with the person; data kind, customer, checked at; allowed count | the chosen row's `login` or `user_id`; request values; checked at is browser time; `decisions[].allowed` |
+| Result table | action, field, allowed or not, why | `decisions[].action`, `field`, `allowed`, `reason`, `delegations[]` |
 
-**Subject rows of the bounded read (HYB-304 T2a, additive, `GET /identity/access/subjects` rows only):** `revocation_unconfirmed`, true when a kept revocation that is not confirmed targets a grant the person holds or a delegation the person receives. Not displayed yet; the request form's warning will use it in T5.
-
-**Permission detail (HYB-304 T2b-2, additive, `GET /identity/access/permissions/grant/{id}` and `/delegation/{id}`):** `would_end`, the delegations effective now that would not be if this record were revoked, in identifier order. Not displayed yet; the revocation panel will use it in T5 in place of the browser's own list.
-
-**Requests section (HYB-304 T3):** read from `GET /identity/access/requests` with `state=pending` (50 a page) and `state=ended` (25 a page) through `accessRequests`; rows use `subject_login`, `proposer_login` and `decided_by_login`. The whole read's `requests` is no longer read by the view.
-
-**Revocations section (HYB-304 T4):** read from `GET /identity/access/revocations` ten a page through `accessRevocations`; a record's heading uses `target_subject_login` (or `target_subject`), `target_action`, `target_fields`, `target_resource_kind` and `target`. The ledger line still comes from the whole read's `ledger`. The whole read's `revocations` is no longer read by the view.
-
-**Revoke panel, what would stop (HYB-304 T5a):** `would_end` of `GET /identity/access/permissions/grant/{id}` or `/delegation/{id}`, read when the panel opens, with `observed_at` as the checked time. The console ceiling table was removed in the same change; the console's grants are rows of the permissions list.
-
-**Person picker (HYB-304 T5b):** the request form and the effect check search `GET /identity/access/subjects` (`q`, 25 a page) through `accessSubjects`; rows use `user_id`, `login` and `revocation_unconfirmed`. The whole read's `subjects`, `grants`, `delegations`, `requests` and `revocations` are no longer read by the M03 view.
-
-**Whole access read after HYB-304 C5b:** `GET /identity/access` answers only `revision`, `catalog`, `now`, `you`, `started_at`, `settings` and `ledger`. Rows of this document that cite its `grants`, `delegations`, `subjects`, `requests` or `revocations` describe the bounded reads named in the entries above.
-
-**Parsed but not displayed on M03:** `you`, grant and delegation `version`, `scope.legal_entity`/`contract`/`period`, request `grant` (used only to match), `result`, revocation `history`, `target_present`, `job_reason`, `requested_by`, `approved_by`, `deny_at`, `verified`, `completed_at`, ledger `replace_reason`, `replaced_file`; preview `revision`, `subject`, `kind`, `customer`.
+**Parsed but not displayed on M03:** `you` of the whole read; ledger `replace_reason`, `replaced_file`; the permission detail's `workspace`, `revision` and `row`; every list page's `search_input`, `query`, `observed_at`, `revision`, `order`, `work_units` and `scan_stopped`. The preview read's `revision`, `subject`, `kind` and `customer` are not parsed: `preview()` returns only its `decisions`.
 
 ## M04 Service accounts
 
@@ -683,8 +676,8 @@ No network address, raw User-Agent, login name, email or bearer secret is stored
 ## Unknowns and mismatches
 
 - **Unknown.** None of the rows above is marked unknown.
-- **Server fields that no console parser reads:** `trust.stricter_fields` (`policy.go:69`, not in `policyPageOf`, `admin.ts:568-573`); `impact.api_keys` and `impact.pending_jobs` (`bulkread.go:85, 87`, not in `detailOf`; the preview shows fixed "not applicable" copy instead, `users/BulkPrepare.tsx:73, 77`); `revocations[].target_version` (`revocations.go:35`, not in the `Revocation` type, `admin.ts:167-190`, although the spread at `admin.ts:900-901` keeps it at run time); trust command result `fields.reason` and `fields.your_session_ended` (`trust.go:314, 320`), `fields.change_revision` (`trust.go:143`); set-role-period result `fields.role_until` (`periods.go:130`); bulk result `fields.digest`, `fields.targets` and `fields.count` (`bulk.go:40, 105`, `bulkstage.go:86`).
-- **Parser type wider than the read.** `access`, `services` and `me` cast their row arrays without checking each field (`admin.ts:891-894, 921`, and `identities` in `me`), unlike `userRowOf`, `trustChangeOf` and the bulk parsers. A missing field arrives as `undefined` rather than an empty string or zero.
+- **Server fields that no console parser reads:** `trust.stricter_fields` (`policy.go:69`, not in `policyPageOf`, `admin.ts:568-573`); `impact.api_keys` and `impact.pending_jobs` (`bulkread.go:85, 87`, not in `detailOf`; the preview shows fixed "not applicable" copy instead, `users/BulkPrepare.tsx:73, 77`); trust command result `fields.reason` and `fields.your_session_ended` (`trust.go:314, 320`), `fields.change_revision` (`trust.go:143`); set-role-period result `fields.role_until` (`periods.go:130`); bulk result `fields.digest`, `fields.targets` and `fields.count` (`bulk.go:40, 105`, `bulkstage.go:86`).
+- **Parser type wider than the read.** Checked again on 2026-11-27 for two of the three reads this entry named: `access` no longer has row arrays, and its remaining arrays are checked field by field (`service/access-read.ts:4-5`); `me` is parsed by `selfPageOf` under `validatedRead` (`service/admin.ts:1006-1008`). The entry's statement about `services` was not re-checked in this change.
 
 ## HYB-327 reconciliation
 

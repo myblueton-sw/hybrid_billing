@@ -25,38 +25,6 @@ type scopeRow struct {
 	Period      string `json:"period"`
 }
 
-type grantRow struct {
-	ID        string   `json:"id"`
-	Subject   string   `json:"subject"`
-	Client    string   `json:"client"`
-	Action    string   `json:"action"`
-	Kind      string   `json:"kind"`
-	Fields    []string `json:"fields"`
-	Scope     scopeRow `json:"scope"`
-	NotBefore string   `json:"not_before"`
-	NotAfter  string   `json:"not_after"`
-	State     string   `json:"state"`
-	Effective bool     `json:"effective"`
-	Version   uint64   `json:"version"`
-}
-
-type delegationRow struct {
-	ID         string   `json:"id"`
-	Delegator  string   `json:"delegator"`
-	Delegate   string   `json:"delegate"`
-	Parent     string   `json:"parent"`
-	Redelegate bool     `json:"redelegate"`
-	Action     string   `json:"action"`
-	Kind       string   `json:"kind"`
-	Fields     []string `json:"fields"`
-	Scope      scopeRow `json:"scope"`
-	NotBefore  string   `json:"not_before"`
-	NotAfter   string   `json:"not_after"`
-	State      string   `json:"state"`
-	Effective  bool     `json:"effective"`
-	Version    uint64   `json:"version"`
-}
-
 type ceilingRow struct {
 	Action string   `json:"action"`
 	Kind   string   `json:"kind"`
@@ -70,18 +38,13 @@ type subjectRow struct {
 }
 
 type accessPage struct {
-	Revision    string             `json:"revision"`
-	Grants      []grantRow         `json:"grants"`
-	Delegations []delegationRow    `json:"delegations"`
-	Catalog     []ceilingRow       `json:"catalog"`
-	Subjects    []subjectRow       `json:"subjects"`
-	Now         string             `json:"now"`
-	You         string             `json:"you"`
-	StartedAt   string             `json:"started_at"`
-	Settings    []settingRow       `json:"settings"`
-	Requests    []changeRequestRow `json:"requests"`
-	Revocations []revocationRow    `json:"revocations"`
-	Ledger      ledgerRow          `json:"ledger"`
+	Revision  string       `json:"revision"`
+	Catalog   []ceilingRow `json:"catalog"`
+	Now       string       `json:"now"`
+	You       string       `json:"you"`
+	StartedAt string       `json:"started_at"`
+	Settings  []settingRow `json:"settings"`
+	Ledger    ledgerRow    `json:"ledger"`
 }
 
 type decisionRow struct {
@@ -172,42 +135,11 @@ func (s *Server) listAccess(w http.ResponseWriter, r *http.Request) {
 	request := r.Header.Get("X-Request-Id")
 	s.domain.RLock()
 	defer s.domain.RUnlock()
-	found, answer, ok := s.admitted(w, r)
+	_, answer, ok := s.admitted(w, r)
 	if !ok {
 		return
 	}
-	subjects, err := s.grantees(found.verifier)
-	if err != nil {
-		failCode(w, commands.DependencyUnavailable, request)
-		return
-	}
-	facts, err := s.accessFacts(found.verifier)
-	if err != nil {
-		failCode(w, commands.DependencyUnavailable, request)
-		return
-	}
-	now := s.clock()
-	page := accessPage{Revision: s.Revision(), Grants: []grantRow{}, Delegations: []delegationRow{}, Catalog: s.ceiling(), Subjects: subjects, Now: stamp(now),
-		You: answer.User(), StartedAt: stamp(s.startedAt), Settings: s.settingRows(), Requests: facts.requestRows(answer.User()), Revocations: s.revocationRows(),
-		Ledger: s.ledgerRow()}
-	unconfirmed := s.unconfirmedTargets()
-	for _, g := range s.admin.Grants() {
-		if gate.InstallationAction(g.Terms.Action) {
-			continue
-		}
-		page.Grants = append(page.Grants, grantRow{ID: g.ID, Subject: g.SubjectID, Client: g.ClientID, Action: string(g.Terms.Action), Kind: g.Terms.Kind,
-			Fields: append([]string{}, g.Terms.Fields...), Scope: scopeOf(g.Terms), NotBefore: stamp(g.Validity.NotBefore), NotAfter: stamp(g.Validity.NotAfter),
-			State: closedState(stateOf(g.Closed, g.Validity, now), unconfirmed[accesschange.TargetGrant+"/"+g.ID]), Effective: g.Effective, Version: g.Version})
-	}
-	for _, d := range s.admin.Delegations() {
-		state := closedState(stateOf(d.Closed, d.Validity, now), unconfirmed[accesschange.TargetDelegation+"/"+d.ID])
-		if state == "active" && !d.Effective {
-			state = "ended"
-		}
-		page.Delegations = append(page.Delegations, delegationRow{ID: d.ID, Delegator: d.DelegatorID, Delegate: d.DelegateID, Parent: d.ParentID, Redelegate: d.AllowRedelegation,
-			Action: string(d.Terms.Action), Kind: d.Terms.Kind, Fields: append([]string{}, d.Terms.Fields...), Scope: scopeOf(d.Terms),
-			NotBefore: stamp(d.Validity.NotBefore), NotAfter: stamp(d.Validity.NotAfter), State: state, Effective: d.Effective, Version: d.Version})
-	}
+	page := accessPage{Revision: s.Revision(), Catalog: s.ceiling(), Now: stamp(s.clock()), You: answer.User(), StartedAt: stamp(s.startedAt), Settings: s.settingRows(), Ledger: s.ledgerRow()}
 	writeJSON(w, http.StatusOK, request, page)
 }
 

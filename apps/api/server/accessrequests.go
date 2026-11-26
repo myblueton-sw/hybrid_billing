@@ -3,7 +3,6 @@ package server
 import (
 	"encoding/hex"
 	"errors"
-	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -423,21 +422,6 @@ func (f accessFacts) changeRequestRow(v accesschange.View, you string) changeReq
 		row.MayEnd = f.mayEnd(v.Holder)
 	}
 	return row
-}
-
-func (f accessFacts) requestRows(you string) []changeRequestRow {
-	pending, ended := []changeRequestRow{}, []changeRequestRow{}
-	views := f.s.changes.Requests(f.s.bootWorkspace)
-	sort.Slice(views, func(a, b int) bool { return views[a].Number > views[b].Number })
-	for _, v := range views {
-		row := f.changeRequestRow(v, you)
-		if v.State == accesschange.StatePending {
-			pending = append(pending, row)
-		} else if len(ended) < f.s.cfg.Access.EndedShown {
-			ended = append(ended, row)
-		}
-	}
-	return append(pending, ended...)
 }
 
 func (s *Server) requestDefinitions(permission commands.Permission) []commands.Definition {

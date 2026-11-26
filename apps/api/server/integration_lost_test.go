@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/url"
 	"strings"
 	"sync"
 	"testing"
@@ -533,7 +534,27 @@ func TestM03NeverOffersIntegrationRights(t *testing.T) {
 		return fmt.Sprint(r.status) + string(raw)
 	}
 	unknown := strip(f.run(root, "access.request_revoke", "grant-unknown", nil))
-	read := f.accessRead(root, "")
+	listed, rows := "", 0
+	for next, pages := "", 0; pages < 200; pages++ {
+		query := "?limit=50"
+		if next != "" {
+			query += "&after=" + url.QueryEscape(next)
+		}
+		got := f.permissions(root, query)
+		if got.status != 200 {
+			t.Fatalf("the permissions list: %s", got.raw)
+		}
+		listed += got.raw
+		rows += len(got.body["rows"].([]any))
+		if next, _ = got.body["next"].(string); next == "" {
+			break
+		}
+	}
+	if rows == 0 {
+		t.Fatal("the permissions list is empty; its silence about integration grants would prove nothing")
+	}
+	checked := 0
+	read := reply{raw: listed}
 	for _, g := range f.s.admin.Grants() {
 		if !strings.HasPrefix(g.ID, integrationGrantID) {
 			continue
@@ -547,6 +568,10 @@ func TestM03NeverOffersIntegrationRights(t *testing.T) {
 		if strings.Contains(read.raw, g.ID) || strings.Contains(read.raw, string(g.Terms.Action)) {
 			t.Errorf("M03 lists %s", g.ID)
 		}
+		checked++
+	}
+	if checked == 0 {
+		t.Fatal("there is no integration grant to look for")
 	}
 }
 

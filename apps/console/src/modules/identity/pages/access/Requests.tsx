@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import type { Locale } from "../../../../shared/types";
-import { AdminError, attempt, type AccessPage, type AccessRequest, type AdminClient, type Attempt } from "../../../../service/admin";
+import { AdminError, attempt, type AccessSetting, type AdminClient, type Attempt } from "../../../../service/admin";
+import type { ListedRequest, RequestPage } from "../../../../service/access-lists";
 import { c } from "../../../../service/copy";
 import { Summary } from "../../../../service/Service";
 import { FailureBox, Reason, reasonProblem, settles } from "../users/Live";
@@ -10,9 +11,12 @@ import { when } from "../authentication/live-model";
 import { a, kindLabel } from "./live-copy";
 import { accessText } from "./live-model";
 import { q } from "./request-copy";
-import { keepAttempt, requestsOf, requestState, shortDigest } from "./request-model";
+import { keepAttempt, requestState, shortDigest } from "./request-model";
+import { readFailure } from "./Permissions";
+import { qcopy } from "../service-accounts/query-copy";
+import { cursorTrail } from "../service-accounts/query-model";
 import { SettingsDisclosure } from "./Settings";
-import { breakable, loginOf, withWho } from "./who";
+import { breakable, withWho } from "./who";
 
 export type Decision = "approve" | "reject" | "withdraw";
 
@@ -31,25 +35,25 @@ export function describeRequest(l: Locale, e: unknown): { title: string; body: s
   return failureText(l, e);
 }
 
-function scopeLine(l: Locale, r: AccessRequest): string {
+function scopeLine(l: Locale, r: ListedRequest): string {
   const what = `${accessText(l, r.action, r.fields)} · ${kindLabel(l, r.kind) ?? r.kind} · ${r.customer === "all" || r.customer === "" ? a.allCustomers(l) : r.customer}`;
   return r.change === "add" ? q.adds(l, what) : q.removes(l, what);
 }
 
-function Facts({ l, page, r }: { l: Locale; page: AccessPage; r: AccessRequest }) {
+function Facts({ l, r }: { l: Locale; r: ListedRequest }) {
   return (
     <dl className="live-facts">
       <div><dt>{q.colChange(l)}</dt><dd>{r.change === "add" ? q.changeAdd(l) : q.changeRevoke(l)}</dd></div>
-      <div><dt>{a.person(l)}</dt><dd><bdi dir="ltr">{loginOf(page, r.subject)}</bdi></dd></div>
+      <div><dt>{a.person(l)}</dt><dd><bdi dir="ltr">{r.subject_login || r.subject}</bdi></dd></div>
       <div><dt>{a.access(l)}</dt><dd className="live-strong">{scopeLine(l, r)}</dd>{r.change === "add" && <dd>{q.forDays(l, r.days)}</dd>}</div>
-      <div><dt>{q.colRequest(l)}</dt><dd>{withWho(q.proposedBy(l, mark, when(l, r.proposed_at)), mark, loginOf(page, r.proposer))}</dd><dd>{q.expires(l, when(l, r.expires_at))}</dd><dd>{r.reason}</dd></div>
+      <div><dt>{q.colRequest(l)}</dt><dd>{withWho(q.proposedBy(l, mark, when(l, r.proposed_at)), mark, r.proposer_login || r.proposer)}</dd><dd>{q.expires(l, when(l, r.expires_at))}</dd><dd>{r.reason}</dd></div>
       <div><dt>{q.revision(l)}</dt><dd className="live-mono access-wrap" dir="ltr">{r.digest}</dd></div>
     </dl>
   );
 }
 
-export function DecidePanel({ l, api, page, request, action, onDone, onCancel, onReload }: {
-  l: Locale; api: AdminClient; page: AccessPage; request: AccessRequest; action: Decision; onDone: (message: string) => void; onCancel: () => void; onReload: () => void;
+export function DecidePanel({ l, api, revision, request, action, onDone, onCancel, onReload }: {
+  l: Locale; api: AdminClient; revision: string; request: ListedRequest; action: Decision; onDone: (message: string) => void; onCancel: () => void; onReload: () => void;
 }) {
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
@@ -63,7 +67,7 @@ export function DecidePanel({ l, api, page, request, action, onDone, onCancel, o
   useEffect(() => {
     if (!kept.current) tried.current = attempt();
     kept.current = false;
-  }, [page.revision]);
+  }, [revision]);
   const title = action === "approve" ? q.approveTitle(l) : action === "reject" ? q.rejectTitle(l) : q.withdrawTitle(l);
   const command = action === "approve" ? "access.approve_request" : action === "reject" ? "access.reject_request" : "access.withdraw_request";
   const submit = async (e: FormEvent) => {
@@ -74,8 +78,8 @@ export function DecidePanel({ l, api, page, request, action, onDone, onCancel, o
     setBusy(true);
     setError(null);
     try {
-      await api.command(command, request.id, page.revision, reason, action === "approve" ? { digest: request.digest } : {}, tried.current);
-      const login = loginOf(page, request.subject);
+      await api.command(command, request.id, revision, reason, action === "approve" ? { digest: request.digest } : {}, tried.current);
+      const login = request.subject_login || request.subject;
       onDone(action === "approve" ? (request.change === "add" ? q.doneApprovedAdd(l, login) : q.doneApprovedRevoke(l)) : action === "reject" ? q.doneRejected(l) : q.doneWithdrawn(l));
     } catch (err) {
       setError(err);
@@ -93,7 +97,7 @@ export function DecidePanel({ l, api, page, request, action, onDone, onCancel, o
       <p className="live-impact">{action === "approve" ? (request.change === "add" ? q.approveLead(l) : q.approveRevokeLead(l)) : action === "reject" ? q.rejectLead(l) : q.withdrawLead(l)}</p>
       {problem && <Summary locale={l} title={c.check(l)} problems={[{ field: "live-reason", message: problem }]} focusKey={focusKey} />}
       {error !== null && <FailureBox l={l} error={error} focusKey={focusKey} describe={describeRequest} />}
-      <Facts l={l} page={page} r={request} />
+      <Facts l={l} r={request} />
       {action === "approve" && request.change === "revoke" && (
         <div className="access-impact-list">
           <h3>{q.mayEnd(l)}</h3>
@@ -109,11 +113,11 @@ export function DecidePanel({ l, api, page, request, action, onDone, onCancel, o
   );
 }
 
-function Rows({ l, page, rows, selected, onAct }: { l: Locale; page: AccessPage; rows: AccessRequest[]; selected: string; onAct?: (action: Decision, r: AccessRequest) => void }) {
+function Rows({ l, rows, selected, onAct }: { l: Locale; rows: ListedRequest[]; selected: string; onAct?: (action: Decision, r: ListedRequest) => void }) {
   return (
-    <div className="security-table-scroll live-table live-access">
+    <div className={"security-table-scroll live-table live-access access-requests" + (onAct ? " access-requests-acting" : "")}>
       <table role="table">
-        <colgroup><col className="live-col-a" /><col className="live-col-b" /><col className="live-col-c" />{onAct && <col className="live-col-d" />}</colgroup>
+        <colgroup><col className="req-col-a" /><col className="req-col-b" /><col className="req-col-c" />{onAct && <col className="req-col-d" />}</colgroup>
         <thead role="rowgroup"><tr role="row">
           <th scope="col" role="columnheader">{q.colChange(l)}</th>
           <th scope="col" role="columnheader">{a.colAccess(l)}</th>
@@ -127,9 +131,9 @@ function Rows({ l, page, rows, selected, onAct }: { l: Locale; page: AccessPage;
               <tr key={r.id} role="row" data-request={r.id} className={selected === r.id ? "live-selected" : undefined}>
                 <td role="cell" className="live-user">
                   {r.change === "add" ? q.changeAdd(l) : q.changeRevoke(l)}
-                  <span className="access-who"><bdi dir="ltr">{breakable(loginOf(page, r.subject))}</bdi></span>
-                  <span className="live-sub">{withWho(q.proposedBy(l, mark, when(l, r.proposed_at)), mark, loginOf(page, r.proposer))}</span>
-                  <span className="live-sub live-mono"><bdi dir="ltr">{r.id} · {shortDigest(r.digest)}</bdi></span>
+                  <span className="access-who"><bdi dir="ltr">{breakable(r.subject_login || r.subject)}</bdi></span>
+                  <span className="live-sub">{withWho(q.proposedBy(l, mark, when(l, r.proposed_at)), mark, r.proposer_login || r.proposer)}</span>
+                  <span className="live-sub live-mono" translate="no"><bdi dir="ltr">{r.id} · {shortDigest(r.digest)}</bdi></span>
                 </td>
                 <td role="cell" data-label={a.colAccess(l)}>{scopeLine(l, r)}{r.change === "add" && <span className="live-sub">{q.forDays(l, r.days)}</span>}</td>
                 <td role="cell" data-label={a.colStatus(l)}>
@@ -138,7 +142,7 @@ function Rows({ l, page, rows, selected, onAct }: { l: Locale; page: AccessPage;
                   {pending && <span className="live-sub">{q.approvers(l, r.eligible_approvers)}</span>}
                   {pending && !r.current && <span className="live-sub live-strong">{q.outOfDate(l)}</span>}
                   {pending && r.current && r.eligible_approvers === 0 && <span className="live-sub live-strong">{q.noApprover(l)}</span>}
-                  {!pending && r.decided_at && <span className="live-sub">{q.decidedBy(l, r.decided_by ? loginOf(page, r.decided_by) : "—", when(l, r.decided_at))}</span>}
+                  {!pending && r.decided_at && <span className="live-sub">{q.decidedBy(l, r.decided_by ? r.decided_by_login || r.decided_by : "—", when(l, r.decided_at))}</span>}
                   {r.decision_reason && <span className="live-sub">{r.decision_reason}</span>}
                 </td>
                 {onAct && (
@@ -157,21 +161,113 @@ function Rows({ l, page, rows, selected, onAct }: { l: Locale; page: AccessPage;
   );
 }
 
-export function RequestSection({ l, page, selected, onAct }: { l: Locale; page: AccessPage; selected: string; onAct: (action: Decision, r: AccessRequest) => void }) {
-  const { pending, ended } = requestsOf(page);
+type Read = { state: "loading" } | { state: "error"; error: unknown } | { state: "ready"; page: RequestPage };
+
+function useRequestList(api: AdminClient, state: "pending" | "ended", limit: number, generation: number) {
+  const [at, setAt] = useState({ generation, after: "" });
+  const [local, setLocal] = useState(0);
+  const after = at.generation === generation ? at.after : "";
+  const token = useMemo(() => ({}), [api, state, limit, generation, after, local]);
+  const [result, setResult] = useState<{ token: object; read: Read } | null>(null);
+  const [trail] = useState(cursorTrail);
+  useEffect(() => { if (at.generation !== generation) trail.clear(); }, [generation]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    let active = true;
+    api.accessRequests({ state, limit, ...(after ? { after } : {}) }).then(
+      (page) => { if (active) setResult({ token, read: { state: "ready", page } }); },
+      (error: unknown) => { if (active) setResult({ token, read: { state: "error", error } }); },
+    );
+    return () => { active = false; };
+  }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
+  const reference = useRef<HTMLParagraphElement>(null);
+  const moved = useRef(false);
+  const read = (result?.token === token ? result.read : { state: "loading" }) as Read;
+  useEffect(() => {
+    if (read.state === "ready" && moved.current) { moved.current = false; reference.current?.focus(); }
+  }, [read]);
+  const go = (next: string) => { moved.current = true; setAt({ generation, after: next }); };
+  return {
+    read, reference, first: after === "",
+    reload: () => setLocal((n) => n + 1),
+    toFirst: () => { trail.clear(); go(""); },
+    toPrevious: () => go(trail.previous(state) || ""),
+    toNext: (next: string) => { if (trail.next(state, after, next)) go(next); },
+  };
+}
+
+type RequestList = ReturnType<typeof useRequestList>;
+
+function ListFailure({ l, title, list, onSignOut }: { l: Locale; title: string; list: RequestList; onSignOut: () => void }) {
+  if (list.read.state !== "error") return null;
+  const error = list.read.error;
   return (
-    <section aria-labelledby="access-requests">
+    <section className="live-error access-list-failure" role="alert">
+      <h3>{title}</h3>
+      <p>{readFailure(l, error)}</p>
+      <div className="live-buttons">
+        {error instanceof AdminError && error.failure === "unauthenticated"
+          ? <button type="button" className="live-secondary" onClick={onSignOut}>{w.signInAgain(l)}</button>
+          : <button type="button" className="live-secondary" onClick={list.reload}>{w.reload(l)}</button>}
+        {!list.first && <button type="button" className="live-secondary" onClick={list.toFirst}>{qcopy(l, "first")}</button>}
+      </div>
+    </section>
+  );
+}
+
+function Paging({ l, label, list }: { l: Locale; label: string; list: RequestList }) {
+  if (list.read.state !== "ready" || (list.first && !list.read.page.next)) return null;
+  const next = list.read.page.next;
+  return (
+    <nav className="live-buttons access-paging" aria-label={label}>
+      <button type="button" className="live-secondary" disabled={list.first} onClick={list.toFirst}>{qcopy(l, "first")}</button>
+      <button type="button" className="live-secondary" disabled={list.first} onClick={list.toPrevious}>{qcopy(l, "previous")}</button>
+      <button type="button" className="live-secondary" disabled={!next} onClick={() => list.toNext(next)}>{qcopy(l, "next")}</button>
+    </nav>
+  );
+}
+
+function Reference({ l, page, list }: { l: Locale; page: RequestPage; list: RequestList }) {
+  return <p className="live-meta access-reference" tabIndex={-1} ref={list.reference}>{qcopy(l, "reference")}: <time dateTime={page.reference_at} title={page.reference_at}>{when(l, page.reference_at)}</time></p>;
+}
+
+export function RequestSection({ l, api, generation, startedAt, settings, selected, notice, onAct, onSignOut }: {
+  l: Locale; api: AdminClient; generation: number; startedAt: string; settings: AccessSetting[]; selected: string; notice: string;
+  onAct: (action: Decision, r: ListedRequest) => void; onSignOut: () => void;
+}) {
+  const pending = useRequestList(api, "pending", 50, generation);
+  const ended = useRequestList(api, "ended", 25, generation);
+  const waiting = pending.read.state === "ready" ? pending.read.page : null;
+  const past = ended.read.state === "ready" ? ended.read.page : null;
+  const summary = ended.read.state === "error" ? q.endedFailed(l) : !past ? q.endedLoading(l)
+    : past.count.certainty === "exact" ? q.endedRequests(l, Number(past.count.value)) : q.endedAtLeast(l, Number(past.count.value));
+  const hidden = !!past && ended.first && past.rows.length === 0 && !past.next;
+  return (
+    <section aria-labelledby="access-requests" className="access-request-section">
       <div className="live-heading live-section-head">
         <h2 id="access-requests" tabIndex={-1}>{q.requestsTitle(l)}</h2>
-        <p className="live-meta">{q.waiting(l, pending.length)}</p>
+        {waiting && <p className="live-meta" data-waiting={waiting.count.value}>{waiting.count.certainty === "exact" ? q.waiting(l, Number(waiting.count.value)) : q.waitingAtLeast(l, Number(waiting.count.value))}</p>}
       </div>
+      {notice && <p className="service-status" data-request-notice="true">{notice}</p>}
       <p className="live-impact">{q.requestsLead(l)}</p>
-      {pending.length === 0 ? <p className="live-empty">{q.noRequests(l)}</p> : <Rows l={l} page={page} rows={pending} selected={selected} onAct={onAct} />}
-      <p className="live-note">{q.notKept(l, when(l, page.started_at))}</p>
-      {ended.length > 0 && (
-        <details className="live-ended"><summary>{q.endedRequests(l, ended.length)}</summary><Rows l={l} page={page} rows={ended} selected="" /></details>
+      {pending.read.state === "loading" && <p role="status" className="live-meta">{a.loading(l)}</p>}
+      <ListFailure l={l} title={q.requestsFailed(l)} list={pending} onSignOut={onSignOut} />
+      {waiting && (waiting.rows.length === 0
+        ? <p className="live-empty">{waiting.next ? qcopy(l, "incomplete") : q.noRequests(l)}</p>
+        : <Rows l={l} rows={waiting.rows} selected={selected} onAct={onAct} />)}
+      {waiting && <Reference l={l} page={waiting} list={pending} />}
+      <Paging l={l} label={q.requestsTitle(l)} list={pending} />
+      <p className="live-note">{q.notKept(l, when(l, startedAt))}</p>
+      {!hidden && (
+        <details className="live-ended access-ended-requests">
+          <summary>{summary}</summary>
+          {ended.read.state === "loading" && <p role="status" className="live-meta">{a.loading(l)}</p>}
+          <ListFailure l={l} title={q.endedFailedTitle(l)} list={ended} onSignOut={onSignOut} />
+          {past && <Reference l={l} page={past} list={ended} />}
+          {past && (past.rows.length === 0 ? <p className="live-empty">{qcopy(l, past.next ? "incomplete" : "empty")}</p> : <Rows l={l} rows={past.rows} selected="" />)}
+          <Paging l={l} label={summary} list={ended} />
+        </details>
       )}
-      <SettingsDisclosure l={l} settings={page.settings} />
+      <SettingsDisclosure l={l} settings={settings} />
     </section>
   );
 }

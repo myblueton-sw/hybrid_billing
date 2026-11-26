@@ -69,6 +69,12 @@ export const q = {
   notKept: (l: Locale, at: string) =>
     t(l, `Access change requests made before the server started at ${at} are not kept.`, `서버가 ${at}에 시작되기 전에 만든 권한 변경 승인 요청은 보관되지 않습니다.`, `لا تُحفظ طلبات تغيير الصلاحيات التي أُنشئت قبل بدء الخادم في ${at}.`),
   endedRequests: (l: Locale, n: number) => t(l, `Ended requests (${n})`, `종료된 요청 (${n})`, `الطلبات المنتهية (${n})`),
+  waitingAtLeast: (l: Locale, n: number) => t(l, `At least ${n} waiting`, `대기 ${n}건 이상`, `عدد الطلبات بانتظار الاعتماد: ${n} على الأقل`),
+  endedAtLeast: (l: Locale, n: number) => t(l, `Ended requests (at least ${n})`, `종료된 요청 (최소 ${n}건)`, `الطلبات المنتهية (${n} على الأقل)`),
+  endedLoading: (l: Locale) => t(l, "Ended requests", "종료된 요청", "الطلبات المنتهية"),
+  endedFailed: (l: Locale) => t(l, "Ended requests (could not be loaded)", "종료된 요청 (불러오지 못함)", "الطلبات المنتهية (تعذّر التحميل)"),
+  requestsFailed: (l: Locale) => t(l, "Access change requests could not be loaded", "권한 변경 승인 요청을 불러오지 못했습니다", "تعذّر تحميل طلبات تغيير الصلاحيات"),
+  endedFailedTitle: (l: Locale) => t(l, "Ended requests could not be loaded", "종료된 요청을 불러오지 못했습니다", "تعذّر تحميل الطلبات المنتهية"),
   colChange: (l: Locale) => t(l, "Change", "변경", "التغيير"),
   colRequest: (l: Locale) => t(l, "Request", "요청", "الطلب"),
   changeAdd: (l: Locale) => t(l, "Add access", "권한 추가", "إضافة صلاحية"),

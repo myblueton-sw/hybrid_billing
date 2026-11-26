@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/myblueton-sw/hybrid_billing/modules/accesschange"
 	"github.com/myblueton-sw/hybrid_billing/modules/gate"
 )
 
@@ -66,6 +67,7 @@ func (f world) manyPermissions() (int, int) {
 		f.must(f.s.admin.AddDelegation(gate.Delegation{ID: fmt.Sprintf("qd-%02d", n), DelegatorID: SampleAdmin, DelegateID: SampleAdmin2, Terms: permissionTerms(gate.All()),
 			Validity: gate.Validity{NotBefore: now, NotAfter: now.Add(time.Hour)}}))
 	}
+	f.must(f.s.admin.AddGrant(gate.Grant{ID: "q-named-all", SubjectID: SampleAdmin2, Terms: permissionTerms(gate.One("all")), Validity: gate.Validity{NotBefore: now, NotAfter: now.Add(100 * time.Hour)}}))
 	shown := 0
 	for _, g := range f.s.admin.Grants() {
 		if !gate.InstallationAction(g.Terms.Action) {
@@ -146,9 +148,9 @@ func TestPermissionsArePagedInOneStableOrderAndEqualTheWholeRead(t *testing.T) {
 		query string
 		count int
 	}{
-		"customer c1 and everything that covers it": {"?q=q-&customer=c1", 23}, "only what covers every customer": {"?q=q-&customer=all", 15}, "another customer": {"?q=q-&customer=c2", 15}, "a legal entity": {"?q=q-&legal_entity=le-1", 23}, "the second administrator's delegations": {"?q=qd&subject=" + SampleAdmin2 + "&source=delegation", 4},
+		"customer c1 and everything that covers it": {"?q=q-&customer=c1", 23}, "a customer named all is one customer": {"?q=q-&customer=all", 15 + 1}, "another customer": {"?q=q-&customer=c2", 15}, "a legal entity": {"?q=q-&legal_entity=le-1", 23 + 1}, "the second administrator's delegations": {"?q=qd&subject=" + SampleAdmin2 + "&source=delegation", 4},
 		"ending within five hours and a half": {"?q=q-&expires_before=" + url.QueryEscape(f.s.clock().Add(5*time.Hour+30*time.Minute).UTC().Format(time.RFC3339)), 5},
-		"no such subject":                     {"?subject=nobody", 0}, "no such action": {"?action=nothing", 0}, "state expired": {"?q=q-&state=expired", 0}, "state active": {"?q=q-&state=active&source=grant", 23},
+		"no such subject":                     {"?subject=nobody", 0}, "no such action": {"?action=nothing", 0}, "state expired": {"?q=q-&state=expired", 0}, "state active": {"?q=q-&state=active&source=grant", 24},
 	} {
 		got, last := f.walkPermissions(root, c.query)
 		if len(got) != c.count || last.body["count"].(map[string]any)["value"] != fmt.Sprint(c.count) {
@@ -343,5 +345,30 @@ func TestPermissionDetailAnswersHiddenAndUnknownAlike(t *testing.T) {
 		if id == "grant/"+hidden {
 			t.Error("the installation-action grant is in the list")
 		}
+	}
+}
+
+func TestARequestForEveryCustomerIsNotTheSameAsAGrantForACustomerNamedAll(t *testing.T) {
+	now := time.Date(2026, 11, 26, 9, 0, 0, 0, time.UTC)
+	view := func(id string, customer gate.Selector) gate.GrantView {
+		return gate.GrantView{Grant: gate.Grant{ID: id, SubjectID: "someone", Terms: permissionTerms(customer), Validity: gate.Validity{NotBefore: now.Add(-time.Hour), NotAfter: now.Add(time.Hour)}}}
+	}
+	change := func(customer string) accesschange.Change {
+		return accesschange.Change{Kind: accesschange.ChangeAdd, Subject: "someone", Action: string(gate.View), ResourceKind: ReaderKind, Fields: []string{ReaderField}, Customer: customer}
+	}
+	named := accessFacts{grants: []gate.GrantView{view("named", gate.One("all"))}, now: now}
+	if got := named.equivalent(change("all")); got != noneFact {
+		t.Errorf("a grant for the customer named all was taken for a grant for every customer: %s", got)
+	}
+	every := accessFacts{grants: []gate.GrantView{view("every", gate.All())}, now: now}
+	if got := every.equivalent(change("all")); got != "every" {
+		t.Errorf("a grant for every customer: %s", got)
+	}
+	one := accessFacts{grants: []gate.GrantView{view("one", gate.One("c1")), view("every", gate.All())}, now: now}
+	if got := one.equivalent(change("c1")); got != "one" {
+		t.Errorf("a grant for one customer: %s", got)
+	}
+	if got := every.equivalent(change("c1")); got != noneFact {
+		t.Errorf("a grant for every customer is not the same request as one for a single customer: %s", got)
 	}
 }

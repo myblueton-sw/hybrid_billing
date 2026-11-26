@@ -98,7 +98,7 @@ Each increment has its own independent review; C2, C4 and C5 change a public rea
 Asked in the working session on 2026-11-26:
 
 - **One list.** Grants and delegations are shown as one list with a source column and filter, as the specification's columns read.
-- **The `customer` and `legal_entity` filters list everything that applies.** `customer=c1` lists the permissions scoped to that customer and those that cover every customer; `customer=all` lists only those that cover every customer. The read first matched the stored selector exactly; it was changed before any screen used it.
+- **The `customer` and `legal_entity` filters list everything that applies.** `customer=c1` lists the permissions scoped to that customer and those that cover every customer. The read first matched the stored selector exactly; it was changed before any screen used it. Its rows give each scope selector as either `any: true` or an identifier (HYB-369), so a customer whose identifier is the word "all", which the service catalog allows, is one customer and is filtered as one; the whole read's text form cannot tell the two apart and goes with C5.
 
 # Open for the owner
 

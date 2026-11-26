@@ -140,8 +140,52 @@ dialog.m02-confirm .m02-wide dd .live-mono {
   min-inline-size: 0;
   container-type: inline-size;
 }
-.remaining-security .m02-lists > h3:first-child {
+.remaining-security .m02-list-section:first-of-type > h3 {
   margin-block-start: 0;
+}
+.remaining-security .m02-main:not([hidden]) {
+  display: contents;
+}
+.remaining-security .m02-live .m02-table .m02-open {
+  display: inline-flex;
+  align-items: flex-start;
+  padding-block: 0;
+}
+.remaining-security .m02-filters .service-hint {
+  margin-block: 4px 0;
+}
+.remaining-security .m02-filters {
+  display: grid;
+  grid-template-columns: minmax(0, 320px) minmax(0, 240px) auto;
+  gap: 16px;
+  align-items: start;
+  margin-block-end: 24px;
+}
+.remaining-security .m02-filters .service-field {
+  min-inline-size: 0;
+  margin: 0;
+}
+.remaining-security .m02-filters :is(input, select) {
+  inline-size: 100%;
+  box-sizing: border-box;
+}
+.remaining-security .m02-filter-buttons {
+  margin: 0;
+  align-self: start;
+  padding-block-start: var(--m02-filter-label, 28px);
+  flex-wrap: nowrap;
+}
+.remaining-security .m02-order-note,
+.remaining-security .m02-evidence-note {
+  margin-block: 8px;
+}
+@container (max-width: 720px) {
+  .remaining-security .m02-filters {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .remaining-security .m02-filter-buttons {
+    flex-wrap: wrap;
+  }
 }
 .remaining-security aside.m02-detail {
   min-inline-size: 0;
@@ -345,6 +389,10 @@ dialog.m02-confirm .m02-members summary {
 }
 .remaining-security :is(.m02-live, dialog.m02-confirm) .m02-actor {
   white-space: nowrap;
+}
+.remaining-security .m02-live .m02-table .m02-actor {
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 .remaining-security .m02-form .live-impact {
   margin-block-end: 24px;

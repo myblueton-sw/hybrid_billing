@@ -9,7 +9,8 @@ import { useWide } from "../users/Live";
 import { w } from "../users/live-copy";
 import { p } from "./live-copy";
 import { policyFailure } from "./live-model";
-import { ChangesHead, Conditions, CurrentRules, Detail, Lists, Revoked, ShortConditions } from "./TrustChanges";
+import { ChangesHead, Conditions, CurrentRules, Detail, Revoked, ShortConditions } from "./TrustChanges";
+import { TrustLists } from "./TrustLists";
 import { ProposeForm, type Proposed } from "./TrustActions";
 import { AfterActivation } from "./TrustAfter";
 import { ConfirmDialog, type Confirming } from "./TrustConfirm";
@@ -75,6 +76,7 @@ export default function LivePolicy({ locale: l, view, session, onSignOut, onView
   const [error, setError] = useState<unknown>(null);
   const [revoked, setRevoked] = useState(false);
   const [selected, setSelected] = useState("");
+  const [generation, setGeneration] = useState(0);
   const [form, setForm] = useState<Form | null>(null);
   const [confirm, setConfirm] = useState<{ k: Confirming; opener: HTMLElement | null } | null>(null);
   const [after, setAfter] = useState<Outcome | null>(null);
@@ -99,6 +101,7 @@ export default function LivePolicy({ locale: l, view, session, onSignOut, onView
         if (!order.current.latest(n)) return;
         had.current = true;
         setPage(got);
+        setGeneration((g) => g + 1);
         setRevoked(false);
         setStatus("ready");
         setError(null);
@@ -131,7 +134,10 @@ export default function LivePolicy({ locale: l, view, session, onSignOut, onView
     return <Revoked l={l} onReload={() => void load()} />;
   }
   if (status === "error" && !page && error instanceof AdminError && error.failure === "denied") return <Unavailable l={l} title={p.deniedTitle(l)} body={p.denied(l)} />;
-  const open = (id: string) => { setForm(null); setSelected(id); setFocusTo(".m02-detail-title"); };
+  const open = (id: string) => {
+    setForm(null); setSelected(id); setFocusTo(".m02-detail-title");
+    if (page && !page.changes.some((x) => x.id === id)) void load();
+  };
   const closeDetail = () => { const back = selected ? `[data-change="${selected}"].m02-open` : ".m02-propose"; setSelected(""); setForm(null); setFocusTo(back); };
   const change = page && selected ? page.changes.find((x) => x.id === selected) ?? null : null;
   const onAction = (k: ActionKey, opener: HTMLElement) => {
@@ -174,15 +180,15 @@ export default function LivePolicy({ locale: l, view, session, onSignOut, onView
   return (
     <div className="m02-live" data-live="policies" aria-busy={status === "loading" || undefined}>
       <p className="visually-hidden" role="status" aria-live="polite">{announce}</p>
-      {stepping && page ? (
+      {stepping && page && (
         <section className="m02-step" aria-label={form ? (form.revise ? ty.reviseTitle(l, form.revise.number) : ty.formTitle(l)) : ty.change(l, change?.number ?? 0)}>
           <button type="button" className="service-button-link live-back m02-back" onClick={closeDetail}>{ty.back(l)}</button>
           {loadError}
           <ShortConditions l={l} page={page} skipHold={change?.state === "activation_unknown"} />
           {panel}
         </section>
-      ) : (
-        <>
+      )}
+      <div className="m02-main" hidden={Boolean(stepping && page)}>
           {page && <Conditions l={l} page={page} onOpen={open} />}
           {!page && status === "loading" && (
             <section className="m02-current" aria-labelledby="m02-current">
@@ -196,13 +202,12 @@ export default function LivePolicy({ locale: l, view, session, onSignOut, onView
             <section className="m02-changes" aria-labelledby="m02-changes">
               <ChangesHead l={l} page={page} onPropose={() => { setSelected(""); setForm({ revise: null, initial: null }); setFocusTo(".m02-form h2"); }} />
               <div className="m02-split" data-mode={wide ? "split" : "step"} data-open={panelOpen ? "true" : "false"}>
-                <Lists l={l} page={page} selected={selected} reduced={wide && panelOpen} onOpen={open} />
+                <TrustLists l={l} api={api} generation={generation} selected={selected} reduced={wide && panelOpen} onOpen={open} onSignOut={onSignOut} />
                 {wide && panel && <aside className="m02-detail" tabIndex={0} aria-label={form ? ty.formTitle(l) : ty.change(l, change?.number ?? 0)}>{panel}</aside>}
               </div>
             </section>
           )}
-        </>
-      )}
+      </div>
       {page && confirm && (
         <ConfirmDialog l={l} page={page} api={api} k={confirm.k} opener={confirm.opener} workspace={session.workspace} onDone={done} onSignedOut={signedOut}
           onClose={(reload) => {

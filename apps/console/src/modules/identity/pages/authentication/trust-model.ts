@@ -107,12 +107,6 @@ export function conditionText(l: Locale, c: Condition, at: string): string[] {
   }
 }
 
-export function grouped(page: PolicyPage): { open: TrustChange[]; closed: TrustChange[] } {
-  const byState = (states: string[]) =>
-    page.changes.filter((c) => states.includes(c.state)).sort((a, b) => states.indexOf(a.state) - states.indexOf(b.state) || b.number - a.number || (a.id < b.id ? 1 : -1));
-  return { open: byState(openStates), closed: byState(closedStates) };
-}
-
 export function blocked(c: TrustChange): boolean {
   return c.validation !== null && c.validation.result === "blocked";
 }

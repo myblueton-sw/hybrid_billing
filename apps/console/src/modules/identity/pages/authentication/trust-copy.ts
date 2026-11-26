@@ -209,7 +209,6 @@ export const ty = {
   caption: (l: Locale, which: string) => t(l, `${which} trust changes`, `${which} 신뢰 변경`, `تغييرات الثقة: ${which}`),
   change: (l: Locale, n: number) => t(l, `Change ${n}`, `변경 ${n}`, `التغيير ${n}`),
   earlierRun: (l: Locale, at: string) => t(l, `From an earlier server run (started ${at})`, `이전 서버 실행에서 생성(${at} 시작)`, `من تشغيل سابق للخادم (بدأ في ${at})`),
-  evidenceChanged: (l: Locale) => t(l, "Evidence changed", "근거 변경됨", "تغيّرت الأدلة"),
   policyNumber: (l: Locale, n: number) => t(l, `Policy ${n}`, `정책 ${n}`, `السياسة ${n}`),
   selected: (l: Locale) => t(l, "Selected", "선택됨", "محدد"),
   close: (l: Locale) => t(l, "Close", "닫기", "إغلاق"),

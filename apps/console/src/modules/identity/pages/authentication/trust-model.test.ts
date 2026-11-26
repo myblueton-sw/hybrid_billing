@@ -5,7 +5,7 @@ import { AdminError } from "../../../../service/admin";
 import { changeFixture, pageFixture } from "./trust-fixtures";
 import { ty } from "./trust-copy";
 import {
-  actions, asTrustFailure, canPropose, candidateOf, conditions, conditionText, configDigest, configEncoding, currentVersion, enrolled, expectedNext, fatal, findingReason, grouped, nextStep, revoked,
+  actions, asTrustFailure, canPropose, candidateOf, conditions, conditionText, configDigest, configEncoding, currentVersion, enrolled, expectedNext, fatal, findingReason, nextStep, revoked,
   rawEpochText as epochText, rightsList, stateSentence, trustFailure, unavailable, valuesFor, versionOf, whyNot,
 } from "./trust-model";
 
@@ -66,14 +66,6 @@ test("actions follow the server flags with one primary", () => {
   assert.deepEqual(whyNot("en", changeFixture({ state: "draft", why_not: { approve: "not_validated", activate: "self" } })), [ty.why.not_validated("en"), ty.why.self("en")]);
   assert.deepEqual(whyNot("en", changeFixture({ state: "activated", why_not: { approve: "self", activate: "self" } })), []);
   assert.deepEqual(whyNot("en", changeFixture({ why_not: { approve: "evidence_stale", activate: "evidence_stale" } })), [ty.why.evidence_stale("en")]);
-});
-
-test("grouping orders open and closed changes", () => {
-  const page = pageFixture({}, [changeFixture({ id: "a", number: 1, state: "activated" }), changeFixture({ id: "b", number: 2, state: "draft" }),
-    changeFixture({ id: "c", number: 3, state: "activation_unknown" }), changeFixture({ id: "d", number: 4, state: "draft" }), changeFixture({ id: "e", number: 5, state: "rejected" })]);
-  const g = grouped(page);
-  assert.deepEqual(g.open.map((x) => x.id), ["c", "d", "b"]);
-  assert.deepEqual(g.closed.map((x) => x.id), ["a", "e"]);
 });
 
 test("conditions, unavailability, holders and rights", () => {

@@ -4,7 +4,7 @@ import { closed, decimal, identifier, requireRead, timestamp } from "./service-q
 
 export type ListedRequest = AccessRequest & { subject_login: string; proposer_login: string; decided_by_login: string };
 export type ListedRevocation = Revocation & { target_version: number; target_subject: string; target_subject_login: string; target_action: string; target_resource_kind: string; target_fields: string[] };
-export type AccessSubject = { user_id: string; login: string };
+export type AccessSubject = { user_id: string; login: string; revocation_unconfirmed: boolean };
 export type ListEcho = { q: string; state: "" | "pending" | "ended"; limit: number };
 export type SubjectEcho = { q: string; id: string; limit: number };
 type Page<Row, Echo, Order> = {
@@ -58,7 +58,7 @@ export const listedRevocationOf: Parser<ListedRevocation> = (v) => {
   requireRead((r.target_subject !== "" || r.target_subject_login === "") && (r.target_action === "") === (r.target_resource_kind === "") && (r.target_action !== "" || r.target_fields.length === 0));
   return r;
 };
-const subject = closed<AccessSubject>({ user_id: identifier, login });
+const subject = closed<AccessSubject>({ user_id: identifier, login, revocation_unconfirmed: boolean });
 
 function pageOf<Row, Echo extends { limit: number }, Order extends string>(row: Parser<Row>, echo: Parser<Echo>, order: Order, ordered: (a: Row, b: Row) => boolean): Parser<Page<Row, Echo, Order>> {
   const parse = closed<Page<Row, Echo, Order>>({

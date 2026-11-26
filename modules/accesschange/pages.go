@@ -75,6 +75,26 @@ func (r *Registry) RevocationPage(workspace, before string, limit int) ([]Revoca
 	return out, false, true
 }
 
+func (r *Registry) UnconfirmedRevocations(workspace string, limit int) ([]RevocationView, bool) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if limit < 1 {
+		return nil, false
+	}
+	out := []RevocationView{}
+	for _, rec := range r.revocations {
+		v := rec.view
+		if v.Workspace != workspace || v.State != RevocationReceived && v.State != RevocationUnconfirmed {
+			continue
+		}
+		if len(out) == limit {
+			return out, true
+		}
+		out = append(out, copyRevocation(v))
+	}
+	return out, false
+}
+
 func (r *Registry) Counts(workspace string, at time.Time) Counts {
 	r.mu.Lock()
 	defer r.mu.Unlock()

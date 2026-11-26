@@ -77,9 +77,9 @@ try {
  assert.ok(revoked.job_id);
  const replay=await command(root,'financial_permission.approve','ui-pending-0',{digest:proposals[0].fields.digest});
  assert.equal(replay.fields.state,'applied');assert.equal(replay.fields.receipt,'historical_decision');
- const access=await root.evaluate(async()=>{const {serviceClient}=await import('/src/service/api.ts');const {adminClient}=await import('/src/service/admin.ts');return adminClient((await serviceClient().current()).csrf).access();});
- const retained=access.grants.filter(g=>g.id===grant);
- assert.equal(retained.length,1);assert.equal(retained[0].state,'revoked');assert.equal(retained[0].effective,false);
+ const access=await root.evaluate(async(id)=>{const {serviceClient}=await import('/src/service/api.ts');const {adminClient}=await import('/src/service/admin.ts');return adminClient((await serviceClient().current()).csrf).accessPermission('grant',id);},grant);
+ const retained=[access.row];
+ assert.equal(retained[0].id,grant);assert.equal(retained[0].state,'revoked');assert.equal(retained[0].effective,false);
  evidence.journey={independentApproval:true,directHumanGrant:true,m03Revocation:true,historicalReplay:true,financialDecision:false};
  assert.deepEqual(evidence.errors,[]);evidence.outcome='passed';
 }catch(e){evidence.outcome='failed';evidence.failure={kind:e.name};if(root)await root.screenshot({path:out+'/failure.png'});throw new Error('Financial permission QA failed: '+e.name);}

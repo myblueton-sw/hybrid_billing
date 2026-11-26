@@ -12,7 +12,7 @@ const me = (body: unknown) => client(body).me();
 const organizations = (body: unknown) => client(body).organizations();
 
 for (const [name, fixture, read, fields] of [
-  ["access", accessFixture, access, ["grants", "delegations", "catalog", "subjects", "settings", "requests", "revocations"]],
+  ["access", accessFixture, access, ["catalog", "settings"]],
   ["self", selfFixture, me, ["identities"]],
   ["organizations", orgFixture, organizations, ["parties", "profiles", "members"]],
 ] as const) {
@@ -27,31 +27,12 @@ for (const [name, fixture, read, fields] of [
 }
 
 test("access rejects malformed nested permission facts", async () => {
-  for (const patch of [{ effective: "true" }, { effective: 1 }, { version: Number.MAX_SAFE_INTEGER + 1 }, { version: -1 }, { version: 1.5 },
-    { state: "future" }, { scope: {} }, { scope: { ...grantFixture.scope, customer: false } }, { fields: ["rows", 1] }, { fields: null }]) {
-    await assert.rejects(access({ ...accessFixture, grants: [grantFixture, { ...grantFixture, ...patch }] }), invalid);
-  }
-  for (const patch of [{ can_approve: "false" }, { can_reject: null }, { can_withdraw: 0 }, { current: "true" }, { eligible_approvers: 1.5 },
-    { days: -1 }, { state: "future" }, { change: "update" }, { may_end: [1] }]) {
-    await assert.rejects(access({ ...accessFixture, requests: [{ ...requestFixture, ...patch }] }), invalid);
-  }
-  const delegation = { ...grantFixture, delegator: "u", delegate: "v", parent: "g", redelegate: false, state: "ended" };
-  assert.equal((await access({ ...accessFixture, delegations: [delegation] })).delegations[0].state, "ended");
-  await assert.rejects(access({ ...accessFixture, delegations: [{ ...delegation, redelegate: "true" }] }), invalid);
   await assert.rejects(access({ ...accessFixture, catalog: [{ ...accessFixture.catalog[0], fields: [false] }] }), invalid);
-  await assert.rejects(access({ ...accessFixture, subjects: [{ user_id: 1, login: "a" }] }), invalid);
-  await assert.rejects(access({ ...accessFixture, settings: [{ ...accessFixture.settings[0], value: "24" }] }), invalid);
-});
-
-test("revocation receipts and cleanup rows retain validated facts only", async () => {
-  const cleanup = { item: "C9", state: "done", reason: "chain_rules", refs: ["d1"] };
-  const valid = { ...revocationFixture, cleanup: [cleanup] };
-  assert.deepEqual((await access({ ...accessFixture, revocations: [valid] })).revocations[0], valid);
-  for (const patch of [{ verified: "true" }, { target_present: 1 }, { receipt: null }, { receipt: { ...valid.receipt, sequence: Number.MAX_SAFE_INTEGER + 1 } },
-    { history: [{ state: "received", at: 123 }] }, { ended_delegations: [1] }, { cleanup: [{ ...cleanup, refs: [false] }] },
-    { cleanup: [{ ...cleanup, state: "future" }] }, { state: "future" }, { job_state: "future" }]) {
-    await assert.rejects(access({ ...accessFixture, revocations: [{ ...valid, ...patch }] }), invalid);
+  for (const ignored of [{ grants: [{ ...grantFixture, effective: "true" }] }, { requests: [{ ...requestFixture, state: "future" }] }, { subjects: [{ user_id: 1 }] }, { delegations: "none" }, { revocations: [{ ...revocationFixture, state: "future" }] }]) {
+    const got = await access({ ...accessFixture, ...ignored });
+    assert.equal(Object.keys(ignored)[0] in got, false, Object.keys(ignored)[0]);
   }
+  await assert.rejects(access({ ...accessFixture, settings: [{ ...accessFixture.settings[0], value: "24" }] }), invalid);
 });
 
 test("preview never infers an allowed decision", async () => {

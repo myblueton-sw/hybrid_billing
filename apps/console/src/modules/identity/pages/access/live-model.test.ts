@@ -1,24 +1,17 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { ledgerOf, type AccessGrant, type AccessPage } from "../../../../service/admin";
 import { accessText, closed, maxDays, reasonText, revocable, scopeText, stateLine, wholeDays } from "./live-model";
 import { a, accessPhrase, actionLabel } from "./live-copy";
 
-const grant = (change: Partial<AccessGrant>): AccessGrant => ({
-  id: "g", subject: "u", client: "", action: "view", kind: "focus_data", fields: ["rows"],
-  scope: { customer: "all", legal_entity: "all", contract: "all", period: "any" },
-  not_before: "2026-11-16T00:00:00Z", not_after: "2026-12-16T00:00:00Z", state: "active", effective: true, version: 1, ...change,
-});
-const page = (grants: AccessGrant[]): AccessPage => ({
-  revision: "r1", grants, delegations: [], catalog: [], subjects: [], now: "2026-11-16T09:00:00Z", you: "", started_at: "", settings: [], requests: [], revocations: [], ledger: ledgerOf({ state: "ok" }),
-});
+type Row = { state: string; not_before: string; not_after: string; effective: boolean };
+const grant = (change: Partial<Row>): Row => ({ not_before: "2026-11-16T00:00:00Z", not_after: "2026-12-16T00:00:00Z", state: "active", effective: true, ...change });
 
 test("unconfirmed revocations stay open for grants and delegations, and unknown states read unconfirmed", () => {
   const d = { ...grant({}), delegator: "a", delegate: "b", parent: "", redelegate: false };
   const want = { en: "Revocation not confirmed", ko: "회수 미확정", ar: "الإبطال غير مؤكَّد" } as const;
   for (const l of ["en", "ko", "ar"] as const) {
     assert.equal(stateLine(l, grant({ state: "revocation_unconfirmed" }))[0], want[l]);
-    assert.equal(stateLine(l, grant({ state: "something-new" as AccessGrant["state"] }))[0], want[l]);
+    assert.equal(stateLine(l, grant({ state: "something-new" }))[0], want[l]);
     assert.equal(stateLine(l, { ...d, state: "revocation_unconfirmed" })[0], want[l]);
   }
   assert.equal(stateLine("en", grant({}))[0], "Active");

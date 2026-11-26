@@ -24,8 +24,8 @@ async function actor(login) {
   await page.locator("#signin-workspace").fill("sample-workspace"); await page.locator("#signin-email").fill(login); await page.locator("#signin-password").fill(password); await page.locator("form button[type=submit]").click(); await page.locator(".service-session").waitFor();
   return page;
 }
-async function readAccess(page) {
-  return page.evaluate(async () => { const session = await (await fetch("/api/v1/session", { headers: { "X-HB-Client": "console" } })).json(); const response = await fetch("/api/v1/identity/access", { headers: { "X-CSRF-Token": session.csrf_token, "X-Request-Id": crypto.randomUUID() } }); return { status: response.status, body: await response.json() }; });
+async function readPath(page, path) {
+  return page.evaluate(async (path) => { const session = await (await fetch("/api/v1/session", { headers: { "X-HB-Client": "console" } })).json(); const response = await fetch("/api/v1/identity/access" + path, { headers: { "X-CSRF-Token": session.csrf_token, "X-Request-Id": crypto.randomUUID() } }); return { status: response.status, body: await response.json() }; }, path);
 }
 async function tabTo(page, selector) {
   for (let i = 0; i < 240; i++) { if (await page.locator(selector).evaluate((e) => e === document.activeElement)) return; await page.keyboard.press("Tab"); }
@@ -81,7 +81,7 @@ try {
   assert.equal(proposed.status, 200); assert.equal(proposed.body.business_state, "requested");
   const id = proposed.body.fields.request;
   assert.match(id, /^[A-Za-z0-9._:-]+$/);
-  const own = (await readAccess(proposer)).body.requests.find((r) => r.id === id);
+  const own = (await readPath(proposer, "/requests?state=pending&limit=50")).body.rows.find((r) => r.id === id);
   assert.equal(own.can_approve, false); assert.equal(own.proposer, "sample-admin");
   evidence.checks.push("fixture created by first administrator; proposer cannot approve");
   reviewer = await actor("admin2@example.invalid");
@@ -113,10 +113,11 @@ try {
   await reviewer.waitForFunction((expected) => document.querySelector('[data-live="grants"] > [role="status"]')?.textContent === expected, announcement);
   await (await refreshed).finished();
   stage = "approval read-back";
-  const final = await readAccess(reviewer); assert.equal(final.status, 200);
-  const decided = final.body.requests.find((r) => r.id === id);
+  const final = await readPath(reviewer, "/requests?state=ended&limit=25"); assert.equal(final.status, 200);
+  const decided = final.body.rows.find((r) => r.id === id);
   assert.equal(decided.state, "applied"); assert.equal(decided.decided_by, reviewerIdentity); assert.equal(decided.subject, "sample-member");
-  const grant = final.body.grants.find((g) => g.id === decided.result); assert.ok(grant); assert.equal(grant.subject, "sample-member"); assert.equal(grant.state, "active"); assert.equal(grant.effective, true);
+  const detail = await readPath(reviewer, "/permissions/grant/" + encodeURIComponent(decided.result)); assert.equal(detail.status, 200);
+  const grant = detail.body.row; assert.ok(grant); assert.equal(grant.id, decided.result); assert.equal(grant.subject, "sample-member"); assert.equal(grant.state, "active"); assert.equal(grant.effective, true);
   await reviewer.locator(`[data-grant="${decided.result}"]`).waitFor();
   assert.equal(await reviewer.locator(approve).count(), 0);
   await tabTo(reviewer, `section[aria-labelledby="access-requests"] details:has(tr[data-request="${id}"]) > summary`); await reviewer.keyboard.press("Enter");

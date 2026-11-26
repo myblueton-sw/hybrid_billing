@@ -183,6 +183,10 @@ func (c rowContext) whyActivate(v trustchange.View, current bool) string {
 	return ""
 }
 
+func (c rowContext) actUntil(v trustchange.View) string {
+	return stamp(c.since.Add(min(c.limit, window(revisionFor(v.Workspace, v.Candidate)))))
+}
+
 func (c rowContext) row(v trustchange.View) changeRow {
 	s := c.s
 	row := changeRow{ID: v.ID, Number: v.Number, State: v.State, ChangeRevision: v.Revision, ChangeDigest: v.ChangeDigest, OldEpoch: epochOf(v.OldEpoch),
@@ -197,7 +201,7 @@ func (c rowContext) row(v trustchange.View) changeRow {
 		row.SupersededEpoch = &e
 	}
 	candidate := revisionFor(v.Workspace, v.Candidate)
-	row.ActUntil = stamp(c.since.Add(min(c.limit, window(candidate))))
+	row.ActUntil = c.actUntil(v)
 	current := false
 	open := trustchange.Open(v.State)
 	if open {
@@ -220,9 +224,13 @@ func (c rowContext) row(v trustchange.View) changeRow {
 	if v.State == trustchange.StateUnknown {
 		row.Job = &jobRow{ID: trustJobPrefix + v.ID, State: "waiting", Reason: v.Unknown}
 	}
-	row.WhyNot = whyRow{Approve: c.whyApprove(v, current), Activate: c.whyActivate(v, current)}
-	act := open && !c.unavailable
-	row.Can = canRow{Revise: act && c.rights.Propose && v.Proposer == c.you, Validate: act && c.rights.Validate, Approve: row.WhyNot.Approve == "",
-		Activate: row.WhyNot.Activate == "", Reject: act && c.rights.Approve && v.Proposer != c.you, Cancel: act && c.rights.Propose && v.Proposer == c.you}
+	row.Can, row.WhyNot = c.actions(v, current)
 	return row
+}
+
+func (c rowContext) actions(v trustchange.View, current bool) (canRow, whyRow) {
+	why := whyRow{Approve: c.whyApprove(v, current), Activate: c.whyActivate(v, current)}
+	act := trustchange.Open(v.State) && !c.unavailable
+	return canRow{Revise: act && c.rights.Propose && v.Proposer == c.you, Validate: act && c.rights.Validate, Approve: why.Approve == "",
+		Activate: why.Activate == "", Reject: act && c.rights.Approve && v.Proposer != c.you, Cancel: act && c.rights.Propose && v.Proposer == c.you}, why
 }

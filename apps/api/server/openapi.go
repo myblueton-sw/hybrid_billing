@@ -48,6 +48,9 @@ func (s *Server) Document() ([]byte, error) {
 	for path, entry := range accessListPaths() {
 		reads[path] = entry
 	}
+	for path, entry := range trustChangePaths() {
+		reads[path] = entry
+	}
 	doc["x-reads"] = reads
 	doc["x-self"] = selfPaths()
 	return json.MarshalIndent(doc, "", "  ")

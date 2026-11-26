@@ -24,6 +24,7 @@ export const r = {
       "새 자격 증명을 발급하고, 기존 자격 증명은 정한 시간 동안만 유효하게 둡니다. 새 비밀값은 한 번만 보여 줍니다.",
       "تُصدَر بيانات اعتماد جديدة، وتبقى بيانات الاعتماد الحالية صالحة للمدة التي تحددها فقط. تُعرض القيمة السرية الجديدة مرة واحدة.",
     ),
+  newCredential: (l: Locale) => t(l, "New credential", "새 자격 증명", "بيانات الاعتماد الجديدة"),
   current: (l: Locale) => t(l, "Current credential", "기존 자격 증명", "بيانات الاعتماد الحالية"),
   newValidFor: (l: Locale) => t(l, "New credential valid for", "새 자격 증명 유효 기간", "مدة صلاحية بيانات الاعتماد الجديدة"),
   overlap: (l: Locale) => t(l, "Keep the current credential valid for", "기존 자격 증명 유지 시간", "مدة بقاء بيانات الاعتماد الحالية صالحة"),
@@ -121,3 +122,6 @@ export const r = {
   replacedBy: (l: Locale): [string, string] => (l === "ko" ? ["", "(으)로 대체됨"] : l === "ar" ? ["حلّت محلها ", ""] : ["Replaced by ", ""]),
   replaces: (l: Locale): [string, string] => (l === "ko" ? ["", "을(를) 대체"] : l === "ar" ? ["تحلّ محل ", ""] : ["Replaces ", ""]),
 };
+
+export const countDays = (l: Locale, n: number): string => counted(l, n, dayForms);
+export const countMinutes = (l: Locale, n: number): string => counted(l, n, minuteForms);

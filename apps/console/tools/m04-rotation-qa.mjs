@@ -65,8 +65,10 @@ try {
   const before = await api(`/identity/service-credentials/${old}`);
   check("the real credential detail says the credential can be rotated and carries the overlap limits", before.body?.eligibility?.can_rotate === true && before.body?.eligibility?.rotate_step_up_state === "ready" && before.body?.limits?.credential_overlap_minutes > 0, JSON.stringify(before.body?.eligibility));
 
+  const firstCredential = old;
   for (const [lang, width] of [["ko", 390], ["ar", 390], ["en", 1440]]) {
     const at = `${lang} ${width}`;
+    const old = lang === "ko" ? firstCredential : (await command("service.issue_credential", service, { days: "30" })).body?.fields?.credential ?? "";
     await page.setViewportSize({ width, height: 1000 });
     await go(lang, { svc_c_service: service, svc_c_selected: old });
     const detail = detailOf(old);
@@ -89,6 +91,8 @@ try {
     check(`${at}: an overlap below the pickup time is refused at the field`, (await form.locator("#svc-overlap").getAttribute("aria-invalid")) === "true" && (await form.locator("#svc-overlap-error").count()) === 1);
     await form.locator("#svc-overlap").fill("60");
     await form.locator("#svc-days").fill("5");
+    const sizes = await page.evaluate(() => ["svc-days", "svc-overlap"].map((id) => Math.round(document.getElementById(id).getBoundingClientRect().width)));
+    check(`${at}: the two number fields are no wider than twelve rem`, sizes.every((w) => w <= 16 * 12 + 1), sizes.join());
     const shown = await inspectView(page);
     check(`${at}: the rotate form does not overflow, cut off or lose contrast`, shown.overflow <= 1 && shown.clipped.length === 0 && shown.cut.length === 0 && shown.low.length === 0, JSON.stringify({ o: shown.overflow, c: shown.clipped.slice(0, 2), cut: shown.cut.slice(0, 2), low: shown.low.slice(0, 2) }));
     if (args.shots) { await form.scrollIntoViewIfNeeded(); await page.screenshot({ path: `${args.shots}/rotate-form-${lang}-${width}.png` }); }
@@ -98,32 +102,28 @@ try {
     await form.locator("button[type=submit]").click();
     await page.locator("#svc-review-title").waitFor();
     await page.waitForTimeout(150);
-    check(`${at}: the review step takes focus, names the credential that will end, and sends nothing yet`, await page.evaluate(() => document.activeElement?.id === "svc-review-title") && (await page.locator("#svc-review-title").innerText()).trim() === copy[lang].check && (await page.locator(".live-review").innerText()).includes(old) && posts.length === 0, posts.join());
+    check(`${at}: the review step takes focus, names the credential that will end, and sends nothing yet`, await page.evaluate(() => document.activeElement?.id === "svc-review-title") && (await page.locator("#svc-review-title").innerText()).trim() === copy[lang].check && (await page.locator(".live-review").innerText()).includes(old) && posts.length === 0 && (lang !== "ar" || ((await page.locator(".live-review").innerText()).includes("5 أيام") && !(await page.locator(".live-review").innerText()).includes("5 يوم"))) && (lang !== "en" || ((await page.locator(".live-review").innerText()).includes("5 days") && (await page.locator(".live-review").innerText()).includes("60 minutes"))), posts.join() + (await page.locator(".live-review").innerText()).slice(0, 200));
     const review = await inspectView(page);
     check(`${at}: the review does not overflow, cut off or lose contrast`, review.overflow <= 1 && review.clipped.length === 0 && review.cut.length === 0 && review.low.length === 0, JSON.stringify({ o: review.overflow, c: review.clipped.slice(0, 2), cut: review.cut.slice(0, 2), low: review.low.slice(0, 2) }));
     if (args.shots) { await page.locator(".live-review").scrollIntoViewIfNeeded(); await page.screenshot({ path: `${args.shots}/rotate-review-${lang}-${width}.png` }); }
-    if (lang !== "en") {
-      page.off("request", watch);
-      await form.getByRole("button", { name: copy[lang].cancel, exact: true }).click();
-      await page.waitForTimeout(200);
-      check(`${at}: cancelling closes the form and sends nothing`, (await page.locator("#svc-rotate-title").count()) === 0 && posts.length === 0);
-      continue;
-    }
     const answered = page.waitForResponse((r) => r.url().includes("/commands/service.rotate_credential"));
     await form.locator("button[type=submit]").click();
     const answer = await answered, result = await answer.json().catch(() => null);
     page.off("request", watch);
     const next = result?.fields?.credential ?? "";
     check(`${at}: confirming sends one rotate command for the old credential with the named overlap, and it completes`, answer.status() === 200 && result?.business_state === "credential_rotated" && posts.join() === "service.rotate_credential" && JSON.parse(answer.request().postData()).target_id === old && JSON.parse(answer.request().postData()).body.overlap_minutes === "60" && /^cred-/.test(next), JSON.stringify({ s: answer.status(), posts, state: result?.business_state }));
-    await page.getByRole("button", { name: copy[lang].show, exact: true }).first().waitFor({ timeout: 8000 }).catch(() => {});
-    check(`${at}: the result offers the one-time secret`, (await page.getByRole("button", { name: copy[lang].show, exact: true }).count()) > 0);
-    if (args.shots) await page.screenshot({ path: `${args.shots}/rotate-done-${lang}-${width}.png` });
+    const done = page.locator(".live-rotate-done");
+    await done.waitFor({ timeout: 8000 }).catch(() => {});
+    await page.waitForTimeout(300);
+    const doneText = (await done.count()) ? await done.innerText() : "";
+    check(`${at}: after confirming, the form is replaced by the result: the new credential, the old one's end, and the one-time secret`, doneText.includes(next) && doneText.includes(old) && (await done.locator("button.live-primary").count()) === 1 && (await page.locator("#svc-days").count()) === 0 && await detailOf(old).locator("button.live-rotate").isDisabled(), doneText.slice(0, 200));
+    if (args.shots) { await done.scrollIntoViewIfNeeded(); await page.screenshot({ path: `${args.shots}/rotate-done-${lang}-${width}.png` }); }
     const after = await api(`/identity/service-credentials/${old}`), fresh = await api(`/identity/service-credentials/${next}`);
-    check("the real reads show the old credential ending and no longer rotatable, and the new one replacing it", after.body?.row?.rotation === "ending" && after.body?.row?.replaced_by === next && after.body?.eligibility?.can_rotate === false && fresh.body?.row?.replaces === old && fresh.body?.row?.rotation === "replacing" && fresh.body?.row?.secret_pickup === "open", JSON.stringify({ old: after.body?.row?.rotation, can: after.body?.eligibility?.can_rotate, fresh: fresh.body?.row?.rotation, pickup: fresh.body?.row?.secret_pickup }));
+    check(`${at}: the real reads show the old credential ending and no longer rotatable, and the new one replacing it`, after.body?.row?.rotation === "ending" && after.body?.row?.replaced_by === next && after.body?.eligibility?.can_rotate === false && fresh.body?.row?.replaces === old && fresh.body?.row?.rotation === "replacing" && fresh.body?.row?.secret_pickup === "open", JSON.stringify({ old: after.body?.row?.rotation, can: after.body?.eligibility?.can_rotate, fresh: fresh.body?.row?.rotation, pickup: fresh.body?.row?.secret_pickup }));
     await go(lang, { svc_c_service: service, svc_c_selected: old });
     const ended = detailOf(old); await ended.waitFor();
     const text = await ended.innerText();
-    check(`${at}: the old credential's detail says it was rotated and by which credential, with Rotate disabled`, text.includes(copy[lang].ending) && text.includes(copy[lang].replacedBy) && text.includes(next) && await ended.locator("button.live-rotate").isDisabled(), text.slice(0, 200));
+    check(`${at}: the old credential's detail says it was rotated and by which credential, with Rotate disabled`, text.includes(copy[lang].ending) && text.includes(copy[lang].replacedBy) && text.includes(next) && await ended.locator("button.live-rotate").isDisabled() && !/\d{4}-\d{2}-\d{2}T/.test(await ended.locator(".live-rotation").innerText()), (await ended.locator(".live-rotation").innerText()).slice(0, 120));
     if (args.shots) { await ended.scrollIntoViewIfNeeded(); await page.screenshot({ path: `${args.shots}/rotate-old-${lang}-${width}.png` }); }
     await go(lang, { svc_c_service: service, svc_c_selected: next });
     const newer = detailOf(next); await newer.waitFor();

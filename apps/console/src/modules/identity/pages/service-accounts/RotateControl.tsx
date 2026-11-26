@@ -6,7 +6,7 @@ import { FieldMessage, ValidationSummary, fieldAttributes, rationaleError, reque
 import { w } from "../users/live-copy";
 import { c } from "../../../../service/copy";
 import { v } from "./live-copy";
-import { r } from "./rotate-copy";
+import { countDays, countMinutes, r } from "./rotate-copy";
 import { CommandFailure } from "./command-failure";
 import { admitsIssueDraft } from "./issue-draft";
 import { issueExec } from "./issue-send";
@@ -68,6 +68,23 @@ export function RotateControl({ l, api, recovery, detail, user, refresh, show, c
     if (present.current && issues.current()) refresh();
   };
   const time = (iso: string) => <bdi dir="ltr" className="live-nowrap">{utcTime(l, iso).replace(/[\u061c\u200e\u200f]/g, "")}</bdi>;
+  if (entry?.phase === "issued" && entry.issued)
+    return (
+      <section className="live-step live-rotate-form live-rotate-done" aria-labelledby="svc-rotate-title">
+        <h2 id="svc-rotate-title" tabIndex={-1} ref={heading}>{r.title(l)}</h2>
+        <p role="status">{r.rotated(l, entry.issued.credential, detail.row.id, service)}</p>
+        <Facts items={[
+          [r.willEnd(l), <span className="live-mono">{bdi(detail.row.id)}</span>],
+          [r.endsAt(l), time(detail.row.not_after)],
+          [r.newCredential(l), <span className="live-mono">{bdi(entry.issued.credential)}</span>],
+        ]} />
+        <p className="live-note">{r.once(l, lim.secret_pickup_minutes)}</p>
+        <div className="live-buttons">
+          <button className="live-primary" type="button" onClick={() => show(service)}>{v.showSecret(l)}</button>
+          <button className="live-secondary" type="button" onClick={cancel}>{v.close(l)}</button>
+        </div>
+      </section>
+    );
   if (other)
     return (
       <section className="live-step" aria-labelledby="svc-rotate-title">
@@ -77,7 +94,7 @@ export function RotateControl({ l, api, recovery, detail, user, refresh, show, c
       </section>
     );
   return (
-    <form className="live-step" onSubmit={submit} noValidate aria-labelledby="svc-rotate-title">
+    <form className="live-step live-rotate-form" onSubmit={submit} noValidate aria-labelledby="svc-rotate-title">
       <h2 id="svc-rotate-title" tabIndex={-1} ref={heading}>{r.title(l)}</h2>
       <p className="live-who">{r.current(l)}: <span className="live-mono">{bdi(detail.row.id)}</span></p>
       {!entry && !reviewing && <p className="live-impact">{r.lead(l)}</p>}
@@ -90,8 +107,8 @@ export function RotateControl({ l, api, recovery, detail, user, refresh, show, c
           <Facts items={[
             [r.willEnd(l), <span className="live-mono">{bdi(detail.row.id)}</span>],
             [oldEnd.sooner ? r.endsAt(l) : r.endsAbout(l), <>{time(oldEnd.at)}<span className="live-to live-sub">{oldEnd.sooner ? r.oldEndsSooner(l, utcTime(l, oldEnd.at)) : r.fromConfirm(l)}</span></>],
-            [r.newValidFor(l), `${shown.days} ${v.days(l)}`],
-            [r.overlap(l), `${shown.overlap} ${r.minutes(l)}`],
+            [r.newValidFor(l), countDays(l, Number(shown.days))],
+            [r.overlap(l), countMinutes(l, Number(shown.overlap))],
             [w.reason(l), shown.reason],
           ]} />
           <ul className="live-review-list">
@@ -137,7 +154,6 @@ export function RotateControl({ l, api, recovery, detail, user, refresh, show, c
           {entry?.phase === "unknown" ? c.tryAgain(l) : reviewing ? r.title(l) : r.review(l)}
         </button>
         {reviewing && !entry && <button className="live-secondary" type="button" onClick={() => setReviewing(false)}>{r.edit(l)}</button>}
-        {entry?.phase === "issued" && <button className="live-secondary" type="button" onClick={() => show(service)}>{v.showSecret(l)}</button>}
         {entry && entry.phase !== "sending" && entry.phase !== "issued" && (
           <button className="live-secondary" type="button" onClick={() => issues.discard(user, service)}>{v.discardAttempt(l)}</button>
         )}

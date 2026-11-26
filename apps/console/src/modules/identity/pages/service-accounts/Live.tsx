@@ -689,7 +689,7 @@ function CredentialWorkspace({
                 <button
                   type="button"
                   className="live-secondary live-rotate"
-                  disabled={!detail.eligibility.can_rotate && rotate !== detail.row.id}
+                  disabled={!detail.eligibility.can_rotate}
                   onClick={() => onParams({ svc_c_rotate: detail.row.id }, true)}
                 >
                   {r.rotate(l)}

@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import type { Locale } from "../../../../shared/types";
 import { AdminError, attempt, type AccessSetting, type AdminClient, type Attempt } from "../../../../service/admin";
-import type { ListedRequest, RequestPage } from "../../../../service/access-lists";
+import type { ListedRequest } from "../../../../service/access-lists";
 import { c } from "../../../../service/copy";
 import { Summary } from "../../../../service/Service";
 import { FailureBox, Reason, reasonProblem, settles } from "../users/Live";
@@ -12,9 +12,8 @@ import { a, kindLabel } from "./live-copy";
 import { accessText } from "./live-model";
 import { q } from "./request-copy";
 import { keepAttempt, requestState, shortDigest } from "./request-model";
-import { readFailure } from "./Permissions";
 import { qcopy } from "../service-accounts/query-copy";
-import { cursorTrail } from "../service-accounts/query-model";
+import { ListFailure, Paging, Reference, usePagedList } from "./paged";
 import { SettingsDisclosure } from "./Settings";
 import { breakable, withWho } from "./who";
 
@@ -161,81 +160,12 @@ function Rows({ l, rows, selected, onAct }: { l: Locale; rows: ListedRequest[]; 
   );
 }
 
-type Read = { state: "loading" } | { state: "error"; error: unknown } | { state: "ready"; page: RequestPage };
-
-function useRequestList(api: AdminClient, state: "pending" | "ended", limit: number, generation: number) {
-  const [at, setAt] = useState({ generation, after: "" });
-  const [local, setLocal] = useState(0);
-  const after = at.generation === generation ? at.after : "";
-  const token = useMemo(() => ({}), [api, state, limit, generation, after, local]);
-  const [result, setResult] = useState<{ token: object; read: Read } | null>(null);
-  const [trail] = useState(cursorTrail);
-  useEffect(() => { if (at.generation !== generation) trail.clear(); }, [generation]); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    let active = true;
-    api.accessRequests({ state, limit, ...(after ? { after } : {}) }).then(
-      (page) => { if (active) setResult({ token, read: { state: "ready", page } }); },
-      (error: unknown) => { if (active) setResult({ token, read: { state: "error", error } }); },
-    );
-    return () => { active = false; };
-  }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
-  const reference = useRef<HTMLParagraphElement>(null);
-  const moved = useRef(false);
-  const read = (result?.token === token ? result.read : { state: "loading" }) as Read;
-  useEffect(() => {
-    if (read.state === "ready" && moved.current) { moved.current = false; reference.current?.focus(); }
-  }, [read]);
-  const go = (next: string) => { moved.current = true; setAt({ generation, after: next }); };
-  return {
-    read, reference, first: after === "",
-    reload: () => setLocal((n) => n + 1),
-    toFirst: () => { trail.clear(); go(""); },
-    toPrevious: () => go(trail.previous(state) || ""),
-    toNext: (next: string) => { if (trail.next(state, after, next)) go(next); },
-  };
-}
-
-type RequestList = ReturnType<typeof useRequestList>;
-
-function ListFailure({ l, title, list, onSignOut }: { l: Locale; title: string; list: RequestList; onSignOut: () => void }) {
-  if (list.read.state !== "error") return null;
-  const error = list.read.error;
-  return (
-    <section className="live-error access-list-failure" role="alert">
-      <h3>{title}</h3>
-      <p>{readFailure(l, error)}</p>
-      <div className="live-buttons">
-        {error instanceof AdminError && error.failure === "unauthenticated"
-          ? <button type="button" className="live-secondary" onClick={onSignOut}>{w.signInAgain(l)}</button>
-          : <button type="button" className="live-secondary" onClick={list.reload}>{w.reload(l)}</button>}
-        {!list.first && <button type="button" className="live-secondary" onClick={list.toFirst}>{qcopy(l, "first")}</button>}
-      </div>
-    </section>
-  );
-}
-
-function Paging({ l, label, list }: { l: Locale; label: string; list: RequestList }) {
-  if (list.read.state !== "ready" || (list.first && !list.read.page.next)) return null;
-  const next = list.read.page.next;
-  return (
-    <nav className="live-buttons access-paging" aria-label={label}>
-      <button type="button" className="live-secondary" disabled={list.first} onClick={list.toFirst}>{qcopy(l, "first")}</button>
-      <button type="button" className="live-secondary" disabled={list.first} onClick={list.toPrevious}>{qcopy(l, "previous")}</button>
-      <button type="button" className="live-secondary" disabled={!next} onClick={() => list.toNext(next)}>{qcopy(l, "next")}</button>
-    </nav>
-  );
-}
-
-function Reference({ l, page, list }: { l: Locale; page: RequestPage; list: RequestList }) {
-  return <p className="live-meta access-reference" tabIndex={-1} ref={list.reference}>{qcopy(l, "reference")}: <time dateTime={page.reference_at} title={page.reference_at}>{when(l, page.reference_at)}</time></p>;
-}
-
 export function RequestSection({ l, api, generation, startedAt, settings, selected, notice, onAct, onSignOut }: {
   l: Locale; api: AdminClient; generation: number; startedAt: string; settings: AccessSetting[]; selected: string; notice: string;
   onAct: (action: Decision, r: ListedRequest) => void; onSignOut: () => void;
 }) {
-  const pending = useRequestList(api, "pending", 50, generation);
-  const ended = useRequestList(api, "ended", 25, generation);
+  const pending = usePagedList((after) => api.accessRequests({ state: "pending", limit: 50, ...(after ? { after } : {}) }), "pending", generation);
+  const ended = usePagedList((after) => api.accessRequests({ state: "ended", limit: 25, ...(after ? { after } : {}) }), "ended", generation);
   const waiting = pending.read.state === "ready" ? pending.read.page : null;
   const past = ended.read.state === "ready" ? ended.read.page : null;
   const summary = ended.read.state === "error" ? q.endedFailed(l) : !past ? q.endedLoading(l)

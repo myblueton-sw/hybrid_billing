@@ -38,19 +38,48 @@ func (p Period) From() Month { return p.from }
 
 func (p Period) To() Month { return p.to }
 
+func insertOrdered(ids []string, id string) []string {
+	at := sort.SearchStrings(ids, id)
+	if at < len(ids) && ids[at] == id {
+		return ids
+	}
+	ids = append(ids, "")
+	copy(ids[at+1:], ids[at:])
+	ids[at] = id
+	return ids
+}
+
+func afterOrdered(ids []string, after string) int {
+	if after == "" {
+		return 0
+	}
+	return sort.Search(len(ids), func(i int) bool { return ids[i] > after })
+}
+
+func (r *Registry) grantView(id string, at time.Time) GrantView {
+	stored := r.grants[id]
+	g := stored.value
+	g.Terms = copyTerms(g.Terms)
+	active := !stored.closed && g.Validity.at(at)
+	effective := active && (g.SubjectID == "" || r.memberWith(g.Terms.Scope.WorkspaceID, g.SubjectID, r.grantJoined[id]))
+	return GrantView{Grant: g, Version: stored.version, Closed: stored.closed, Active: active, Effective: effective}
+}
+
+func (r *Registry) delegationView(id string, at time.Time) DelegationView {
+	stored := r.delegations[id]
+	d := stored.value
+	d.Terms = copyTerms(d.Terms)
+	return DelegationView{Delegation: d, Version: stored.version, Closed: stored.closed, Active: !stored.closed && d.Validity.at(at), Effective: r.effective(stored, at)}
+}
+
 func (r *Registry) Grants() []GrantView {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	now := r.time()
-	out := make([]GrantView, 0, len(r.grants))
-	for id, stored := range r.grants {
-		g := stored.value
-		g.Terms = copyTerms(g.Terms)
-		active := !stored.closed && g.Validity.at(now)
-		effective := active && (g.SubjectID == "" || r.memberWith(g.Terms.Scope.WorkspaceID, g.SubjectID, r.grantJoined[id]))
-		out = append(out, GrantView{Grant: g, Version: stored.version, Closed: stored.closed, Active: active, Effective: effective})
+	out := make([]GrantView, 0, len(r.grantOrder))
+	for _, id := range r.grantOrder {
+		out = append(out, r.grantView(id, now))
 	}
-	sort.Slice(out, func(a, b int) bool { return out[a].ID < out[b].ID })
 	return out
 }
 
@@ -58,14 +87,65 @@ func (r *Registry) Delegations() []DelegationView {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	now := r.time()
-	out := make([]DelegationView, 0, len(r.delegations))
-	for _, stored := range r.delegations {
-		d := stored.value
-		d.Terms = copyTerms(d.Terms)
-		out = append(out, DelegationView{Delegation: d, Version: stored.version, Closed: stored.closed, Active: !stored.closed && d.Validity.at(now), Effective: r.effective(stored, now)})
+	out := make([]DelegationView, 0, len(r.delegationOrder))
+	for _, id := range r.delegationOrder {
+		out = append(out, r.delegationView(id, now))
 	}
-	sort.Slice(out, func(a, b int) bool { return out[a].ID < out[b].ID })
 	return out
+}
+
+func (r *Registry) GrantPage(after string, limit int, at time.Time) ([]GrantView, bool) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	if limit < 1 {
+		return nil, false
+	}
+	start := afterOrdered(r.grantOrder, after)
+	end := min(start+limit, len(r.grantOrder))
+	out := make([]GrantView, 0, end-start)
+	for _, id := range r.grantOrder[start:end] {
+		out = append(out, r.grantView(id, at))
+	}
+	return out, end < len(r.grantOrder)
+}
+
+func (r *Registry) DelegationPage(after string, limit int, at time.Time) ([]DelegationView, bool) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	if limit < 1 {
+		return nil, false
+	}
+	start := afterOrdered(r.delegationOrder, after)
+	end := min(start+limit, len(r.delegationOrder))
+	out := make([]DelegationView, 0, end-start)
+	for _, id := range r.delegationOrder[start:end] {
+		out = append(out, r.delegationView(id, at))
+	}
+	return out, end < len(r.delegationOrder)
+}
+
+func (r *Registry) GrantAt(id string, at time.Time) (GrantView, bool) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	if _, known := r.grants[id]; !known {
+		return GrantView{}, false
+	}
+	return r.grantView(id, at), true
+}
+
+func (r *Registry) DelegationAt(id string, at time.Time) (DelegationView, bool) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	if _, known := r.delegations[id]; !known {
+		return DelegationView{}, false
+	}
+	return r.delegationView(id, at), true
+}
+
+func (r *Registry) Counts() (int, int) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	return len(r.grantOrder), len(r.delegationOrder)
 }
 
 func (r *Registry) Generation() uint64 {

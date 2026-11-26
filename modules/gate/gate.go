@@ -299,6 +299,41 @@ func (a *Administration) Delegations() []DelegationView {
 	return a.permissions.Delegations()
 }
 
+func (a *Administration) GrantPage(after string, limit int, at time.Time) ([]GrantView, bool) {
+	if !a.ready() {
+		return nil, false
+	}
+	return a.permissions.GrantPage(after, limit, at)
+}
+
+func (a *Administration) DelegationPage(after string, limit int, at time.Time) ([]DelegationView, bool) {
+	if !a.ready() {
+		return nil, false
+	}
+	return a.permissions.DelegationPage(after, limit, at)
+}
+
+func (a *Administration) GrantAt(id string, at time.Time) (GrantView, bool) {
+	if !a.ready() {
+		return GrantView{}, false
+	}
+	return a.permissions.GrantAt(id, at)
+}
+
+func (a *Administration) DelegationAt(id string, at time.Time) (DelegationView, bool) {
+	if !a.ready() {
+		return DelegationView{}, false
+	}
+	return a.permissions.DelegationAt(id, at)
+}
+
+func (a *Administration) PermissionCounts() (int, int) {
+	if !a.ready() {
+		return 0, 0
+	}
+	return a.permissions.Counts()
+}
+
 func (a *Administration) Generation() uint64 {
 	if !a.ready() {
 		return 0

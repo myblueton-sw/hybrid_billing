@@ -87,6 +87,8 @@ Each increment has its own independent review; C2, C4 and C5 change a public rea
 
 - **C1a, 2026-11-26.** `apps/api/server/querycursor.go` holds the signed token, the binding check, the expiry and the scan budget; `servicequery_cursor.go` uses them. Token format, domain strings, key and checks are unchanged. The scan limit is now read once when a walk begins instead of on each use; access settings are fixed at startup (`server.go:302`), so the two are the same. Verified: the whole server package passes; the M04 rotation runner passes (55 checks); new unit tests for the generic pieces. Independent review: approve, behaviour preserved.
 
+- **C1b, auth registry, 2026-11-26.** The registry keeps its grants and delegations in identifier order as they are added (nothing removes one) and gains `GrantPage`, `DelegationPage`, `GrantAt`, `DelegationAt` with the evaluation time as a parameter, and `Counts`; the gate module exposes them. `Grants()` and `Delegations()` now walk the same order instead of sorting per call and return what they did. Tests: pages of several sizes equal the whole list; cursors between and past identifiers; copies do not share terms; validity evaluated at the given time through the delegation chain while standing is read as stored and a change of standing advances the generation. The accesschange version and reads and the by-identifier people read are the rest of C1b.
+
 # Open for the owner
 
 - **C5 removes fields from an existing public read.** The plan's common contract requires it ("a new paged endpoint alone is insufficient if the old screen entry still downloads all rows"), and M04 did the same to the services read. It is listed here because a removal is a contract change; it will be asked before C5 is built.

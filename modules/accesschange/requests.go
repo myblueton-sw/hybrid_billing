@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
+	"math"
 	"sort"
 	"strconv"
 	"strings"
@@ -26,6 +27,7 @@ type Registry struct {
 	revocations    []*revocation
 	nextRevocation uint64
 	last           Receipt
+	version        uint64
 }
 
 func NewRegistry(clock func() time.Time, limits Limits) (*Registry, error) {
@@ -36,6 +38,12 @@ func NewRegistry(clock func() time.Time, limits Limits) (*Registry, error) {
 }
 
 func (r *Registry) now() time.Time { return r.clock().UTC() }
+
+func (r *Registry) changed() {
+	if r.version < math.MaxUint64 {
+		r.version++
+	}
+}
 
 func digestOf(parts ...string) string {
 	sum := sha256.New()
@@ -94,6 +102,7 @@ func (r *Registry) end(q *request, state string, by, reason string, now time.Tim
 
 func (r *Registry) Propose(p Proposal) (View, bool, error) {
 	r.mu.Lock()
+	r.changed()
 	defer r.mu.Unlock()
 	now := r.now()
 	switch {
@@ -185,6 +194,7 @@ func (r *Registry) live(q *request, now time.Time) error {
 
 func (r *Registry) Approve(number uint64, workspace string, approver Actor, digest string, current Standing, apply func(Applier) (string, error)) (View, error) {
 	r.mu.Lock()
+	r.changed()
 	defer r.mu.Unlock()
 	now := r.now()
 	q, err := r.find(number, workspace)
@@ -225,6 +235,7 @@ func (r *Registry) Approve(number uint64, workspace string, approver Actor, dige
 
 func (r *Registry) Reject(number uint64, workspace string, rejecter Actor, allowed bool, rationale string) (View, error) {
 	r.mu.Lock()
+	r.changed()
 	defer r.mu.Unlock()
 	now := r.now()
 	q, err := r.find(number, workspace)
@@ -252,6 +263,7 @@ func (r *Registry) Reject(number uint64, workspace string, rejecter Actor, allow
 
 func (r *Registry) Withdraw(number uint64, workspace string, actor Actor) (View, error) {
 	r.mu.Lock()
+	r.changed()
 	defer r.mu.Unlock()
 	now := r.now()
 	q, err := r.find(number, workspace)

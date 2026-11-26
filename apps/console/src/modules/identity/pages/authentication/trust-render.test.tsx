@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { renderToStaticMarkup } from "react-dom/server";
 import React from "react";
 import type { PolicyPage, TrustChange } from "../../../../service/admin";
-import { ChangesHead, Conditions, CurrentRules, Detail, Lists, Revoked, ShortConditions } from "./TrustChanges";
+import { ChangesHead, Conditions, CurrentRules, Detail, Revoked, ShortConditions } from "./TrustChanges";
 import { AdminError } from "../../../../service/admin";
 import { trustFailure } from "./trust-model";
 import { ConfirmBody } from "./TrustConfirmBody";
@@ -16,7 +16,7 @@ const noop = () => undefined;
 const detail = (page: PolicyPage, c: TrustChange, l: "en" | "ko" | "ar" = "en") =>
   renderToStaticMarkup(<Detail l={l} page={page} c={c} split onClose={noop} onAction={noop} onOpen={noop} />);
 const whole = (page: PolicyPage, l: "en" | "ko" | "ar" = "en") =>
-  renderToStaticMarkup(<><Conditions l={l} page={page} onOpen={noop} /><CurrentRules l={l} page={page} loading={false} onReload={noop} /><ChangesHead l={l} page={page} onPropose={noop} /><Lists l={l} page={page} selected="" reduced={false} onOpen={noop} /></>);
+  renderToStaticMarkup(<><Conditions l={l} page={page} onOpen={noop} /><CurrentRules l={l} page={page} loading={false} onReload={noop} /><ChangesHead l={l} page={page} onPropose={noop} /></>);
 const items = [
   { item: "test_login", result: "verified", reason: "", detail: "" }, { item: "recovery_path", result: "verified", reason: "", detail: "" },
   { item: "issuer_subject", result: "not_applicable", reason: "local_password", detail: "" }, { item: "provider_diagnostics", result: "not_applicable", reason: "no_provider_connection", detail: "" },

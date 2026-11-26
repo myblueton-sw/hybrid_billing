@@ -15,7 +15,7 @@ export type PermissionPage = {
   rows: Permission[]; search_input: string; query: PermissionEcho; next: string; reference_at: string; observed_at: string; revision: string; order: "source_then_id";
   count: { value: string; certainty: "exact" | "lower_bound" }; work_units: number; scan_stopped: boolean;
 };
-export type PermissionDetail = { workspace: string; row: Permission; revision: string; observed_at: string };
+export type PermissionDetail = { workspace: string; row: Permission; would_end: string[]; revision: string; observed_at: string };
 
 const states = ["active", "pending", "expired", "revoked", "revocation_unconfirmed", "ended"] as const;
 const emptyOr = <T>(parse: Parser<T>): Parser<T | ""> => (v) => (v === "" ? "" : parse(v));
@@ -55,7 +55,7 @@ export const permissionPageOf: Parser<PermissionPage> = (v) => {
   }
   return r;
 };
-export const permissionDetailOf: Parser<PermissionDetail> = closed<PermissionDetail>({ workspace: identifier, row: permissionOf, revision: (v) => { const s = text(v); requireRead(s.length > 0); return s; }, observed_at: timestamp });
+export const permissionDetailOf: Parser<PermissionDetail> = closed<PermissionDetail>({ workspace: identifier, row: permissionOf, would_end: (v) => { requireRead(Array.isArray(v) && v.length <= 10000); const ids = array(identifier)(v); requireRead(ids.every((id, i) => i === 0 || ids[i - 1] < id)); return ids; }, revision: (v) => { const s = text(v); requireRead(s.length > 0); return s; }, observed_at: timestamp });
 
 function applies(stored: PermissionSelector, wanted: string): boolean {
   return wanted === "" || stored.any || stored.id === wanted;
@@ -102,7 +102,7 @@ export function accessQueryClient(send: Send, request: () => string, validate: V
     async accessPermission(source: PermissionSource, id: string): Promise<PermissionDetail> {
       const target = validate(() => { requireRead(source === "grant" || source === "delegation"); return identifier(id); });
       const body = await send("/identity/access/permissions/" + source + "/" + encodeURIComponent(target), { method: "GET" }, request());
-      return validate(() => { const detail = permissionDetailOf(body); requireRead(detail.row.id === target && detail.row.source === source); return detail; });
+      return validate(() => { const detail = permissionDetailOf(body); requireRead(detail.row.id === target && detail.row.source === source && !(source === "delegation" && detail.would_end.includes(target))); return detail; });
     },
   };
 }

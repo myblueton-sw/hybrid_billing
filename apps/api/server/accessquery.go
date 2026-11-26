@@ -120,6 +120,7 @@ type permissionsPage struct {
 type permissionDetail struct {
 	Workspace string        `json:"workspace"`
 	Row       permissionRow `json:"row"`
+	WouldEnd  []string      `json:"would_end"`
 	Revision  string        `json:"revision"`
 	Observed  string        `json:"observed_at"`
 }
@@ -436,7 +437,18 @@ func (s *Server) readPermission(source string) http.HandlerFunc {
 			failCode(w, commands.InvalidRequest, request)
 			return
 		}
-		writeJSON(w, http.StatusOK, request, permissionDetail{Workspace: s.bootWorkspace, Row: row, Revision: s.Revision(), Observed: now.UTC().Format(time.RFC3339Nano)})
+		var ending []string
+		within := false
+		if source == sourceGrant {
+			ending, _, within = s.admin.GrantWouldEnd(id, s.cfg.Access.ServiceQueryScan, now)
+		} else {
+			ending, _, within = s.admin.DelegationWouldEnd(id, s.cfg.Access.ServiceQueryScan, now)
+		}
+		if !within {
+			failCode(w, commands.DependencyUnavailable, request)
+			return
+		}
+		writeJSON(w, http.StatusOK, request, permissionDetail{Workspace: s.bootWorkspace, Row: row, WouldEnd: append([]string{}, ending...), Revision: s.Revision(), Observed: now.UTC().Format(time.RFC3339Nano)})
 	}
 }
 
@@ -461,7 +473,7 @@ func permissionReadPaths() map[string]any {
 			"x-never":     "grants for installation actions are not listed",
 			"x-filter-id": "customer and legal_entity list every permission that applies to the named one: those scoped to it and those that cover every one",
 			"x-scope":     "each selector is either any: true or an identifier; an identifier is never read as covering every one, whatever its text"}},
-		"/identity/access/permissions/grant/{id}":      map[string]any{"get": map[string]any{"operationId": "identity.access.grant", "x-row": row, "responses": serviceReadResponses(map[string]any{"type": "object", "properties": map[string]any{"row": row}}, false), "x-unknown": "an unknown identifier, a grant for an installation action and a delegation's identifier answer alike"}},
-		"/identity/access/permissions/delegation/{id}": map[string]any{"get": map[string]any{"operationId": "identity.access.delegation", "x-row": row, "responses": serviceReadResponses(map[string]any{"type": "object", "properties": map[string]any{"row": row}}, false), "x-unknown": "an unknown identifier and a grant's identifier answer alike"}},
+		"/identity/access/permissions/grant/{id}":      map[string]any{"get": map[string]any{"operationId": "identity.access.grant", "x-row": row, "responses": serviceReadResponses(map[string]any{"type": "object", "properties": map[string]any{"row": row}}, false), "x-would-end": "would_end lists the delegations that are effective now and would not be if this record were revoked, the set a revocation then reports as ended; 503 dependency_unavailable when more delegations depend on it than the scan limit", "x-unknown": "an unknown identifier, a grant for an installation action and a delegation's identifier answer alike"}},
+		"/identity/access/permissions/delegation/{id}": map[string]any{"get": map[string]any{"operationId": "identity.access.delegation", "x-row": row, "responses": serviceReadResponses(map[string]any{"type": "object", "properties": map[string]any{"row": row}}, false), "x-would-end": "would_end lists the delegations that are effective now and would not be if this record were revoked, the set a revocation then reports as ended; 503 dependency_unavailable when more delegations depend on it than the scan limit", "x-unknown": "an unknown identifier and a grant's identifier answer alike"}},
 	}
 }

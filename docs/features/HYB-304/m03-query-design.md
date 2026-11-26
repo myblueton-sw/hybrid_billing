@@ -107,6 +107,8 @@ Each increment has its own independent review; C2, C4 and C5 change a public rea
 
 - **C4c-1, 2026-11-26.** `apps/console/src/service/access-lists.ts`: the strict client for the three reads (`accessRequests`, `accessRevocations`, `accessSubjects`), attached to the admin client. Rows are closed shapes; a request is refused before sending when it could not be a valid query; the answer must echo and honour the filters, keep its order and its count rules. Checked against real answers taken from the server's test world (five requests in three states, a revocation, the people list, a search and a lookup by identifier), which the client accepted; that check was a temporary test and is not repeatable from the repository. The independent review found two values the server can send that the first build refused: a reason holding control characters (the server limits a reason's length only), and revocations whose recorded times do not descend (the list is in the order they were recorded in, and the clock is rebased at start); both corrected, and the comparison of a sign-in name with the search text was dropped because lower-casing differs between the server and the browser for some letters. Reasons are shown as text by the screen, not as markup. No screen uses it yet.
 
+- **Screen transition, 2026-11-26.** What replaces each read of the whole page by the grants view, and the additive facts still needed, are planned in [the screen transition](m03-screen-transition.md): T1 and T2 on the server, T3 to T5 on the screen.
+
 # Decided by the owner
 
 Asked in the working session on 2026-11-26:

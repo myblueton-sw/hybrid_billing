@@ -15,7 +15,7 @@ import (
 	"github.com/myblueton-sw/hybrid_billing/modules/commands"
 )
 
-func (f world) policyRead(a actor) reply {
+func (f world) policyWire(a actor) reply {
 	f.t.Helper()
 	return f.do("GET", "/api/v1/identity/policy", "", func(r *http.Request) {
 		if a.cookie != nil {
@@ -23,6 +23,45 @@ func (f world) policyRead(a actor) reply {
 		}
 		r.Header.Set(csrfHeader, a.csrf)
 	})
+}
+
+func (f world) policyRead(a actor) reply {
+	f.t.Helper()
+	got := f.policyWire(a)
+	if got.status != 200 || a.cookie == nil {
+		return got
+	}
+	if _, served := got.body["changes"]; served {
+		f.t.Fatal("the policy read serves changes")
+	}
+	request, _ := http.NewRequest("GET", "/", nil)
+	request.AddCookie(a.cookie)
+	found, ok := f.s.lookup(request)
+	if !ok {
+		f.t.Fatal("no session for the policy read")
+	}
+	raw, err := json.Marshal(f.s.formerChanges(found))
+	if err != nil {
+		f.t.Fatal(err)
+	}
+	var rows []any
+	if err := json.Unmarshal(raw, &rows); err != nil {
+		f.t.Fatal(err)
+	}
+	got.body["changes"] = rows
+	return got
+}
+
+func (s *Server) formerChanges(found session) []changeRow {
+	s.domain.RLock()
+	defer s.domain.RUnlock()
+	you, now := found.owner.User, s.clock()
+	ctx := s.trustRows(found, you, now, s.rightsOf(you, now))
+	out := []changeRow{}
+	for _, v := range s.trust.List(s.bootWorkspace) {
+		out = append(out, ctx.row(v))
+	}
+	return out
 }
 
 func (f world) publishDirect(rev authpolicy.Revision) {
@@ -233,7 +272,7 @@ func TestConcurrentPolicyReadsAndCommands(t *testing.T) {
 		go func() {
 			defer wg.Done()
 			for j := 0; j < 5; j++ {
-				f.policyRead(root)
+				f.policyWire(root)
 			}
 		}()
 	}
@@ -299,7 +338,7 @@ func TestConcurrentStaleRequests(t *testing.T) {
 		}(i, a)
 	}
 	wg.Add(1)
-	go func() { defer wg.Done(); f.policyRead(fresh) }()
+	go func() { defer wg.Done(); f.policyWire(fresh) }()
 	wg.Wait()
 	for _, a := range olds {
 		if _, ok := f.s.sessions.get(a.verifier(f)); ok {

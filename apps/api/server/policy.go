@@ -116,7 +116,6 @@ type policyPage struct {
 	Ledger          trustLedgerRow `json:"ledger"`
 	Rights          rightsRow      `json:"rights"`
 	Holders         holdersRow     `json:"holders"`
-	Changes         []changeRow    `json:"changes"`
 	Waiting         string         `json:"waiting_activation"`
 	EarlierRunKept  bool           `json:"earlier_run_kept"`
 }
@@ -182,7 +181,7 @@ func (s *Server) policyPage(found session, answer identity.Answer) policyPage {
 	you := answer.User()
 	page := policyPage{Revision: s.Revision(), Now: stamp(now), SignedInAt: stamp(found.created), AuthenticatedAt: stamp(found.authenticated),
 		You: you, StartedAt: stamp(s.startedAt), Ledger: s.trustLedger(), Rights: s.rightsOf(you, now),
-		Holders: holdersRow{Needed: needPeople, Enrolment: "not_decided", Missing: []string{}}, Changes: []changeRow{}}
+		Holders: holdersRow{Needed: needPeople, Enrolment: "not_decided", Missing: []string{}}}
 	ctx := s.trustRows(found, you, now, page.Rights)
 	page.Trust = s.trustRow(ctx.base)
 	limit := ctx.limit
@@ -201,9 +200,6 @@ func (s *Server) policyPage(found session, answer identity.Answer) policyPage {
 		if missing, ok := strings.CutPrefix(detail, "missing:"); ok {
 			page.Holders.Missing = strings.Split(missing, ",")
 		}
-	}
-	for _, v := range s.trust.List(s.bootWorkspace) {
-		page.Changes = append(page.Changes, ctx.row(v))
 	}
 	summary := s.trust.Summary(s.bootWorkspace)
 	page.Waiting, page.EarlierRunKept = summary.Unknown, summary.EarlierRun

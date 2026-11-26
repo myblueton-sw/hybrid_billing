@@ -1,4 +1,4 @@
-import { credentialRowOf } from "./admin";
+import { credentialRowOf, trustChangeOf } from "./admin";
 import { accessFixture, requestFixture, revocationFixture, credentialFixture, orgFixture } from "./read-fixtures";
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -145,25 +145,27 @@ test("the policy read keeps the server times and the trust model and defaults mi
     trust: { stricter_fields: null, epoch: "1", epoch_generation: 0, epoch_number: 1, policy_number: 1, digest: "d", origin: "seed", carried_from: "", carried_line: 0, durable_unconfirmed: false, activated_at: "",
       reset_at: "", older_record_ignored: false, proposer: "", validator: "", approver: "", activator: "", change: "", hold: { reason: "commit_unknown", since: "t" } },
     ledger: { state: "ok", isolation_reason: "", problem_line: 0, records: 2, watermark: "2:x", generation: 0, generation_stated: false, not_durable: false },
-    rights: { propose: true, validate: true, approve: true, activate: true }, holders: { qualifying_people: 3, members: 3, needed: 3, enrolment: "not_decided", ready: true, missing: [] }, changes: [change], waiting_activation: "", earlier_run_kept: false,
+    rights: { propose: true, validate: true, approve: true, activate: true }, holders: { qualifying_people: 3, members: 3, needed: 3, enrolment: "not_decided", ready: true, missing: [] }, waiting_activation: "", earlier_run_kept: false,
   };
   const { f, calls } = fake(200, page);
   const got = await adminClient("tok", f).policy();
   assert.equal(calls[0].url, "/api/v1/identity/policy");
   assert.deepEqual(got, page);
   const empty = await adminClient("tok", fake(200, { changes: [{ state: "nonsense" }], trust: { origin: "elsewhere" } }).f).policy();
+  assert.equal("changes" in empty, false);
   assert.equal(empty.policy, null);
   assert.equal(empty.trust.origin, "");
   assert.equal(empty.trust.hold, null);
   assert.equal(empty.ledger.state, "unknown");
   assert.equal(empty.holders.needed, 3);
-  assert.equal(empty.changes[0].state, "draft");
-  assert.equal(empty.changes[0].validation, null);
-  assert.equal(empty.changes[0].impact, null);
-  const computed = await adminClient("tok", fake(200, { changes: [{ state: "proposed", impact: { members: 0, sessions: 0, affected_ids: [], signs_out_everyone: true } }, { state: "proposed", impact: null }, { state: "proposed", impact: [] }] }).f).policy();
-  assert.deepEqual(computed.changes[0].impact, { members: 0, sessions: 0, affected_ids: [], weakens_mfa: false, signs_out_everyone: true });
-  assert.equal(computed.changes[1].impact, null);
-  assert.equal(computed.changes[2].impact, null);
+  assert.deepEqual(trustChangeOf(change), change);
+  const unknown = trustChangeOf({ state: "nonsense" });
+  assert.equal(unknown.state, "draft");
+  assert.equal(unknown.validation, null);
+  assert.equal(unknown.impact, null);
+  assert.deepEqual(trustChangeOf({ state: "proposed", impact: { members: 0, sessions: 0, affected_ids: [], signs_out_everyone: true } }).impact, { members: 0, sessions: 0, affected_ids: [], weakens_mfa: false, signs_out_everyone: true });
+  assert.equal(trustChangeOf({ state: "proposed", impact: null }).impact, null);
+  assert.equal(trustChangeOf({ state: "proposed", impact: [] }).impact, null);
 });
 
 test("trust refusals map to their own failures", () => {

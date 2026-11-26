@@ -64,11 +64,9 @@ test("M02 detail: the notice, the note and the successor no longer look through 
     const out = renderToStaticMarkup(<Detail l={l} page={pageFixture()} c={c} split onClose={noop} onAction={noop} onOpen={noop} />);
     assert.ok(out.includes(ty.supersededBy(l)) && out.includes(`<bdi dir="ltr" class="live-mono">${winner}</bdi>`) && out.includes(`data-opens="${winner}"`) && out.includes(`>${tl.openReplacing(l)}</button>`), l);
   }
-  const unknown = changeFixture({ state: "activation_unknown" });
-  const unnamed = renderToStaticMarkup(<Conditions l="en" page={pageFixture(hold, [unknown])} onOpen={noop} />);
+  const unnamed = renderToStaticMarkup(<Conditions l="en" page={pageFixture(hold)} onOpen={noop} />);
   assert.ok(unnamed.includes('data-condition="hold"') && !unnamed.includes("data-opens"), "the notice opens only what the policy read names");
   const kept = renderToStaticMarkup(<ChangesHead l="en" page={pageFixture({ earlier_run_kept: true })} onPropose={noop} />);
-  const listed = renderToStaticMarkup(<ChangesHead l="en" page={pageFixture({}, [changeFixture({ earlier_run: true })])} onPropose={noop} />);
   const none = renderToStaticMarkup(<ChangesHead l="en" page={pageFixture()} onPropose={noop} />);
-  assert.ok(kept.includes("m02-note") && !listed.includes("m02-note") && !none.includes("m02-note"));
+  assert.ok(kept.includes("m02-note") && !none.includes("m02-note"));
 });

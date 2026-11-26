@@ -8,14 +8,12 @@ export const changeFixture = (over: Record<string, unknown> = {}): TrustChange =
     can: {}, why_not: { approve: "", activate: "" }, history: [{ state: "draft", by: "sample-admin", at: "2026-11-18T09:00:00Z", rationale: "Shorter sign-in" }], ...over,
   });
 
-export const pageFixture = (over: Record<string, unknown> = {}, changes: TrustChange[] = []): PolicyPage => ({
-  ...policyPageOf({
+export const pageFixture = (over: Record<string, unknown> = {}): PolicyPage =>
+  policyPageOf({
     revision: "r5", now: "2026-11-18T09:00:00Z", signed_in_at: "2026-11-18T08:50:00Z", authenticated_at: "2026-11-18T08:50:00Z", act_until: "2026-11-18T09:05:00Z", step_up_seconds: 900,
     you: "sample-admin-3", started_at: "2026-11-18T08:00:00Z",
     policy: { methods: ["password"], mfa: "none", max_age_seconds: 43200, step_up: [], number: 1, epoch: { value: "1", generation: 0, number: 1 }, proposer: "", validator: "", approver: "", activator: "", at: "2026-11-18T08:00:00Z" },
     trust: { epoch: "1", epoch_generation: 0, epoch_number: 1, policy_number: 1, digest: "d".repeat(64), origin: "seed", hold: null },
     ledger: { state: "ok", records: 1, generation: 0 }, rights: { propose: true, validate: true, approve: true, activate: true }, holders: { qualifying_people: 3, members: 3, needed: 3, enrolment: "not_decided", ready: true, missing: [] },
     ...over,
-  }),
-  changes,
-});
+  });

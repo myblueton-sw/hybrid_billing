@@ -43,7 +43,7 @@ test("an activated change shows the new version and the invalidation items", () 
 test("an unconfirmed activation waits, never says activated and offers no retry", () => {
   for (const l of ["en", "ko", "ar"] as const) {
     const c = changeFixture({ state: "activation_unknown", job: { id: "trust-activation-trust-0a1b2c3d-1", state: "waiting", reason: "commit_unknown" } });
-    const page = pageFixture({ trust: { hold: { reason: "commit_unknown", since: "2026-11-18T09:00:00Z" } }, ledger: { state: "stopped" } }, [c]);
+    const page = pageFixture({ trust: { hold: { reason: "commit_unknown", since: "2026-11-18T09:00:00Z" } }, ledger: { state: "stopped" } });
     const out = detail(page, c, l) + whole(page, l);
     assert.match(out, /trust-activation-trust-0a1b2c3d-1/);
     assert.match(out, new RegExp(ty.waiting(l)));
@@ -56,7 +56,7 @@ test("an unconfirmed activation waits, never says activated and offers no retry"
 test("a superseded change links to the activated one", () => {
   const winner = changeFixture({ id: "trust-0a1b2c3d-2", number: 2, state: "activated" });
   const c = changeFixture({ state: "superseded", superseded_by: winner.id, superseded_epoch: { value: "2", generation: 0, number: 2 } });
-  const out = detail(pageFixture({}, [winner, c]), c);
+  const out = detail(pageFixture({}), c);
   assert.match(out, /Another change was activated on the same epoch/);
   assert.match(out, /Superseded by/);
   assert.match(out, /data-opens="trust-0a1b2c3d-2"/);
@@ -67,7 +67,7 @@ test("a blocked validation names the blocked checks in plain words", () => {
   const blockedItems = items.map((i) => (i.item === "recovery_path" ? { ...i, result: "blocked", reason: "recovery_unverified", detail: "missing:trust_activate" } : i));
   const c = changeFixture({ validator: "sample-admin-2", validation: { result: "blocked", at: "2026-11-18T09:00:00Z", evidence_current: true, items: blockedItems, evidence_digest: "e".repeat(64) },
     can: { validate: true, cancel: true }, why_not: { approve: "not_validated", activate: "needs_approval" } });
-  const out = detail(pageFixture({}, [c]), c);
+  const out = detail(pageFixture({}), c);
   assert.match(out, /Validation found blocked checks, so this change stays a draft and cannot be approved or activated\./);
   assert.match(out, /1 check blocked/);
   assert.match(out, /No administrator who can sign in under the proposed rules holds: activate/);
@@ -90,7 +90,7 @@ test("the enrolment block replaces the holders line", () => {
 
 test("isolation shows the problem line and removes trust actions", () => {
   const c = changeFixture({ can: {} , why_not: { approve: "trust_unavailable", activate: "trust_unavailable" } });
-  const page = pageFixture({ ledger: { state: "isolated", isolation_reason: "integrity_failed", problem_line: 9 }, trust: { origin: "ledger_replay" } }, [c]);
+  const page = pageFixture({ ledger: { state: "isolated", isolation_reason: "integrity_failed", problem_line: 9 }, trust: { origin: "ledger_replay" } });
   const out = whole(page) + detail(page, c);
   assert.match(out, /The decision ledger cannot be verified\./);
   assert.match(out, /\(problem at line 9\)/);
@@ -110,14 +110,14 @@ test("versions render as g.n inside an ltr isolate in every language", () => {
 
 test("rationales use an auto-direction span, never bdi", () => {
   const c = changeFixture({ history: [{ state: "draft", by: "sample-admin", at: "2026-11-18T09:00:00Z", rationale: "تقليل مدة الجلسة" }] });
-  const out = detail(pageFixture({}, [c]), c, "ar");
+  const out = detail(pageFixture({}), c, "ar");
   assert.match(out, /<span class="m02-free" dir="auto">تقليل مدة الجلسة<\/span>/);
 });
 
 test("confirmations C1 to C6 show the common facts, the bound values and their boundary", () => {
   const ch = changeFixture({ state: "independently_approved", change_revision: 2, validator: "sample-admin-2", approver: "sample-admin-2",
     validation: { result: "validated", evidence_current: true, evidence_digest: "e".repeat(64), items } });
-  const page = pageFixture({ ledger: { state: "ok", generation: 0 } }, [ch]);
+  const page = pageFixture({ ledger: { state: "ok", generation: 0 } });
   const body = (k: Confirming) => renderToStaticMarkup(<ConfirmBody l="en" page={page} k={k} expectedDigest={"f".repeat(64)} workspace="sample-workspace" />);
   const c1 = body({ kind: "propose", change: null, proposed: { maxAge: 60, step: 10 } });
   assert.match(c1, /sample-workspace/);
@@ -180,7 +180,7 @@ test("the after-activation view trusts only a completed activated answer", () =>
 test("dialog details after a refusal and the C3/C4 wording", () => {
   const ch = changeFixture({ state: "independently_approved", approver: "sample-admin-2", validator: "sample-admin-2",
     validation: { result: "validated", at: "2026-11-18T09:00:00Z", evidence_current: true, evidence_digest: "e".repeat(64), items } });
-  const page = pageFixture({}, [ch]);
+  const page = pageFixture({});
   const body = (k: Confirming, dead = false) => renderToStaticMarkup(<ConfirmBody l="en" page={page} k={k} expectedDigest="" workspace="w" dead={dead} />);
   const c3 = body({ kind: "approve", change: { ...ch, state: "validated" }, proposed: null });
   assert.doesNotMatch(c3, /2026-11-18T09:00:00Z/);
@@ -199,7 +199,7 @@ test("dialog details after a refusal and the C3/C4 wording", () => {
 test("an activation that is not confirmed never says activated", () => {
   const c = changeFixture({ state: "activation_unknown", activator: "sample-admin-3", job: { id: "trust-activation-x", state: "waiting", reason: "commit_unknown" } });
   for (const l of ["en", "ko", "ar"] as const) {
-    const out = detail(pageFixture({ trust: { hold: { reason: "commit_unknown", since: "t" } } }, [c]), c, l);
+    const out = detail(pageFixture({ trust: { hold: { reason: "commit_unknown", since: "t" } } }), c, l);
     assert.doesNotMatch(out, new RegExp(ty.activatedBy(l) + "<"), l);
     assert.match(out, new RegExp(ty.attemptedBy(l)), l);
   }
@@ -207,7 +207,7 @@ test("an activation that is not confirmed never says activated", () => {
 
 test("round-two details: lockout reason, stale text per command, kept approval, empty reasons, the hold shown once", () => {
   const ch = changeFixture({ state: "validated", validation: { result: "validated", at: "2026-11-18T09:00:00Z", evidence_current: true, evidence_digest: "e".repeat(64), items } });
-  const page = pageFixture({}, [ch]);
+  const page = pageFixture({});
   const c3 = renderToStaticMarkup(<ConfirmBody l="en" page={page} k={{ kind: "approve", change: ch, proposed: null }} expectedDigest="" workspace="w" />);
   assert.match(c3, /Lockout risk<\/dt><dd>Verified · Three different administrators who can sign in under the proposed rules/);
   for (const l of ["ko", "ar"] as const) {
@@ -222,7 +222,7 @@ test("round-two details: lockout reason, stale text per command, kept approval, 
   assert.doesNotMatch(out, /data-label="Reason"><\/td>/);
   assert.match(out, /<tr role="row" data-item="test_login" data-result="verified"><td role="cell">Test login<\/td><td role="cell" data-label="Result" class="m02-word">Verified<\/td><td role="cell"><\/td><\/tr>/);
   const unknown = changeFixture({ state: "activation_unknown", job: { id: "trust-activation-x", state: "waiting", reason: "commit_unknown" } });
-  const held = pageFixture({ trust: { hold: { reason: "commit_unknown", since: "t" } } }, [unknown]);
+  const held = pageFixture({ trust: { hold: { reason: "commit_unknown", since: "t" } } });
   const split = detail(held, unknown);
   assert.equal((split.match(/could not confirm that the activation record was saved/g) ?? []).length, 0);
   assert.match(split, /listed in the notice above/);
@@ -233,7 +233,7 @@ test("round-two details: lockout reason, stale text per command, kept approval, 
 test("the validated line keeps the validator ID in one isolated unit", () => {
   const c = changeFixture({ state: "validated", validator: "sample-admin-2", validation: { result: "validated", at: "2026-11-18T09:00:00Z", evidence_current: true, items, evidence_digest: "e".repeat(64) } });
   for (const l of ["en", "ko", "ar"] as const) {
-    const html = detail(pageFixture({ changes: [c] }), c, l);
+    const html = detail(pageFixture(), c, l);
     assert.match(html, /<p class="m02-result">[^<]*<bdi dir="ltr" class="live-mono m02-actor">sample-admin-2<\/bdi>/);
     assert.doesNotMatch(html, /⁣/);
   }

@@ -12,7 +12,6 @@ let navigation = 0;
 const check = (name, ok, detail = "") => { results.push(`${ok ? "PASS" : "FAIL"} ${name}${!ok && detail ? " " + String(detail).replace(/\s+/g, " ").slice(0, 300) : ""}`); if (!ok) process.exitCode = 1; };
 page.on("pageerror", (e) => errors.push(e.message));
 const password = randomBytes(20).toString("base64url");
-const read = "**/api/v1/identity/policy*";
 const copy = {
   en: { title: "Impact if activated", everyone: "Everyone in this workspace is signed out at activation.", not: "Not computed. This is not zero.", members: "Members" },
   ko: { title: "활성화 시 영향", everyone: "활성화하면 이 작업 공간의 모든 사용자가 로그아웃됩니다.", not: "계산되지 않았습니다. 0이라는 뜻이 아닙니다.", members: "구성원" },
@@ -27,6 +26,7 @@ async function settled() {
   await page.locator('.m02-live[data-live="policies"]').waitFor();
   await page.waitForFunction(() => document.querySelector('.m02-live[data-live="policies"]')?.getAttribute("aria-busy") !== "true");
   await page.locator(".m02-changes").waitFor();
+  for (const group of ["open", "closed"]) await page.locator(`.m02-list-section[data-group="${group}"] h3[data-count]`).waitFor();
 }
 async function contained(name) {
   const m = await page.evaluate(() => ({ page: document.documentElement.scrollWidth, view: document.documentElement.clientWidth }));
@@ -34,14 +34,7 @@ async function contained(name) {
 }
 const one = (url) => /\/api\/v1\/identity\/policy\/changes\/[^/]+$/.test(new URL(url.toString()).pathname);
 async function staged(change) {
-  await page.unroute(read);
   await page.unroute(one);
-  await page.route(read, async (route) => {
-    const response = await route.fetch();
-    const body = await response.json();
-    if (Array.isArray(body.changes)) body.changes = body.changes.map(change);
-    await route.fulfill({ response, json: body });
-  });
   await page.route(one, async (route) => {
     const response = await route.fetch();
     if (response.status() !== 200) return route.fulfill({ response });
@@ -69,10 +62,16 @@ try {
   await page.locator("#signin-password").fill(password); await page.locator("form button[type=submit]").click();
   await page.locator(".service-session").waitFor();
 
-  let served = null, capture = true;
-  page.on("response", async (r) => { if (capture && r.url().split("?")[0].endsWith("/api/v1/identity/policy") && r.status() === 200) served = await r.json().catch(() => served); });
-  const listed = () => (Array.isArray(served?.changes) ? served.changes : []);
-  const describe = () => `served changes ${listed().length}: ${listed().map((c) => `${c.number}:${c.state}:${c.impact ? "impact" : "no-impact"}`).join(" ")}`;
+  const served = { open: [], closed: [] };
+  let capture = true;
+  page.on("response", async (r) => {
+    const u = new URL(r.url());
+    if (!capture || !u.pathname.endsWith("/api/v1/identity/policy/changes") || r.status() !== 200) return;
+    const body = await r.json().catch(() => null);
+    if (body && Array.isArray(body.rows)) served[u.searchParams.get("state") === "closed" ? "closed" : "open"] = body.rows;
+  });
+  const listed = () => [...served.open, ...served.closed];
+  const describe = () => `served changes ${listed().length}: ${listed().map((c) => `${c.number}:${c.state}`).join(" ")}`;
   await open("en"); await settled();
   notes.push("at start, " + describe());
   if (listed().length === 0) {
@@ -134,7 +133,7 @@ try {
         const counted = zero.first().locator(`xpath=.//dt[normalize-space()="${copy[lang].members}"]/following-sibling::dd[1]`);
         const members = (await counted.count()) > 0 ? (await counted.first().innerText()).trim() : "absent";
         check(`${lang} ${width} computed impact of zero shows zero members and not the sentence`, members === "0" && !zeroText.includes(copy[lang].not) && !zeroText.includes(copy[lang].everyone), members + " | " + zeroText);
-        await page.unroute(read);
+        await page.unroute(one);
       }
     }
     await page.setViewportSize({ width: 1440, height: 1000 });

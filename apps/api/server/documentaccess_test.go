@@ -39,7 +39,8 @@ func TestDocumentAccessRejectsGenericGrantBypass(t *testing.T) {
 					t.Fatal(err)
 				}
 			}
-			for _, row := range f.s.ceiling() {
+			catalog, _ := f.s.ceiling()
+			for _, row := range catalog {
 				if governedGrantTerms(gate.Action(row.Action), row.Kind, row.Fields) {
 					t.Fatal("dedicated document exposed as generic ceiling")
 				}

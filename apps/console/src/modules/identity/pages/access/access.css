@@ -434,3 +434,6 @@
   font-size: 16px;
   color: inherit;
 }
+.remaining-security [data-catalog-none] {
+  margin-block: 8px 16px;
+}

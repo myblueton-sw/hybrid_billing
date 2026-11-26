@@ -38,13 +38,14 @@ type subjectRow struct {
 }
 
 type accessPage struct {
-	Revision  string       `json:"revision"`
-	Catalog   []ceilingRow `json:"catalog"`
-	Now       string       `json:"now"`
-	You       string       `json:"you"`
-	StartedAt string       `json:"started_at"`
-	Settings  []settingRow `json:"settings"`
-	Ledger    ledgerRow    `json:"ledger"`
+	Revision   string       `json:"revision"`
+	Catalog    []ceilingRow `json:"catalog"`
+	Incomplete bool         `json:"catalog_incomplete"`
+	Now        string       `json:"now"`
+	You        string       `json:"you"`
+	StartedAt  string       `json:"started_at"`
+	Settings   []settingRow `json:"settings"`
+	Ledger     ledgerRow    `json:"ledger"`
 }
 
 type decisionRow struct {
@@ -105,14 +106,15 @@ func fullScope(t gate.Terms) bool {
 	return t.Scope.Customer.Any() && t.Scope.LegalEntity.Any() && t.Scope.Contract.Any() && t.Period.Any()
 }
 
-func (s *Server) ceiling() []ceilingRow {
+func (s *Server) ceiling() ([]ceilingRow, bool) {
 	out := []ceilingRow{}
-	for _, g := range s.admin.Grants() {
+	grants, more := s.admin.GrantsOfClient(ConsoleClient, s.cfg.Access.ServiceQueryScan, s.clock())
+	for _, g := range grants {
 		if g.ClientID == ConsoleClient && g.Active && !gate.InstallationAction(g.Terms.Action) && !governedGrantTerms(g.Terms.Action, g.Terms.Kind, g.Terms.Fields) && g.Terms.Scope.WorkspaceID == s.bootWorkspace && fullScope(g.Terms) {
 			out = append(out, ceilingRow{Action: string(g.Terms.Action), Kind: g.Terms.Kind, Fields: append([]string{}, g.Terms.Fields...), Until: stamp(g.Validity.NotAfter)})
 		}
 	}
-	return out
+	return out, more
 }
 
 func (s *Server) grantees(actor identity.Verifier) ([]subjectRow, error) {
@@ -139,7 +141,8 @@ func (s *Server) listAccess(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	page := accessPage{Revision: s.Revision(), Catalog: s.ceiling(), Now: stamp(s.clock()), You: answer.User(), StartedAt: stamp(s.startedAt), Settings: s.settingRows(), Ledger: s.ledgerRow()}
+	catalog, more := s.ceiling()
+	page := accessPage{Revision: s.Revision(), Catalog: catalog, Incomplete: more, Now: stamp(s.clock()), You: answer.User(), StartedAt: stamp(s.startedAt), Settings: s.settingRows(), Ledger: s.ledgerRow()}
 	writeJSON(w, http.StatusOK, request, page)
 }
 

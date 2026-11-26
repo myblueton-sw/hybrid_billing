@@ -395,7 +395,7 @@ Reads:
 
 | Read | Server | Client and parser | Used for |
 | --- | --- | --- | --- |
-| `GET /api/v1/identity/access` | `listAccess` (`access.go:134`), shape `accessPage` (`access.go:40`): `revision`, `catalog`, `now`, `you`, `started_at`, `settings`, `ledger` | `access()` (`service/admin.ts:986`), `catalogOf`, `settingsOf` (`service/access-read.ts:4-5`), `ledgerOf` (`service/admin.ts:756`) | the command revision, the request form's choices, the settings disclosure, the ledger line; it carries no list of grants, delegations, people, requests or revocations |
+| `GET /api/v1/identity/access` | `listAccess` (`access.go:134`), shape `accessPage` (`access.go:40`): `revision`, `catalog`, `catalog_incomplete`, `now`, `you`, `started_at`, `settings`, `ledger` | `access()` (`service/admin.ts:986`), `catalogOf`, `settingsOf` (`service/access-read.ts:4-5`), `ledgerOf` (`service/admin.ts:756`) | the command revision, the request form's choices, the settings disclosure, the ledger line; it carries no list of grants, delegations, people, requests or revocations |
 | `GET /api/v1/identity/access/permissions` | `queryPermissions` (`accessquery.go:278`), row `permissionRow` (`accessquery.go:54`) | `accessPermissions` (`service/access-query.ts:70`), `permissionOf` (`:34`) | the one list of grants and delegations |
 | `GET /api/v1/identity/access/permissions/grant/{id}`, `/delegation/{id}` | `readPermission` (`accessquery.go:401`), shape `permissionDetail` (`accessquery.go:120`) | `accessPermission` (`service/access-query.ts:102`) | the revoke panel's list of delegations that would stop |
 | `GET /api/v1/identity/access/requests` | `queryAccessRequests` (`accesslists.go:198`), row `listedRequest` (`accesslists.go:50`) over `changeRequestRow` (`accessrequests.go:359`) | `accessRequests` (`service/access-lists.ts:118`), `listedRequestOf` (`:35`) | waiting and ended requests, the decision panel |
@@ -449,7 +449,8 @@ Component `GrantForm` (`access/Live.tsx:46`).
 | Additions paused | warning; the button disabled | `ledger.state` not `ok` or `recovered` |
 | Person | search, results, chosen line, the unconfirmed-revocation sentence | `PersonPicker` (`access/PersonPicker.tsx:12`) over the subjects read: `q`, 25 a page; rows `user_id`, `login`, `revocation_unconfirmed`; the signed-in person is left out here |
 | Person | No eligible person | the first page of the subjects read holds no one else and has no `next` |
-| Access | choice, and the hint about the console's own limits | `catalog[].action`, `fields`, `kind` |
+| Access | choice, the hint about the console's own limits, and a second hint when the catalog could not be listed in full | `catalog[].action`, `fields`, `kind`; `catalog_incomplete` |
+| In place of the form | a note that no access to grant could be listed | `catalog_incomplete` with no usable `catalog` entry |
 | Customer | all customers | fixed: the form sends `customer = "all"` |
 | Days | value, hint with the maximum | typed; the maximum from the chosen entry's `until` and `now` |
 | Impact sentence | derived from the chosen person, entry and days | none |
@@ -518,7 +519,7 @@ Component `Effects` (`access/Live.tsx:263`).
 | Area | Displayed field or state | Source |
 | --- | --- | --- |
 | Person | the person picker; the unconfirmed-revocation sentence under the chosen person | the subjects read; `revocation_unconfirmed` of the chosen row |
-| Data kind | choice when there is more than one | distinct `catalog[].kind` of the whole read |
+| Data kind | choice when there is more than one; a hint, or a different refusal, when the catalog could not be listed in full | distinct `catalog[].kind` of the whole read; `catalog_incomplete` |
 | Customer | optional, sent as `customer` | typed |
 | States | start hint, cleared after a change, loading, failed; only the latest request is shown | derived |
 | Result | title with the person; data kind, customer, checked at; allowed count | the chosen row's `login` or `user_id`; request values; checked at is browser time; `decisions[].allowed` |

@@ -95,6 +95,8 @@ Each increment has its own independent review; C2, C4 and C5 change a public rea
 
 - **C3a, 2026-11-26.** The console's strict reader and client for the permissions read and its detail reads (`apps/console/src/service/access-query.ts`): closed shapes that refuse unknown fields, the source-then-identifier order, the facts a row must agree with itself on (a grant has a subject or a client and no delegator; effective only when active; a selector is any or an identifier), a page that agrees with its count, cursor and the query that was asked, and every returned row satisfying the filters asked. The shape was taken from the answers of a local service. No screen uses it yet.
 
+- **C3b, 2026-11-26.** The M03 list needs two facts per row that the whole page supplied from its other populations: a person's sign-in name (from every subject) and whether a request to revoke a grant is pending (from every request). The permission rows now carry `subject_login`, `delegator_login` and `revocation_requested`, looked up for the rows emitted; the directory version joins the source basis so that a change of a sign-in name ends a cursor. The console reader takes them. A person who is suspended or no longer a member keeps a sign-in name here, where the whole read's screen fell back to the identifier; a person who has left has none. The readers are installation administrators, who read every user's sign-in name on M01, so nothing new is disclosed. Additive to a read no screen uses yet.
+
 # Decided by the owner
 
 Asked in the working session on 2026-11-26:

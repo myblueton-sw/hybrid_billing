@@ -125,6 +125,19 @@ func TestPermissionsArePagedInOneStableOrderAndEqualTheWholeRead(t *testing.T) {
 	if delegation["subject"] != before["delegate"] || delegation["delegator"] != before["delegator"] || delegation["state"] != before["state"] || delegation["source"] != sourceDelegation {
 		t.Errorf("delegation row %+v against %+v", delegation, before)
 	}
+	if grant["subject_login"] != Admin2Login || grant["revocation_requested"] != false || delegation["subject_login"] != Admin2Login || delegation["delegator_login"] != AdminLogin || delegation["revocation_requested"] != false {
+		t.Errorf("the sign-in names and the request flag: %v %v / %v %v", grant["subject_login"], grant["revocation_requested"], delegation["subject_login"], delegation["delegator_login"])
+	}
+	if got := f.run(root, "access.request_revoke", "q-03", nil); got.status != 200 {
+		t.Fatalf("request to revoke %s", got.raw)
+	}
+	asked := f.permissions(root, "?q=q-0&limit=50")
+	if rowOf("q-03", asked.body["rows"].([]any))["revocation_requested"] != true || rowOf("q-04", asked.body["rows"].([]any))["revocation_requested"] != false {
+		t.Error("a pending request to revoke marks its grant and no other")
+	}
+	if one := f.readAs(root, "/api/v1/identity/access/permissions/grant/q-03"); one.body["row"].(map[string]any)["revocation_requested"] != true || one.body["row"].(map[string]any)["subject_login"] != Admin2Login {
+		t.Errorf("the detail carries the same facts: %s", one.raw)
+	}
 	for name, c := range map[string]struct {
 		query string
 		keep  func(string) bool

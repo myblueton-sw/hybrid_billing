@@ -34,6 +34,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/v1/identity/access", s.listAccess)
 	mux.HandleFunc("GET /api/v1/identity/access/preview", s.previewAccess)
 	mux.HandleFunc("GET /api/v1/identity/access/permissions", s.queryPermissions)
+	mux.HandleFunc("GET /api/v1/identity/access/subjects", s.queryAccessSubjects)
 	mux.HandleFunc("GET /api/v1/identity/access/permissions/grant/{id}", s.readPermission(sourceGrant))
 	mux.HandleFunc("GET /api/v1/identity/access/permissions/delegation/{id}", s.readPermission(sourceDelegation))
 	mux.HandleFunc("GET /api/v1/identity/services", s.queryServiceAccounts)

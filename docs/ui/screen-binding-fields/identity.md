@@ -485,10 +485,6 @@ Bounded reads (HYB-304 increment C2, server only; the screen does not use them y
 
 | View/area | Displayed field, column or state | Source | Parser | Rendered at |
 | --- | --- | --- | --- | --- |
-| Console ceiling | Rows | derived: grants with `client` set and `state = "active"` (`access/live-model.ts:35-37`) | `admin.ts:891` | `access/Live.tsx:413, 473` |
-| Console ceiling | Access and data | `action`, `fields`, `kind` | `admin.ts:891` | `access/Live.tsx:475` |
-| Console ceiling | Customer | `scope.customer` | `admin.ts:891` | `access/Live.tsx:476` |
-| Console ceiling | Active until | `not_after` | `admin.ts:891` | `access/Live.tsx:477` |
 | Delegations | Active count, none | derived: delegations not in a closed state (`access/live-model.ts:39-44`) | `admin.ts:892` | `access/Live.tsx:489, 491` |
 | Delegations table | Delegator → delegate | `delegator`, `delegate` (`access.go:45-46`) via `loginOf` | `admin.ts:892, 894` | `access/Live.tsx:506` |
 | Delegations table | From parent, may redelegate | `parent`, `redelegate` (`access.go:47-48`) | `admin.ts:892` | `access/Live.tsx:507` |
@@ -526,6 +522,8 @@ Bounded reads (HYB-304 increment C2, server only; the screen does not use them y
 **Requests section (HYB-304 T3):** read from `GET /identity/access/requests` with `state=pending` (50 a page) and `state=ended` (25 a page) through `accessRequests`; rows use `subject_login`, `proposer_login` and `decided_by_login`. The whole read's `requests` is no longer read by the view.
 
 **Revocations section (HYB-304 T4):** read from `GET /identity/access/revocations` ten a page through `accessRevocations`; a record's heading uses `target_subject_login` (or `target_subject`), `target_action`, `target_fields`, `target_resource_kind` and `target`. The ledger line still comes from the whole read's `ledger`. The whole read's `revocations` is no longer read by the view.
+
+**Revoke panel, what would stop (HYB-304 T5a):** `would_end` of `GET /identity/access/permissions/grant/{id}` or `/delegation/{id}`, read when the panel opens, with `observed_at` as the checked time. The console ceiling table was removed in the same change; the console's grants are rows of the permissions list.
 
 **Parsed but not displayed on M03:** `you`, grant and delegation `version`, `scope.legal_entity`/`contract`/`period`, request `grant` (used only to match), `result`, revocation `history`, `target_present`, `job_reason`, `requested_by`, `approved_by`, `deny_at`, `verified`, `completed_at`, ledger `replace_reason`, `replaced_file`; preview `revision`, `subject`, `kind`, `customer`.
 

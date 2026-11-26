@@ -11,9 +11,9 @@ import { w } from "../users/live-copy";
 import { failureText } from "../users/live-model";
 import { when } from "../authentication/live-model";
 import { a, accessPhrase, actionLabel, fieldLabel, kindLabel } from "./live-copy";
-import { accessText, capabilityKey, grantCapabilities, selectedCapability, ceilingGrants, maxDays, reasonText, wholeDays } from "./live-model";
+import { accessText, capabilityKey, grantCapabilities, selectedCapability, maxDays, reasonText, wholeDays } from "./live-model";
 import { q, v } from "./request-copy";
-import { additionsPaused, descendantsOf, keepAttempt, unconfirmedFor } from "./request-model";
+import { additionsPaused, keepAttempt, unconfirmedFor } from "./request-model";
 import { DecidePanel, describeRequest, RequestSection, type Decision } from "./Requests";
 import { loginOf } from "./who";
 import { RevocationSection } from "./Revocations";
@@ -137,9 +137,10 @@ function GrantForm({ l, api, page, self, onDone, onCancel, onReload, stepping }:
       )}
       <div className="service-field">
         <label htmlFor="access-capability">{a.access(l)}</label>
+        <p className="service-hint" id="access-capability-hint">{a.accessHint(l)}</p>
         {field("access-capability") && <p className="service-field-error" id="access-capability-error"><span className="visually-hidden">{c.errorPrefix(l)} </span>{field("access-capability")}</p>}
         <select id="access-capability" className="live-select" value={pair ? capability : ""} disabled={busy}
-          aria-invalid={field("access-capability") ? true : undefined} aria-describedby={field("access-capability") ? "access-capability-error" : undefined}
+          aria-invalid={field("access-capability") ? true : undefined} aria-describedby={field("access-capability") ? "access-capability-hint access-capability-error" : "access-capability-hint"}
           onChange={(e) => changeCapability(e.target.value)}>
           <option value="">{a.chooseAccess(l)}</option>
           {capabilities.map((row) => <option key={capabilityKey(row)} value={capabilityKey(row)}>{accessText(l, row.action, row.fields)} · {kindLabel(l, row.kind)}</option>)}
@@ -167,6 +168,46 @@ function GrantForm({ l, api, page, self, onDone, onCancel, onReload, stepping }:
         {stepping && <button type="button" className="live-secondary" onClick={onCancel}>{w.cancel(l)}</button>}
       </div>
     </form>
+  );
+}
+
+function WouldStop({ l, api, source, id }: { l: Locale; api: AdminClient; source: "grant" | "delegation"; id: string }) {
+  const [tries, setTries] = useState(0);
+  const [read, setRead] = useState<{ state: "loading" } | { state: "error" } | { state: "ready"; ids: string[]; at: string }>({ state: "loading" });
+  useEffect(() => {
+    let active = true;
+    setRead({ state: "loading" });
+    api.accessPermission(source, id).then(
+      (detail) => { if (active) setRead({ state: "ready", ids: detail.would_end, at: detail.observed_at }); },
+      () => { if (active) setRead({ state: "error" }); },
+    );
+    return () => { active = false; };
+  }, [api, source, id, tries]);
+  const shown = read.state === "ready" ? read.ids.slice(0, 10) : [];
+  const rest = read.state === "ready" ? read.ids.slice(10) : [];
+  const line = (x: string) => <li key={x}><bdi dir="ltr" className="live-mono" translate="no">{x}</bdi></li>;
+  return (
+    <div className="access-impact-list access-would-stop" data-would-stop={read.state}>
+      <div className="live-heading live-section-head">
+        <h3>{q.stopTitle(l)}</h3>
+        {read.state === "ready" && read.ids.length > 0 && <p className="live-meta" data-stop-count={read.ids.length}>{q.stopCount(l, read.ids.length)}</p>}
+      </div>
+      <p className="live-note">{source === "grant" ? q.stopLeadGrant(l) : q.stopLeadDeleg(l)}</p>
+      {read.state === "loading" && <p role="status" className="live-meta">{q.stopLoading(l)}</p>}
+      {read.state === "error" && (
+        <div role="alert" className="access-stop-failed">
+          <p>{q.stopFailed(l)}</p>
+          <button type="button" className="live-secondary" onClick={() => setTries((n) => n + 1)}>{c.tryAgain(l)}</button>
+        </div>
+      )}
+      {read.state === "ready" && <p className="live-meta">{a.checkedAt(l, when(l, read.at))}</p>}
+      {read.state === "ready" && (read.ids.length === 0 ? <p className="live-note">{q.stopNone(l)}</p> : (
+        <>
+          <ul role="list" className="access-stop-list">{shown.map(line)}</ul>
+          {rest.length > 0 && <details className="live-ended"><summary>{q.stopMore(l, rest.length)}</summary><ul role="list" className="access-stop-list">{rest.map(line)}</ul></details>}
+        </>
+      ))}
+    </div>
   );
 }
 
@@ -205,7 +246,6 @@ function Revoke({ l, api, page, target, onDone, onCancel, onReload }: {
     }
   };
   const title = grant ? q.requestRevocation(l) : a.revokeDelegTitle(l);
-  const below = grant ? [] : descendantsOf(page, id);
   return (
     <form className="live-step" onSubmit={submit} noValidate>
       <h2 tabIndex={-1} ref={heading}>{title}</h2>
@@ -218,12 +258,7 @@ function Revoke({ l, api, page, target, onDone, onCancel, onReload }: {
         <div><dt>{a.colStatus(l)}</dt><dd>{target.kind === "grant" ? target.status : target.until}</dd></div>
       </dl>
       <p className="live-impact">{grant ? q.revokeRequestLead(l, who) : a.revokeDelegImpact(l, who)}</p>
-      {!grant && (
-        <div className="access-impact-list">
-          <h3>{q.descendants(l)}</h3>
-          {below.length === 0 ? <p className="live-note">{q.noDescendants(l)}</p> : <p className="live-mono" dir="ltr">{below.join(", ")}</p>}
-        </div>
-      )}
+      <WouldStop l={l} api={api} source={grant ? "grant" : "delegation"} id={id} />
       <Reason l={l} value={reason} onChange={(v) => { tried.current = attempt(); setReason(v); }} error={problem} />
       <div className="live-buttons">
         <button type="submit" className="live-primary" aria-busy={busy || undefined} disabled={busy}>{busy ? w.saving(l) : title}</button>
@@ -413,7 +448,6 @@ export default function LiveAccess({ locale: l, view, session, onSignOut, onView
     return <>{loadError && <div className="live-users">{loadError}</div>}<Effects l={l} api={api} page={page} /></>;
   }
   const self = session.user;
-  const ceiling = page ? ceilingGrants(page) : [];
   const selected = mode?.kind === "revoke" ? mode.target.id : mode?.kind === "decide" ? mode.row.id : "";
   const decide = (action: Decision, row: ListedRequest) => { setNotice(""); setMode({ kind: "decide", action, row }); };
   const customerOf = (row: Permission) => (row.scope.customer.any ? a.allCustomers(l) : row.scope.customer.id);
@@ -464,26 +498,6 @@ export default function LiveAccess({ locale: l, view, session, onSignOut, onView
           {page && <RequestSection l={l} api={api} generation={listed} startedAt={page.started_at} settings={page.settings} selected={selected}
             notice={noticeAt === "requests" ? notice : ""} onAct={decide} onSignOut={onSignOut} />}
           {page && <RevocationSection l={l} api={api} generation={listed} ledger={page.ledger} onSignOut={onSignOut} />}
-          {page && (
-            <section aria-labelledby="access-ceiling">
-              <h2 id="access-ceiling" className="live-title">{a.ceilingTitle(l)}</h2>
-              <p className="live-impact">{a.ceilingLead(l)}</p>
-              <div className="security-table-scroll live-table">
-                <table role="table">
-                  <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader">{a.colAccess(l)}</th><th scope="col" role="columnheader">{a.colCustomer(l)}</th><th scope="col" role="columnheader">{a.colStatus(l)}</th></tr></thead>
-                  <tbody role="rowgroup">
-                    {ceiling.map((g) => (
-                      <tr key={g.id} role="row">
-                        <td role="cell" className="live-user">{accessText(l, g.action, g.fields)}<span className="live-sub">{kindLabel(l, g.kind) ?? g.kind}</span></td>
-                        <td role="cell" data-label={a.colCustomer(l)}>{g.scope.customer === "all" ? a.allCustomers(l) : g.scope.customer}</td>
-                        <td role="cell" data-label={a.colStatus(l)}>{a.stActive(l)}<span className="live-sub">{a.until(l, when(l, g.not_after))}</span></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </section>
-          )}
         </div>
       )}
       {(wide || stepping) && panel && (

@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ledgerOf, type AccessGrant, type AccessPage } from "../../../../service/admin";
-import { accessText, ceilingGrants, closed, delegationsOf, maxDays, people, reasonText, revocable, scopeText, stateLine, wholeDays } from "./live-model";
+import { accessText, closed, delegationsOf, maxDays, people, reasonText, revocable, scopeText, stateLine, wholeDays } from "./live-model";
 import { a, accessPhrase, actionLabel } from "./live-copy";
 
 const grant = (change: Partial<AccessGrant>): AccessGrant => ({
@@ -22,7 +22,6 @@ test("grants split into current, ended and ceiling", () => {
   const split = people(p);
   assert.deepEqual(split.current.map((g) => g.id), ["a", "c", "b"]);
   assert.deepEqual(split.ended.map((g) => g.id), ["x", "y"]);
-  assert.deepEqual(ceilingGrants(p).map((g) => g.id), ["k"]);
   const d = { ...grant({}), delegator: "a", delegate: "b", parent: "", redelegate: false };
   const ds = delegationsOf({ ...p, delegations: [{ ...d, id: "d1" }, { ...d, id: "d2", state: "revoked" }, { ...d, id: "d3", state: "pending" }, { ...d, id: "d4", state: "ended" }] });
   assert.deepEqual(ds.current.map((x) => x.id), ["d1", "d3"]);

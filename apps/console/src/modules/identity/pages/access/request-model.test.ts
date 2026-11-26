@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { AdminError, ledgerOf, type AccessPage, type AccessRequest, type CleanupItem, type Revocation } from "../../../../service/admin";
 import {
-  additionsPaused, cleanupGroups, descendantsOf, failureWords, itemWords, jobWords, keepAttempt, ledgerLines, pendingRevokeFor, requestState, requestsOf, settingName,
+  additionsPaused, cleanupGroups, failureWords, itemWords, jobWords, keepAttempt, ledgerLines, pendingRevokeFor, requestState, requestsOf, settingName,
   settingSource, settingValue, settled, shortDigest, stateWords, unconfirmedFor,
 } from "./request-model";
 
@@ -142,12 +142,6 @@ test("the attempt is kept after a partial outcome only", () => {
   assert.ok(keepAttempt(new AdminError("partial", [], 0, "op-1")));
   assert.ok(!keepAttempt(new AdminError("stale")));
   assert.ok(!keepAttempt(new Error("x")));
-});
-
-test("descendants of a delegation", () => {
-  const p = page({ delegations: [deleg("d1", ""), deleg("d2", "d1"), deleg("d3", "d2"), deleg("d4", "d1", "revoked"), deleg("d5", "")] });
-  assert.deepEqual(descendantsOf(p, "d1"), ["d2", "d3"]);
-  assert.deepEqual(descendantsOf(p, "d5"), []);
 });
 
 test("waiting counts and Arabic request wording", async () => {

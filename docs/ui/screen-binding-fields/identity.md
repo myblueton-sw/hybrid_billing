@@ -677,7 +677,7 @@ No network address, raw User-Agent, login name, email or bearer secret is stored
 
 - **Unknown.** None of the rows above is marked unknown.
 - **Server fields that no console parser reads:** `trust.stricter_fields` (`policy.go:69`, not in `policyPageOf`, `admin.ts:568-573`); `impact.api_keys` and `impact.pending_jobs` (`bulkread.go:85, 87`, not in `detailOf`; the preview shows fixed "not applicable" copy instead, `users/BulkPrepare.tsx:73, 77`); trust command result `fields.reason` and `fields.your_session_ended` (`trust.go:314, 320`), `fields.change_revision` (`trust.go:143`); set-role-period result `fields.role_until` (`periods.go:130`); bulk result `fields.digest`, `fields.targets` and `fields.count` (`bulk.go:40, 105`, `bulkstage.go:86`).
-- **Parser type wider than the read.** Checked again on 2026-11-27 for two of the three reads this entry named: `access` no longer has row arrays, and its remaining arrays are checked field by field (`service/access-read.ts:4-5`); `me` is parsed by `selfPageOf` under `validatedRead` (`service/admin.ts:1006-1008`). The entry's statement about `services` was not re-checked in this change.
+- **Parser type wider than the read.** Checked again on 2026-11-27 for two of the three reads this entry named: `access` no longer has row arrays, and its remaining arrays are checked field by field (`service/access-read.ts:4-5`); `me` is parsed by `selfPageOf` under `validatedRead` (`service/admin.ts:1006-1008`). The earlier statement that the service-accounts read cast its row arrays without checking each field was not re-checked in this change.
 
 ## HYB-327 reconciliation
 

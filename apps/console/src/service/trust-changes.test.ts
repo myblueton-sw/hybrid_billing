@@ -56,9 +56,9 @@ test("M02 changes: a page that is not what was asked for is refused", async () =
   ];
   for (const [name, body, query] of cases) await assert.rejects(client(body).trustChanges(query), invalid, name);
   await assert.rejects(client(trustWire.detail).trustChange("trust-00000000-1"), invalid, "a detail of another change");
-  const beyond = { ...whole(), rows: [], count: { value: "0", certainty: "exact" }, search_input: "İx", query: { q: "i̇x", state: "", limit: 25 } };
-  assert.equal((await client(beyond).trustChanges({ q: "İx" })).rows.length, 0, "a search the service lower-cases by its own rules");
-  await assert.rejects(client({ ...beyond, query: { q: "", state: "", limit: 25 } }).trustChanges({ q: "İx" }), invalid, "a search that was dropped");
+  const beyond = { ...whole(), rows: [], count: { value: "0", certainty: "exact" }, search_input: "\u0130x", query: { q: "ix", state: "", limit: 25 } };
+  assert.equal((await client(beyond).trustChanges({ q: "\u0130x" })).rows.length, 0, "a search the service lower-cases by its own rules");
+  await assert.rejects(client({ ...beyond, query: { q: "", state: "", limit: 25 } }).trustChanges({ q: "\u0130x" }), invalid, "a search that was dropped");
 });
 
 test("M02 changes: a malformed page or row is refused", () => {

@@ -3,7 +3,7 @@ import { array, boolean, choice, integer, text, type Parser } from "./strict-rea
 import { closed, decimal, identifier, requireRead, timestamp } from "./service-query-read";
 
 export type ListedRequest = AccessRequest & { subject_login: string; proposer_login: string; decided_by_login: string };
-export type ListedRevocation = Revocation & { target_version: number };
+export type ListedRevocation = Revocation & { target_version: number; target_subject: string; target_subject_login: string; target_action: string; target_resource_kind: string; target_fields: string[] };
 export type AccessSubject = { user_id: string; login: string };
 export type ListEcho = { q: string; state: "" | "pending" | "ended"; limit: number };
 export type SubjectEcho = { q: string; id: string; limit: number };
@@ -49,10 +49,13 @@ const revocation = closed<ListedRevocation>({
   requested_by: emptyOr(identifier), approved_by: emptyOr(identifier), request: emptyOr(identifier), received_at: timestamp, deny_at: timestamp,
   receipt: closed<{ sequence: number; watermark: string; reason: string }>({ sequence: natural, watermark: bounded(256), reason: bounded(256) }), verified: boolean,
   cleanup: (v) => { requireRead(Array.isArray(v) && v.length <= 100); return array(cleanup)(v); }, completed_at: stamp,
+  target_subject: emptyOr(identifier), target_subject_login: login, target_action: emptyOr(identifier), target_resource_kind: emptyOr(identifier),
+  target_fields: (v) => { requireRead(Array.isArray(v) && v.length <= 100); return array(identifier)(v); },
 });
 export const listedRevocationOf: Parser<ListedRevocation> = (v) => {
   const r = revocation(v);
   requireRead(r.received_at === r.history[0].at && r.verified === (r.receipt.reason === "" && r.receipt.sequence > 0));
+  requireRead((r.target_subject !== "" || r.target_subject_login === "") && (r.target_action === "") === (r.target_resource_kind === "") && (r.target_action !== "" || r.target_fields.length === 0));
   return r;
 };
 const subject = closed<AccessSubject>({ user_id: identifier, login });

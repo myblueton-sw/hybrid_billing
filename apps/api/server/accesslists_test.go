@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"github.com/myblueton-sw/hybrid_billing/modules/accesschange"
 	"net/url"
 	"strings"
 	"testing"
@@ -151,11 +152,40 @@ func TestAccessRevocationsReadEqualsTheWholeReadsRevocations(t *testing.T) {
 			previous = at
 		}
 	}
+	for _, raw := range all.body["rows"].([]any) {
+		row := raw.(map[string]any)
+		if row["target_subject"] != SampleMember || row["target_subject_login"] != MemberLogin || row["target_action"] != "view" || row["target_resource_kind"] != ReaderKind ||
+			fmt.Sprint(row["target_fields"]) != "["+ReaderField+"]" || row["target_kind"] != "grant" || row["target_present"] != true {
+			t.Errorf("%v: the target's facts: %v", row["id"], row)
+		}
+	}
+	f.manyPermissions()
+	if got := f.run(root, "access.revoke_delegation", "qd-02", nil); got.status != 202 && got.status != 200 {
+		t.Fatalf("revoke a delegation %s", got.raw)
+	}
+	newest := f.readAs(root, revocationsPath+"?limit=1").body["rows"].([]any)[0].(map[string]any)
+	if newest["target_kind"] != "delegation" || newest["target"] != "qd-02" || newest["target_subject"] != SampleAdmin2 || newest["target_subject_login"] != Admin2Login ||
+		newest["target_action"] != "view" || newest["target_resource_kind"] != ReaderKind || fmt.Sprint(newest["target_fields"]) != "["+ReaderField+"]" {
+		t.Errorf("a revoked delegation's facts name its delegate: %v", newest)
+	}
+	for _, raw := range f.accessRead(root, "").body["revocations"].([]any) {
+		if row := raw.(map[string]any); row["id"] == newest["id"] && fmt.Sprint(row) != fmt.Sprint(newest) {
+			t.Error("the whole read's row for the delegation differs")
+		}
+	}
+	for _, kind := range []string{accesschange.TargetGrant, accesschange.TargetDelegation} {
+		gone := f.s.revocationRow(accesschange.RevocationView{ID: "revocation-gone", Target: accesschange.Target{Kind: kind, ID: "no-longer-here"}, History: []accesschange.Transition{{State: "received"}}})
+		if gone.TargetSubject != "" || gone.TargetLogin != "" || gone.TargetAction != "" || gone.TargetResource != "" || gone.TargetFields == nil || len(gone.TargetFields) != 0 {
+			t.Errorf("a %s that is no longer present: %+v", kind, gone)
+		}
+	}
+	got = listIDs(f.readAs(root, revocationsPath+"?limit=50"))
 	if walked := walkList(t, f, root, revocationsPath, ""); strings.Join(walked, " ") != strings.Join(got, " ") {
 		t.Errorf("one at a time: %v want %v", walked, got)
 	}
-	target := fmt.Sprint(seen[got[0]]["target"])
-	if found := f.readAs(root, revocationsPath+"?limit=50&q="+target); len(listIDs(found)) != 1 || listIDs(found)[0] != got[0] {
+	oldest := got[len(got)-1]
+	target := fmt.Sprint(seen[oldest]["target"])
+	if found := f.readAs(root, revocationsPath+"?limit=50&q="+target); len(listIDs(found)) != 1 || listIDs(found)[0] != oldest {
 		t.Errorf("search by target %q: %v", target, listIDs(found))
 	}
 }

@@ -517,6 +517,8 @@ Bounded reads (HYB-304 increment C2, server only; the screen does not use them y
 | Result table | Allowed or not allowed | `decisions[].allowed` (`access.go:90`) | `admin.ts:914` | `access/Live.tsx:334` |
 | Result table | Why | `decisions[].reason`, `delegations[]` (`access.go:91-92`) via `reasonText` (`access/live-model.ts:66-83`) | `admin.ts:914` | `access/Live.tsx:335` |
 
+**Revocation rows, target facts (HYB-304 T1, additive, on `GET /identity/access` `revocations[]` and `GET /identity/access/revocations` rows):** `target_subject` (a grant's holder, a delegation's delegate), `target_subject_login`, `target_action`, `target_resource_kind`, `target_fields`; empty when the target is not present. Not displayed yet; the revocations section will use them in T4.
+
 **Parsed but not displayed on M03:** `you`, grant and delegation `version`, `scope.legal_entity`/`contract`/`period`, request `grant` (used only to match), `result`, revocation `history`, `target_present`, `job_reason`, `requested_by`, `approved_by`, `deny_at`, `verified`, `completed_at`, ledger `replace_reason`, `replaced_file`; preview `revision`, `subject`, `kind`, `customer`.
 
 ## M04 Service accounts

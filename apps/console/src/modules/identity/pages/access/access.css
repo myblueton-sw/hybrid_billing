@@ -255,3 +255,44 @@
     inline-size: auto;
   }
 }
+.remaining-security .access-requests table {
+  inline-size: 100%;
+  min-inline-size: 0;
+  table-layout: fixed;
+}
+.remaining-security .access-requests td,
+.remaining-security .access-requests th {
+  padding-inline: 8px;
+  overflow-wrap: break-word;
+}
+.remaining-security .access-requests .live-mono {
+  overflow-wrap: anywhere;
+}
+.req-col-a { inline-size: 30%; }
+.req-col-b { inline-size: 30%; }
+.req-col-c { inline-size: 25%; }
+.req-col-d { inline-size: 15%; }
+.access-requests:not(.access-requests-acting) .req-col-a { inline-size: 35%; }
+.access-requests:not(.access-requests-acting) .req-col-b { inline-size: 35%; }
+.access-requests:not(.access-requests-acting) .req-col-c { inline-size: 30%; }
+.access-request-section {
+  container-type: inline-size;
+}
+.remaining-security .access-requests .access-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.remaining-security .access-reference {
+  margin: 0;
+}
+@container (max-width: 960px) {
+  .req-col-a { inline-size: 28%; }
+  .req-col-b { inline-size: 28%; }
+  .req-col-c { inline-size: 26%; }
+  .req-col-d { inline-size: 18%; }
+  .remaining-security .access-requests .access-actions {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

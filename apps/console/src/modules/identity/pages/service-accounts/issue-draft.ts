@@ -26,6 +26,19 @@ export function admitsIssueDraft(draft: IssueDraft, limits: ServiceLimits) {
   );
 }
 
+export function admitsRotateDraft(draft: IssueDraft & { overlap: string }, limits: ServiceLimits) {
+  return (
+    /^[A-Za-z0-9._:-]{1,128}$/.test(draft.target) &&
+    draft.days.length <= 3 &&
+    draft.overlap.length <= 6 &&
+    admitsCommand(
+      { command: "service.rotate_credential", target: draft.target, reason: draft.reason, fields: { days: draft.days, overlap_minutes: draft.overlap }, revision: "r".repeat(128), replay: 1 },
+      limits,
+      { request: "r".repeat(128), key: "k".repeat(128) },
+    )
+  );
+}
+
 export function issueDrafts(current: () => boolean) {
   let value: IssueDraft | undefined,
     disposed = false,

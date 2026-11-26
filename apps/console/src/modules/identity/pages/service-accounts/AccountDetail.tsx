@@ -9,8 +9,7 @@ import {
   PageInfo,
   ReadBoundary,
   bdi,
-  usePanelHeading,
-} from "./query-ui";
+  usePanelHeading, Moment } from "./query-ui";
 import { qcopy as t } from "./query-copy";
 import { v } from "./live-copy";
 import { ScopeDefinition } from "./DeclarationForm";
@@ -102,7 +101,7 @@ export function DeclarationHistory({
                   [t(l, "purpose"), row.purpose],
                   [t(l, "organization"), bdi(row.organization)],
                   [t(l, "catalog"), bdi(row.catalog_version)],
-                  [t(l, "recordedAt"), bdi(row.recorded_at)],
+                  [t(l, "recordedAt"), row.recorded_at ? <Moment l={l} iso={row.recorded_at} /> : bdi(row.recorded_at)],
                   [
                     t(l, "scopes"),
                     row.scopes.map((s) => (
@@ -168,7 +167,7 @@ export function AccountDetailView({
           [t(l, "state"), filterValue(l, row.state)],
           [t(l, "owner"), bdi(row.owner_login || row.owner)],
           [v.creator(l), bdi(row.creator_login || row.creator)],
-          [t(l, "observed"), bdi(detail.observed_at)],
+          [t(l, "observed"), <Moment l={l} iso={detail.observed_at} />],
         ]}
       />
       <h3>{t(l, "declaration")}</h3>

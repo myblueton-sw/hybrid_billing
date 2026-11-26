@@ -24,6 +24,7 @@ test("M02 changes: the service's own answers are accepted as it sends them", asy
     "/api/v1/identity/policy/changes/" + trustWire.detail.change.id]);
   assert.deepEqual([first.rows.length, first.next, first.count], [3, "cursor-1", { value: "7", certainty: "exact" }]);
   assert.deepEqual(first.rows.map((r) => r.state), ["independently_approved", "validated", "draft"]);
+  assert.deepEqual([first.rows[0].old_epoch, first.rows[0].old_policy], [{ value: "2", generation: 0, number: 2 }, 2]);
   assert.deepEqual([first.rows[0].can, first.rows[0].why_not, first.rows[0].decide_in_detail, first.rows[0].evidence_current],
     [{ revise: true, validate: true, reject: false, cancel: true }, { approve: "self", activate: "self" }, true, "not_evaluated"]);
   assert.ok(open.rows.length > 0 && open.rows.every((r) => ["draft", "validated", "independently_approved", "activation_unknown"].includes(r.state)));
@@ -63,6 +64,7 @@ test("M02 changes: a page that is not what was asked for is refused", async () =
 
 test("M02 changes: a malformed page or row is refused", () => {
   assert.doesNotThrow(() => trustChangePageOf(whole()));
+  assert.doesNotThrow(() => trustChangePageOf({ ...whole(), rows: whole().rows.map((r, i) => (i ? r : { ...r, old_epoch: { value: "4294967298", generation: 1, number: 2 } })) }));
   const page = (change: (p: Loose) => void) => { const p = whole(); change(p); return p; };
   const row = (change: (r: Record<string, unknown>) => void, at = 0) => page((p) => change(p.rows[at]));
   const bad: [string, unknown][] = [
@@ -90,6 +92,11 @@ test("M02 changes: a malformed page or row is refused", () => {
     ["no sign-in method", row((r) => { (r.candidate as Record<string, unknown>).methods = []; })],
     ["a malformed time", row((r) => { r.act_until = "soon"; })],
     ["a number as text", row((r) => { r.number = "7"; })],
+    ["a row without what it is based on", row((r) => { delete r.old_epoch; })],
+    ["an epoch whose parts do not make its value", row((r) => { (r.old_epoch as Record<string, unknown>).number = 9; })],
+    ["a policy number as text", row((r) => { r.old_policy = "1"; })],
+    ["an epoch of another generation than its value", row((r) => { r.old_epoch = { value: "4294967298", generation: 2, number: 2 }; })],
+    ["an epoch number that belongs to the generation", row((r) => { r.old_epoch = { value: "4294967296", generation: 0, number: 4294967296 }; })],
     ["an echoed limit of zero", page((p) => { p.query.limit = 0; p.rows = []; p.count.value = "0"; })],
     ["an echoed limit above a hundred", page((p) => { p.query.limit = 101; })],
     ["a continuation longer than a cursor", page((p) => { p.next = "c".repeat(4097); p.query.limit = 3; })],

@@ -55,7 +55,7 @@ func listedOf(t *testing.T, whole map[string]any) map[string]any {
 	t.Helper()
 	state := fmt.Sprint(whole["state"])
 	want := map[string]any{"validation_result": "", "evidence_current": evidenceNotApplicable, "invalidation_state": "", "decide_in_detail": trustchange.Open(state)}
-	for _, name := range []string{"id", "number", "state", "change_revision", "candidate", "proposer", "validator", "approver", "activator", "superseded_by", "earlier_run", "run_started_at", "act_until"} {
+	for _, name := range []string{"id", "number", "state", "change_revision", "old_epoch", "old_policy", "candidate", "proposer", "validator", "approver", "activator", "superseded_by", "earlier_run", "run_started_at", "act_until"} {
 		want[name] = whole[name]
 	}
 	if v, ok := whole["validation"].(map[string]any); ok {

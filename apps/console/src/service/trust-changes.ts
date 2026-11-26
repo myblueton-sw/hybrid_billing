@@ -1,4 +1,4 @@
-import { trustChangeOf, type RevisionRow, type TrustChange, type TrustState } from "./admin";
+import { trustChangeOf, type EpochRow, type RevisionRow, type TrustChange, type TrustState } from "./admin";
 import { array, boolean, choice, integer, record, text, type Parser } from "./strict-read";
 import { closed, decimal, identifier, requireRead, timestamp } from "./service-query-read";
 
@@ -7,7 +7,7 @@ export const trustGroups = { open: ["draft", "validated", "independently_approve
 export type TrustFilter = "open" | "closed" | TrustState;
 export type TrustReason = "" | "trust_unavailable" | "no_right" | "self" | "approver" | "not_validated" | "needs_approval";
 export type ListedTrustChange = {
-  id: string; number: number; state: TrustState; change_revision: number; candidate: RevisionRow; proposer: string; validator: string; approver: string; activator: string;
+  id: string; number: number; state: TrustState; change_revision: number; old_epoch: EpochRow; old_policy: number; candidate: RevisionRow; proposer: string; validator: string; approver: string; activator: string;
   superseded_by: string; earlier_run: boolean; run_started_at: string; validation_result: "" | "validated" | "blocked"; evidence_current: "not_evaluated" | "not_applicable";
   invalidation_state: "" | "complete" | "in_progress"; decide_in_detail: boolean; can: { revise: boolean; validate: boolean; reject: boolean; cancel: boolean };
   why_not: { approve: TrustReason; activate: TrustReason }; act_until: string;
@@ -31,8 +31,13 @@ const candidate = closed<RevisionRow>({
   methods: (v) => { requireRead(Array.isArray(v) && v.length >= 1 && v.length <= 8); return array(identifier)(v); }, mfa: identifier, max_age_seconds: seconds,
   step_up: (v) => { requireRead(Array.isArray(v) && v.length <= 100); return array(closed<RevisionRow["step_up"][number]>({ action: identifier, max_age_seconds: seconds, mfa: boolean }))(v); },
 });
+const epoch: Parser<EpochRow> = (v) => {
+  const e = closed<EpochRow>({ value: decimal, generation: natural, number: natural })(v);
+  requireRead(BigInt(e.value) === BigInt(e.generation) * 4294967296n + BigInt(e.number) && e.number < 4294967296);
+  return e;
+};
 const row = closed<ListedTrustChange>({
-  id: identifier, number: natural, state: choice(...trustStates), change_revision: natural, candidate, proposer: emptyOr(identifier), validator: emptyOr(identifier),
+  id: identifier, number: natural, state: choice(...trustStates), change_revision: natural, old_epoch: epoch, old_policy: natural, candidate, proposer: emptyOr(identifier), validator: emptyOr(identifier),
   approver: emptyOr(identifier), activator: emptyOr(identifier), superseded_by: emptyOr(identifier), earlier_run: boolean, run_started_at: emptyOr(timestamp),
   validation_result: choice("", "validated", "blocked"), evidence_current: choice("not_evaluated", "not_applicable"), invalidation_state: choice("", "complete", "in_progress"),
   decide_in_detail: boolean, can: closed<ListedTrustChange["can"]>({ revise: boolean, validate: boolean, reject: boolean, cancel: boolean }),

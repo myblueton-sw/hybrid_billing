@@ -96,10 +96,17 @@ func (f accessFacts) ceilingFor(c accesschange.Change) (gate.GrantView, bool) {
 	return found, found.ID != ""
 }
 
+func sameCustomer(stored gate.Selector, requested string) bool {
+	if requested == "all" {
+		return stored.Any()
+	}
+	return !stored.Any() && stored.ID() == requested
+}
+
 func (f accessFacts) equivalent(c accesschange.Change) string {
 	for _, g := range f.grants {
 		if g.SubjectID == c.Subject && !g.Closed && f.now.Before(g.Validity.NotAfter) && string(g.Terms.Action) == c.Action && g.Terms.Kind == c.ResourceKind &&
-			strings.Join(g.Terms.Fields, ",") == strings.Join(c.Fields, ",") && selectorText(g.Terms.Scope.Customer) == c.Customer {
+			strings.Join(g.Terms.Fields, ",") == strings.Join(c.Fields, ",") && sameCustomer(g.Terms.Scope.Customer, c.Customer) {
 			return g.ID
 		}
 	}

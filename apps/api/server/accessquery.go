@@ -28,23 +28,46 @@ const (
 
 var permissionStates = []string{"active", "pending", "expired", "revoked", stateUnconfirmed, "ended"}
 
+type permissionSelector struct {
+	Any bool   `json:"any"`
+	ID  string `json:"id"`
+}
+
+type permissionScope struct {
+	Customer    permissionSelector `json:"customer"`
+	LegalEntity permissionSelector `json:"legal_entity"`
+	Contract    permissionSelector `json:"contract"`
+	Period      string             `json:"period"`
+}
+
+func permissionSelectorOf(s gate.Selector) permissionSelector {
+	if s.Any() {
+		return permissionSelector{Any: true}
+	}
+	return permissionSelector{ID: s.ID()}
+}
+
+func permissionScopeOf(t gate.Terms) permissionScope {
+	return permissionScope{Customer: permissionSelectorOf(t.Scope.Customer), LegalEntity: permissionSelectorOf(t.Scope.LegalEntity), Contract: permissionSelectorOf(t.Scope.Contract), Period: scopeOf(t).Period}
+}
+
 type permissionRow struct {
-	Source     string   `json:"source"`
-	ID         string   `json:"id"`
-	Subject    string   `json:"subject"`
-	Client     string   `json:"client"`
-	Delegator  string   `json:"delegator"`
-	Parent     string   `json:"parent"`
-	Redelegate bool     `json:"redelegate"`
-	Action     string   `json:"action"`
-	Kind       string   `json:"kind"`
-	Fields     []string `json:"fields"`
-	Scope      scopeRow `json:"scope"`
-	NotBefore  string   `json:"not_before"`
-	NotAfter   string   `json:"not_after"`
-	State      string   `json:"state"`
-	Effective  bool     `json:"effective"`
-	Version    uint64   `json:"version"`
+	Source     string          `json:"source"`
+	ID         string          `json:"id"`
+	Subject    string          `json:"subject"`
+	Client     string          `json:"client"`
+	Delegator  string          `json:"delegator"`
+	Parent     string          `json:"parent"`
+	Redelegate bool            `json:"redelegate"`
+	Action     string          `json:"action"`
+	Kind       string          `json:"kind"`
+	Fields     []string        `json:"fields"`
+	Scope      permissionScope `json:"scope"`
+	NotBefore  string          `json:"not_before"`
+	NotAfter   string          `json:"not_after"`
+	State      string          `json:"state"`
+	Effective  bool            `json:"effective"`
+	Version    uint64          `json:"version"`
 }
 
 type permissionQuery struct {
@@ -173,8 +196,8 @@ func (q permissionQuery) digest() string {
 	return hex.EncodeToString(sum[:])
 }
 
-func selectorApplies(stored, wanted string) bool {
-	return wanted == "" || stored == wanted || stored == "all"
+func selectorApplies(stored permissionSelector, wanted string) bool {
+	return wanted == "" || stored.Any || stored.ID == wanted
 }
 
 func (q permissionQuery) matches(row permissionRow, notAfter time.Time) bool {
@@ -203,7 +226,7 @@ func (s *Server) accessBasis() (string, bool) {
 
 func grantPermission(g gate.GrantView, at time.Time, unconfirmed map[string]bool) permissionRow {
 	return permissionRow{Source: sourceGrant, ID: g.ID, Subject: g.SubjectID, Client: g.ClientID, Action: string(g.Terms.Action), Kind: g.Terms.Kind,
-		Fields: append([]string{}, g.Terms.Fields...), Scope: scopeOf(g.Terms), NotBefore: stamp(g.Validity.NotBefore), NotAfter: stamp(g.Validity.NotAfter),
+		Fields: append([]string{}, g.Terms.Fields...), Scope: permissionScopeOf(g.Terms), NotBefore: stamp(g.Validity.NotBefore), NotAfter: stamp(g.Validity.NotAfter),
 		State: closedState(stateOf(g.Closed, g.Validity, at), unconfirmed[accesschange.TargetGrant+"/"+g.ID]), Effective: g.Effective, Version: g.Version}
 }
 
@@ -213,7 +236,7 @@ func delegationPermission(d gate.DelegationView, at time.Time, unconfirmed map[s
 		state = "ended"
 	}
 	return permissionRow{Source: sourceDelegation, ID: d.ID, Subject: d.DelegateID, Delegator: d.DelegatorID, Parent: d.ParentID, Redelegate: d.AllowRedelegation,
-		Action: string(d.Terms.Action), Kind: d.Terms.Kind, Fields: append([]string{}, d.Terms.Fields...), Scope: scopeOf(d.Terms),
+		Action: string(d.Terms.Action), Kind: d.Terms.Kind, Fields: append([]string{}, d.Terms.Fields...), Scope: permissionScopeOf(d.Terms),
 		NotBefore: stamp(d.Validity.NotBefore), NotAfter: stamp(d.Validity.NotAfter), State: state, Effective: d.Effective, Version: d.Version}
 }
 
@@ -386,10 +409,11 @@ func (s *Server) readPermission(source string) http.HandlerFunc {
 func permissionReadPaths() map[string]any {
 	str := map[string]any{"type": "string"}
 	boolean := map[string]any{"type": "boolean"}
+	selector := map[string]any{"type": "object", "properties": map[string]any{"any": boolean, "id": str}}
 	row := map[string]any{"type": "object", "properties": map[string]any{
 		"source": map[string]any{"type": "string", "enum": []string{sourceGrant, sourceDelegation}}, "id": str, "subject": map[string]any{"type": "string", "x-meaning": "the holder: a grant's subject or a delegation's delegate; empty for a client grant"},
 		"client": str, "delegator": str, "parent": map[string]any{"type": "string", "x-meaning": "the delegation this one was redelegated from, if any"}, "redelegate": boolean, "action": str, "kind": str,
-		"fields": map[string]any{"type": "array", "items": str}, "scope": map[string]any{"type": "object"}, "not_before": str, "not_after": str,
+		"fields": map[string]any{"type": "array", "items": str}, "scope": map[string]any{"type": "object", "properties": map[string]any{"customer": selector, "legal_entity": selector, "contract": selector, "period": str}}, "not_before": str, "not_after": str,
 		"state": map[string]any{"type": "string", "enum": permissionStates, "x-meaning": "evaluated at reference_at in the list and at observed_at in a detail read"}, "effective": boolean, "version": map[string]any{"type": "integer"}}}
 	filters := []string{"q", "subject", "action", "customer", "legal_entity", "source", "state", "expires_before", "limit", "after"}
 	return map[string]any{
@@ -399,7 +423,8 @@ func permissionReadPaths() map[string]any {
 			"x-cursor":    "bound to the list, the filters, the caller's session, the reference time and the source basis; 409 revision_conflict when it no longer fits",
 			"x-count":     "exact on the last page, a lower bound before it",
 			"x-never":     "grants for installation actions are not listed",
-			"x-filter-id": "customer and legal_entity list every permission that applies to the named one: those scoped to it and those that cover every one; the value all lists only those that cover every one"}},
+			"x-filter-id": "customer and legal_entity list every permission that applies to the named one: those scoped to it and those that cover every one",
+			"x-scope":     "each selector is either any: true or an identifier; an identifier is never read as covering every one, whatever its text"}},
 		"/identity/access/permissions/grant/{id}":      map[string]any{"get": map[string]any{"operationId": "identity.access.grant", "x-row": row, "responses": serviceReadResponses(map[string]any{"type": "object", "properties": map[string]any{"row": row}}, false), "x-unknown": "an unknown identifier, a grant for an installation action and a delegation's identifier answer alike"}},
 		"/identity/access/permissions/delegation/{id}": map[string]any{"get": map[string]any{"operationId": "identity.access.delegation", "x-row": row, "responses": serviceReadResponses(map[string]any{"type": "object", "properties": map[string]any{"row": row}}, false), "x-unknown": "an unknown identifier and a grant's identifier answer alike"}},
 	}

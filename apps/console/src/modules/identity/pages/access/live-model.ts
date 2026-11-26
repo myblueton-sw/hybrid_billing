@@ -1,9 +1,7 @@
 import type { Locale } from "../../../../shared/types";
-import type { AccessDelegation, AccessGrant, AccessPage, Ceiling, Preview } from "../../../../service/admin";
+import type { AccessPage, Ceiling, Preview } from "../../../../service/admin";
 import { when } from "../authentication/live-model";
 import { a, accessPhrase, actionLabel, fieldLabel, kindLabel } from "./live-copy";
-
-const rank = (g: AccessGrant) => (g.state === "active" && g.effective ? 0 : g.state === "pending" ? 1 : 2);
 
 const closedStates: string[] = ["revoked", "expired", "ended"];
 

@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { renderToStaticMarkup } from "react-dom/server";
 import React from "react";
-import { ledgerOf, type AccessPage } from "../../../../service/admin";
+import { ledgerOf } from "../../../../service/admin";
 import type { ListedRevocation } from "../../../../service/access-lists";
 import { LedgerLine, RevocationRecords } from "./Revocations";
 import { SettingsDisclosure } from "./Settings";
@@ -15,11 +15,9 @@ const rev = (change: Partial<Revocation>): Revocation => ({
   cleanup: [{ item: "C1", state: "done", reason: "deny_generation", refs: [] }, { item: "C5", state: "outside_scope", reason: "cannot_recall", refs: [] }], completed_at: "",
   target_version: 1, target_subject: "sample-member", target_subject_login: "member@example.invalid", target_action: "view", target_resource_kind: "focus_data", target_fields: ["rows"], ...change,
 });
-const page = (revocations: Revocation[], ledger = ledgerOf({ state: "ok", records: 2, watermark: "2:abcdef" })): AccessPage => ({
-  revision: "r1", grants: [], delegations: [], catalog: [], subjects: [], now: "2026-11-18T09:00:00Z", you: "me", started_at: "2026-11-18T08:00:00Z",
-  settings: [{ name: "access_request_hours", value: 24, unit: "hours", default: 168, min: 1, max: 720, source: "start_flag" }], requests: [], revocations, ledger,
-});
-const html = (p: AccessPage) => renderToStaticMarkup(<><LedgerLine l="en" ledger={p.ledger} /><RevocationRecords l="en" rows={p.revocations as Revocation[]} /></>);
+const settings = [{ name: "access_request_hours", value: 24, unit: "hours", default: 168, min: 1, max: 720, source: "start_flag" }];
+const page = (revocations: Revocation[], ledger = ledgerOf({ state: "ok", records: 2, watermark: "2:abcdef" })) => ({ revocations, ledger, settings });
+const html = (p: ReturnType<typeof page>) => renderToStaticMarkup(<><LedgerLine l="en" ledger={p.ledger} /><RevocationRecords l="en" rows={p.revocations} /></>);
 
 test("each revocation state renders its copy and job state", () => {
   const cases: [Revocation["state"], Revocation["job_state"], RegExp][] = [

@@ -61,8 +61,8 @@ try {
  const human=await command(root,'financial_request_permission.propose_human','ui-human',{...times,recipient,ceiling});
  const granted=await command(second,'financial_request_permission.approve','ui-human',{digest:human.fields.digest});
  const grant=granted.fields.grant;assert.ok(grant);
- const live=await root.evaluate(async()=>{const {serviceClient}=await import('/src/service/api.ts');const {adminClient}=await import('/src/service/admin.ts');return adminClient((await serviceClient().current()).csrf).access();});
- const actual=live.grants.filter(g=>g.id===grant);assert.equal(actual.length,1);assert.equal(actual[0].action,'request_approval');assert.equal(actual[0].state,'active');assert.equal(actual[0].effective,true);
+ const live=await root.evaluate(async(id)=>{const {serviceClient}=await import('/src/service/api.ts');const {adminClient}=await import('/src/service/admin.ts');return adminClient((await serviceClient().current()).csrf).accessPermission('grant',id);},grant);
+ const actual=[live.row];assert.equal(actual[0].id,grant);assert.equal(actual[0].action,'request_approval');assert.equal(actual[0].state,'active');assert.equal(actual[0].effective,true);
  for(const lang of ['en','ko','ar'])for(const width of [1440,1024,390]){
   await root.setViewportSize({width,height:1000});await root.goto('about:blank');
   await root.goto(`${url}/?service=api&lang=${lang}#/access?lang=${lang}&view=grants`);
@@ -93,9 +93,9 @@ try {
  assert.ok(revoked.job_id);
  const replay=await command(second,'financial_request_permission.approve','ui-human',{digest:human.fields.digest});
  assert.equal(replay.fields.state,'applied');assert.equal(replay.fields.receipt,'historical_decision');
- const access=await root.evaluate(async()=>{const {serviceClient}=await import('/src/service/api.ts');const {adminClient}=await import('/src/service/admin.ts');return adminClient((await serviceClient().current()).csrf).access();});
- const retained=access.grants.filter(g=>g.id===grant);
- assert.equal(retained.length,1);assert.equal(retained[0].state,'revoked');assert.equal(retained[0].effective,false);
+ const access=await root.evaluate(async(id)=>{const {serviceClient}=await import('/src/service/api.ts');const {adminClient}=await import('/src/service/admin.ts');return adminClient((await serviceClient().current()).csrf).accessPermission('grant',id);},grant);
+ const retained=[access.row];
+ assert.equal(retained[0].id,grant);assert.equal(retained[0].state,'revoked');assert.equal(retained[0].effective,false);
  evidence.journey={independentApproval:true,separateRequestCeilingAndHuman:true,m03Revocation:true,historicalReplay:true,financialDecision:false};
  assert.deepEqual(evidence.errors,[]);evidence.outcome='passed';
 }catch(e){evidence.outcome='failed';evidence.failure={kind:e.name};if(root)await root.screenshot({path:out+'/failure.png'});throw new Error('Request permission QA failed: '+e.name);}

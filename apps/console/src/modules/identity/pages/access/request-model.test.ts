@@ -17,7 +17,7 @@ const rev = (change: Partial<Revocation>): Revocation => ({
   receipt: { sequence: 2, watermark: "2:ab", reason: "" }, verified: true, cleanup: [], completed_at: "", ...change,
 });
 const page = (change: Partial<AccessPage>): AccessPage => ({
-  revision: "r1", grants: [], delegations: [], catalog: [], subjects: [], now: "", you: "me", started_at: "", settings: [], requests: [], revocations: [], ledger: ledgerOf({ state: "ok" }),
+  revision: "r1", catalog: [], now: "", you: "me", started_at: "", settings: [], ledger: ledgerOf({ state: "ok" }),
   ...change,
 });
 const grant = { id: "g1", subject: "u", client: "", action: "view", kind: "focus_data", fields: ["rows"], scope: { customer: "all", legal_entity: "all", contract: "all", period: "any" },
@@ -25,7 +25,6 @@ const grant = { id: "g1", subject: "u", client: "", action: "view", kind: "focus
 const deleg = (id: string, parent: string, state: "active" | "revoked" | "ended" = "active") => ({ ...grant, id, delegator: "a", delegate: "d-" + id, parent, redelegate: true, state, effective: state === "active" });
 
 test("requests order and pending revocations", () => {
-  const p = page({ requests: [req({ id: "a" }), req({ id: "b", state: "applied" }), req({ id: "c", change: "revoke", grant: "g1", state: "pending" }), req({ id: "d", change: "revoke", grant: "g2", state: "rejected" })] });
   assert.equal(shortDigest("abcdef0123456789"), "abcdef012345");
   for (const st of ["pending", "applied", "rejected", "withdrawn", "expired", "superseded"] as const) assert.ok(requestState("en", req({ state: st })).length > 0);
   assert.equal(requestState("ko", req({ state: "superseded" })), "최신 아님");

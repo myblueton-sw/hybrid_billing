@@ -7,7 +7,7 @@ import { a } from "./live-copy";
 import { pc } from "./person-copy";
 
 const pageSize = 25;
-type Read = { state: "searching" } | { state: "failed" } | { state: "ready"; page: SubjectPage };
+type Read = { state: "searching" } | { state: "failed"; term: string } | { state: "ready"; term: string; page: SubjectPage };
 
 export function PersonPicker({ l, api, id, self, chosen, error, disabled, flagLine, onChoose }: {
   l: Locale; api: AdminClient; id: string; self: string; chosen: AccessSubject | null; error: string; disabled?: boolean; flagLine: string;
@@ -17,7 +17,7 @@ export function PersonPicker({ l, api, id, self, chosen, error, disabled, flagLi
   const [term, setTerm] = useState("");
   const [tries, setTries] = useState(0);
   const [changing, setChanging] = useState(false);
-  const [read, setRead] = useState<Read>({ state: "searching" });
+  const [answer, setRead] = useState<Read>({ state: "searching" });
   const input = useRef<HTMLInputElement>(null);
   const toggle = useRef<HTMLButtonElement>(null);
   const focus = useRef<"" | "toggle" | "input">("");
@@ -27,8 +27,8 @@ export function PersonPicker({ l, api, id, self, chosen, error, disabled, flagLi
     let active = true;
     setRead({ state: "searching" });
     api.accessSubjects({ limit: pageSize, ...(term ? { q: term } : {}) }).then(
-      (page) => { if (active) setRead({ state: "ready", page }); },
-      () => { if (active) setRead({ state: "failed" }); },
+      (page) => { if (active) setRead({ state: "ready", term, page }); },
+      () => { if (active) setRead({ state: "failed", term }); },
     );
     return () => { active = false; };
   }, [api, term, tries, open]);
@@ -38,6 +38,7 @@ export function PersonPicker({ l, api, id, self, chosen, error, disabled, flagLi
     focus.current = "";
   });
   const run = () => { const next = draft.trim(); if (next === term) setTries((n) => n + 1); else setTerm(next); };
+  const read: Read = answer.state !== "searching" && answer.term !== term ? { state: "searching" } : answer;
   const page = read.state === "ready" ? read.page : null;
   const rows = page ? page.rows.filter((row) => row.user_id !== self) : [];
   const nobody = !!page && term === "" && rows.length === 0 && !page.next;

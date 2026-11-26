@@ -109,12 +109,15 @@ Each increment has its own independent review; C2, C4 and C5 change a public rea
 
 - **Screen transition, 2026-11-26.** What replaces each read of the whole page by the grants view, and the additive facts still needed, are planned in [the screen transition](m03-screen-transition.md): T1 and T2 on the server, T3 to T5 on the screen.
 
+- **C5a, 2026-11-27.** The console stops depending on the five fields before the server drops them: the whole read's type and parser in `service/admin.ts` no longer have them (the parsers and row types of the five are removed from `service/access-read.ts` and `admin.ts`), so an answer with or without them is read the same; `tools/access-approval-qa.mjs` reads the bounded reads for its own assertions. Two defects surfaced by rerunning the rendered checks were corrected here: the person picker showed, for one frame after a new search term, the status of the new term over the previous results (its answer is now tied to the term it was asked for), and the requests check read the ended list's summary before that list had settled (a fault of the check). The independent review found two check scripts at the repository root, `tools/financial-permission-qa.mjs` and `tools/financial-request-permission-qa.mjs`, that read `grants` from the console's whole read and would have failed on this change; root had searched only `apps/console`. They now read the grant's detail, and both were run and pass. The refusals the removed whole-read test asserted for revocation rows were added to the bounded read's test. Verified: console TypeScript clean; tests pass; the approval journey against the built console; the four M03 checks (119, 57, 90, 66); the two root checks. Independent review: one blocking finding, corrected and resolved on a bounded re-review. Not verified: check scripts kept outside this repository.
+
 # Decided by the owner
 
 Asked in the working session on 2026-11-26:
 
 - **One list.** Grants and delegations are shown as one list with a source column and filter, as the specification's columns read.
 - **The `customer` and `legal_entity` filters list everything that applies.** `customer=c1` lists the permissions scoped to that customer and those that cover every customer. The read first matched the stored selector exactly; it was changed before any screen used it. Its rows give each scope selector as either `any: true` or an identifier (HYB-369), so a customer whose identifier is the word "all", which the service catalog allows, is one customer and is filtered as one; the whole read's text form cannot tell the two apart and goes with C5.
+- **The five population fields are removed from `GET /identity/access`.** On 2026-11-27, once the M03 view read none of them, the owner was asked whether to remove `grants`, `delegations`, `subjects`, `requests` and `revocations`, keep them, or mark them deprecated first, and chose removal. C5 builds it: the console first (C5a), then the server.
 
 # Open for the owner
 

@@ -176,7 +176,9 @@ test("the access read and preview", async () => {
   const page = accessFixture;
   const { f, calls } = fake(200, page);
   const got = await adminClient("t", f).access();
-  assert.deepEqual(got, { ...page, ledger: ledgerOf(page.ledger) });
+  const { grants: _g, delegations: _d, subjects: _s, requests: _q, revocations: _r, ...kept } = page;
+  assert.deepEqual(got, { ...kept, ledger: ledgerOf(page.ledger) });
+  for (const gone of ["grants", "delegations", "subjects", "requests", "revocations"]) assert.equal(gone in got, false, gone);
   assert.equal(calls[0].url, "/api/v1/identity/access");
   await assert.rejects(adminClient("t", fake(200, {}).f).access(), (e: AdminError) => e.failure === "invalid");
   const full = await adminClient("t", fake(200, {
@@ -186,10 +188,6 @@ test("the access read and preview", async () => {
     ledger: { state: "isolated", isolation_reason: "missing", records: 3, recovery: { at: "a", truncated_bytes: 5 }, not_durable: true },
   }).f).access();
   assert.equal(full.you, "me");
-  assert.deepEqual(full.requests.map((q) => [q.fields, q.may_end]), [[[], []], [["rows"], ["d1"]]]);
-  assert.deepEqual(full.revocations[0].receipt, { sequence: 0, watermark: "", reason: "" });
-  assert.deepEqual(full.revocations[0].cleanup, []);
-  assert.deepEqual(full.revocations[1].cleanup.map((c) => c.refs), [[], ["d"]]);
   assert.equal(full.ledger.state, "isolated");
   assert.equal(full.ledger.not_durable, true);
   assert.equal(ledgerOf({ state: "ok", not_durable: "yes" }).not_durable, false);

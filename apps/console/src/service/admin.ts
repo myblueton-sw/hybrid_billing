@@ -3,7 +3,7 @@ import { sessionQueryClient } from "./session-query";
 import { serviceQueryClient } from "./service-query";
 import { accessQueryClient } from "./access-query";
 import { accessListClient } from "./access-lists";
-import { grantsOf, delegationsOf, catalogOf, subjectsOf, settingsOf as accessSettingsOf, requestsOf, revocationsOf, previewsOf } from "./access-read";
+import { catalogOf, settingsOf as accessSettingsOf, previewsOf } from "./access-read";
 import { credentialOf, selfPageOf } from "./account-read";
 import { organizationsPageOf, organizationTreeOf } from "./organization-read";
 import { ReadParseError, text as readText } from "./strict-read";
@@ -146,37 +146,6 @@ export type StepRow = { action: string; max_age_seconds: number; mfa: boolean };
 export type RevisionRow = { methods: string[]; mfa: string; max_age_seconds: number; step_up: StepRow[] };
 export type EpochRow = { value: string; generation: number; number: number };
 export type PolicyRow = RevisionRow & { number: number; epoch: EpochRow; proposer: string; validator: string; approver: string; activator: string; at: string };
-export type ScopeRow = { customer: string; legal_entity: string; contract: string; period: string };
-export type AccessGrant = {
-  id: string;
-  subject: string;
-  client: string;
-  action: string;
-  kind: string;
-  fields: string[];
-  scope: ScopeRow;
-  not_before: string;
-  not_after: string;
-  state: "active" | "revoked" | "expired" | "pending" | "revocation_unconfirmed";
-  effective: boolean;
-  version: number;
-};
-export type AccessDelegation = {
-  id: string;
-  delegator: string;
-  delegate: string;
-  parent: string;
-  redelegate: boolean;
-  action: string;
-  kind: string;
-  fields: string[];
-  scope: ScopeRow;
-  not_before: string;
-  not_after: string;
-  state: "active" | "revoked" | "expired" | "pending" | "ended" | "revocation_unconfirmed";
-  effective: boolean;
-  version: number;
-};
 export type AccessSetting = { name: string; value: number; unit: string; default: number; min: number; max: number; source: string };
 export type AccessRequest = {
   id: string;
@@ -250,16 +219,11 @@ export type LedgerStatus = {
 export type Ceiling = { action: string; kind: string; fields: string[]; until: string };
 export type AccessPage = {
   revision: string;
-  grants: AccessGrant[];
-  delegations: AccessDelegation[];
   catalog: Ceiling[];
-  subjects: { user_id: string; login: string }[];
   now: string;
   you: string;
   started_at: string;
   settings: AccessSetting[];
-  requests: AccessRequest[];
-  revocations: Revocation[];
   ledger: LedgerStatus;
 };
 export type Preview = { action: string; field: string; allowed: boolean; reason: string; delegations: string[] };
@@ -1022,10 +986,8 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis), ste
     async access(): Promise<AccessPage> {
       const body = await send("/identity/access", { method: "GET" }, attempt().request);
       return validatedRead(() => ({
-        revision: readText(body.revision), grants: grantsOf(body.grants), delegations: delegationsOf(body.delegations),
-        catalog: catalogOf(body.catalog), subjects: subjectsOf(body.subjects), now: readText(body.now), you: readText(body.you),
-        started_at: readText(body.started_at), settings: accessSettingsOf(body.settings), requests: requestsOf(body.requests),
-        revocations: revocationsOf(body.revocations), ledger: ledgerOf(body.ledger),
+        revision: readText(body.revision), catalog: catalogOf(body.catalog), now: readText(body.now), you: readText(body.you),
+        started_at: readText(body.started_at), settings: accessSettingsOf(body.settings), ledger: ledgerOf(body.ledger),
       }));
     },
     async preview(subject: string, kind: string, customer = ""): Promise<Preview[]> {

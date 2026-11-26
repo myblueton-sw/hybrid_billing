@@ -48,6 +48,7 @@ try {
     await page.goto(`${base}/?service=api&lang=${lang}&qa=${++navigation}#/access?${new URLSearchParams({ lang, view: "grants" })}`);
     await page.locator("#access-requests").waitFor();
     await page.locator(".access-request-section [data-waiting], .access-request-section .access-list-failure").first().waitFor();
+    await page.waitForFunction(() => { const section = document.querySelector(".access-request-section"); const ended = section.querySelector("details.access-ended-requests"); return !section.querySelector("[role=status]") && (!ended || !ended.querySelector("[role=status]")); });
   };
   const section = ".access-request-section";
 

@@ -525,6 +525,8 @@ Bounded reads (HYB-304 increment C2, server only; the screen does not use them y
 
 **Requests section (HYB-304 T3):** read from `GET /identity/access/requests` with `state=pending` (50 a page) and `state=ended` (25 a page) through `accessRequests`; rows use `subject_login`, `proposer_login` and `decided_by_login`. The whole read's `requests` is no longer read by the view.
 
+**Revocations section (HYB-304 T4):** read from `GET /identity/access/revocations` ten a page through `accessRevocations`; a record's heading uses `target_subject_login` (or `target_subject`), `target_action`, `target_fields`, `target_resource_kind` and `target`. The ledger line still comes from the whole read's `ledger`. The whole read's `revocations` is no longer read by the view.
+
 **Parsed but not displayed on M03:** `you`, grant and delegation `version`, `scope.legal_entity`/`contract`/`period`, request `grant` (used only to match), `result`, revocation `history`, `target_present`, `job_reason`, `requested_by`, `approved_by`, `deny_at`, `verified`, `completed_at`, ledger `replace_reason`, `replaced_file`; preview `revision`, `subject`, `kind`, `customer`.
 
 ## M04 Service accounts

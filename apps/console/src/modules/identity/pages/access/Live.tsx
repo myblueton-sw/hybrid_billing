@@ -463,7 +463,7 @@ export default function LiveAccess({ locale: l, view, session, onSignOut, onView
           </section>
           {page && <RequestSection l={l} api={api} generation={listed} startedAt={page.started_at} settings={page.settings} selected={selected}
             notice={noticeAt === "requests" ? notice : ""} onAct={decide} onSignOut={onSignOut} />}
-          {page && <RevocationSection l={l} page={page} />}
+          {page && <RevocationSection l={l} api={api} generation={listed} ledger={page.ledger} onSignOut={onSignOut} />}
           {page && (
             <section aria-labelledby="access-ceiling">
               <h2 id="access-ceiling" className="live-title">{a.ceilingTitle(l)}</h2>

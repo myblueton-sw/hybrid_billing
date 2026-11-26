@@ -1,10 +1,14 @@
 import type { ReactNode } from "react";
 import type { Locale } from "../../../../shared/types";
-import type { AccessPage, LedgerStatus, Revocation } from "../../../../service/admin";
+import type { AdminClient, LedgerStatus } from "../../../../service/admin";
+import type { ListedRevocation } from "../../../../service/access-lists";
 import { when } from "../authentication/live-model";
+import { a, kindLabel } from "./live-copy";
 import { accessText } from "./live-model";
 import { v } from "./request-copy";
-import { withWho } from "./who";
+import { breakable } from "./who";
+import { ListFailure, Paging, Reference, usePagedList } from "./paged";
+import { qcopy } from "../service-accounts/query-copy";
 import { cleanupGroups, failureWords, itemWords, jobWords, ledgerLines, settled, stateWords, type Groups } from "./request-model";
 
 export function LedgerLine({ l, ledger }: { l: Locale; ledger: LedgerStatus }) {
@@ -29,12 +33,17 @@ export function LedgerLine({ l, ledger }: { l: Locale; ledger: LedgerStatus }) {
 
 const mark = "\u0000who\u0000";
 
-function targetText(l: Locale, page: AccessPage, r: Revocation): ReactNode {
-  if (r.target_kind === "delegation") return v.delegationOf(l, r.target);
-  const g = page.grants.find((x) => x.id === r.target);
-  if (!g) return v.grantGone(l, r.target);
-  const who = page.subjects.find((x) => x.user_id === g.subject)?.login || g.subject;
-  return withWho(v.grantOf(l, mark, accessText(l, g.action, g.fields)), mark, who);
+function Target({ l, r }: { l: Locale; r: ListedRevocation }) {
+  if (r.target_action === "") return <h3>{r.target_kind === "delegation" ? v.delegationOf(l, r.target) : v.grantGone(l, r.target)}</h3>;
+  const access = accessText(l, r.target_action, r.target_fields);
+  const text = r.target_kind === "delegation" ? v.delegationTo(l, mark, access) : v.grantOf(l, mark, access);
+  const [before, after] = text.split(mark);
+  return (
+    <>
+      <h3>{before}<bdi dir="ltr">{breakable(r.target_subject_login || r.target_subject)}</bdi>{after}</h3>
+      <p className="live-meta access-target">{kindLabel(l, r.target_resource_kind) ?? r.target_resource_kind} · <bdi dir="ltr" className="live-mono" translate="no">{r.target}</bdi></p>
+    </>
+  );
 }
 
 function Cleanup({ l, groups }: { l: Locale; groups: Groups }) {
@@ -56,12 +65,12 @@ function Cleanup({ l, groups }: { l: Locale; groups: Groups }) {
   );
 }
 
-function Record({ l, page, r }: { l: Locale; page: AccessPage; r: Revocation }) {
+function Record({ l, r }: { l: Locale; r: ListedRevocation }) {
   const words = stateWords(l, r);
   const groups = cleanupGroups(r.cleanup);
   return (
     <li className="access-record" data-revocation={r.id} data-state={r.state} tabIndex={-1}>
-      <h3>{targetText(l, page, r)}</h3>
+      <Target l={l} r={r} />
       <p><span className="live-strong">{words.name}</span> · {jobWords(l, r)}</p>
       <p>{words.copy}</p>
       {r.state === "decision_unconfirmed" && <p className="live-strong">{v.thisProcess(l)}</p>}
@@ -86,17 +95,26 @@ function Record({ l, page, r }: { l: Locale; page: AccessPage; r: Revocation }) 
   );
 }
 
-export function RevocationSection({ l, page }: { l: Locale; page: AccessPage }) {
+export function RevocationRecords({ l, rows }: { l: Locale; rows: ListedRevocation[] }) {
+  return <ol className="access-records">{rows.map((r) => <Record key={r.id} l={l} r={r} />)}</ol>;
+}
+
+export function RevocationSection({ l, api, generation, ledger, onSignOut }: { l: Locale; api: AdminClient; generation: number; ledger: LedgerStatus; onSignOut: () => void }) {
+  const list = usePagedList((after) => api.accessRevocations({ limit: 10, ...(after ? { after } : {}) }), "revocations", generation);
+  const page = list.read.state === "ready" ? list.read.page : null;
   return (
-    <section aria-labelledby="access-revocations">
+    <section aria-labelledby="access-revocations" className="access-revocation-section">
       <div className="live-heading live-section-head">
         <h2 id="access-revocations" tabIndex={-1}>{v.title(l)}</h2>
+        {page && <p className="live-meta" data-revocations={page.count.value}>{page.count.certainty === "exact" ? v.revocationsShown(l, Number(page.count.value)) : v.revocationsAtLeast(l, Number(page.count.value))}</p>}
       </div>
       <p className="live-impact">{v.lead(l)}</p>
-      <LedgerLine l={l} ledger={page.ledger} />
-      {page.revocations.length === 0 ? <p className="live-empty">{v.none(l)}</p> : (
-        <ol className="access-records">{page.revocations.map((r) => <Record key={r.id} l={l} page={page} r={r} />)}</ol>
-      )}
+      <LedgerLine l={l} ledger={ledger} />
+      {list.read.state === "loading" && <p role="status" className="live-meta">{a.loading(l)}</p>}
+      <ListFailure l={l} title={v.revocationsFailed(l)} list={list} onSignOut={onSignOut} />
+      {page && (page.rows.length === 0 ? <p className="live-empty">{page.next ? qcopy(l, "incomplete") : v.none(l)}</p> : <RevocationRecords l={l} rows={page.rows} />)}
+      {page && <Reference l={l} page={page} list={list} />}
+      <Paging l={l} label={v.title(l)} list={list} />
     </section>
   );
 }

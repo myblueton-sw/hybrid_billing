@@ -46,6 +46,10 @@ HYB-304 increment C4, machine:mac_mini. Root wrote this on 2026-11-26 from the c
 
 Then C4c: the screen reads requests, revocations and subjects from the bounded reads.
 
+# Progress
+
+- **R1, 2026-11-26.** `modules/auth/held.go`: indexes by subject, client, installation action, delegator and delegate, filled where `AddGrant` and `AddDelegation` store a record; reads `GrantsOfSubject`, `GrantsOfClient`, `InstallationGrants` and `DelegationsOfUser`, each in identifier order with a limit and a more flag, evaluated at a given time; gate pass-throughs. Nothing calls them yet. Tests: over sixty generated registries with revocations each read equals a filter of the whole page lists, with and without a limit; client and installation-action reads on the installation fixture, including a revoked grant staying listed as closed. Verified: the auth and gate module tests pass and the repository builds; the server package was not rerun, since no server file changed and nothing calls the reads, which the reviewer accepted with a full server run required at R2. Independent review: approve. Not tested: a revoked client grant; a client with no grants.
+
 # Review and risk
 
 `accessFacts` decides who may approve, reject and withdraw. R2 touches that code without meaning to change it, and R3 adds a second source of its facts; each increment has an independent change review with a permission lens, and this design an independent design review. The main risk is a difference between the two sources; the equality test in R3 is the guard, and the commands keep the whole-population source, so a difference could mislead a displayed row but not admit a command.

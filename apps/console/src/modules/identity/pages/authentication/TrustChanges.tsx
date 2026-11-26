@@ -6,6 +6,7 @@ import { w } from "../users/live-copy";
 import { p } from "./live-copy";
 import { duration, effectiveStep, methodsText, stale as pastWindow, stepText, when } from "./live-model";
 import { ty } from "./trust-copy";
+import { tl } from "./trust-list-copy";
 import {
   actions, blocked, canPropose, checkItems, conditions, conditionText, currentVersion, enrolled, epochText, findingReason, firstSentence, nextStep, rightsList, stale,
   stateSentence, unavailable, versionOf, whyNot, type ActionKey, type Condition,
@@ -27,7 +28,7 @@ export function Conditions({ l, page, onOpen }: { l: Locale; page: PolicyPage; o
   const list = conditions(page);
   if (!list.length) return null;
   const at = (c: Condition) => (c.kind === "reset" ? when(l, page.trust.reset_at) : "");
-  const unknown = page.changes.find((c) => c.state === "activation_unknown");
+  const waiting = page.waiting_activation;
   return (
     <section className="m02-conditions" aria-labelledby="m02-notices">
       <h2 id="m02-notices" className="visually-hidden">{ty.notices(l)}</h2>
@@ -39,7 +40,7 @@ export function Conditions({ l, page, onOpen }: { l: Locale; page: PolicyPage; o
             {c.kind === "hold" && page.trust.hold && (
               <p className="m02-note">
                 {ty.since(l, when(l, page.trust.hold.since))}
-                {unknown && <> · <button type="button" className="service-button-link m02-open" onClick={() => onOpen(unknown.id)}>{ty.change(l, unknown.number)}</button></>}
+                {waiting && <> · <button type="button" className="service-button-link m02-open" data-opens={waiting} onClick={() => onOpen(waiting)}>{tl.openWaiting(l)}</button></>}
               </p>
             )}
           </div>
@@ -102,7 +103,7 @@ export function CurrentRules({ l, page, onReload, loading }: { l: Locale; page: 
 }
 
 export function ChangesHead({ l, page, onPropose }: { l: Locale; page: PolicyPage; onPropose: () => void }) {
-  const notKept = page.changes.some((c) => c.earlier_run) || page.trust.origin === "ledger_replay" || page.trust.origin === "carried";
+  const notKept = page.earlier_run_kept || page.trust.origin === "ledger_replay" || page.trust.origin === "carried";
   return (
     <div className="m02-changes-head">
       <div className="m02-toolbar">
@@ -295,14 +296,14 @@ function Outcome({ l, c, onOpen, page }: { l: Locale; c: TrustChange; onOpen: (i
     );
   }
   if (c.state === "superseded") {
-    const by = page.changes.find((x) => x.id === c.superseded_by);
     return (
       <dl className="m02-sum">
         <div>
           <dt>{ty.supersededBy(l)}</dt>
           <dd>
-            {by ? <button type="button" className="service-button-link m02-open" onClick={() => onOpen(by.id)}>{ty.change(l, by.number)}</button> : ltr(c.superseded_by)}
+            {ltr(c.superseded_by)}
             {c.superseded_epoch && <> · {ltr(versionOf(c.superseded_epoch))}</>}
+            {c.superseded_by && <><br /><button type="button" className="service-button-link m02-open" data-opens={c.superseded_by} onClick={() => onOpen(c.superseded_by)}>{tl.openReplacing(l)}</button></>}
           </dd>
         </div>
       </dl>

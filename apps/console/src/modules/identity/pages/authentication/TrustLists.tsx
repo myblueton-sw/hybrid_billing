@@ -16,7 +16,7 @@ import { versionOf } from "./trust-model";
 import { actor, ltr } from "./TrustChanges";
 
 export function ChangeRows({ l, rows, title, selected, reduced, onOpen }: {
-  l: Locale; rows: ListedTrustChange[]; title: string; selected: string; reduced: boolean; onOpen: (id: string) => void;
+  l: Locale; rows: ListedTrustChange[]; title: string; selected: string; reduced: boolean; onOpen: (id: string, number: number) => void;
 }) {
   return (
     <div className="security-table-scroll m02-table-wrap">
@@ -35,7 +35,7 @@ export function ChangeRows({ l, rows, title, selected, reduced, onOpen }: {
             const state = <span className={"m02-state-word" + (strong ? " live-strong" : "")}>{ty.state(l, c.state)}</span>;
             const opener = (
               <>
-                <button type="button" className="m02-open" data-change={c.id} onClick={() => onOpen(c.id)}>{ty.change(l, c.number)}</button>
+                <button type="button" className="m02-open" data-change={c.id} onClick={() => onOpen(c.id, c.number)}>{ty.change(l, c.number)}</button>
                 {selected === c.id && <span className="m02-tag" aria-hidden="true">{ty.selected(l)}</span>}
                 {c.earlier_run && <><br /><span className="m02-sub">{ty.earlierRun(l, when(l, c.run_started_at))}</span></>}
               </>
@@ -63,7 +63,7 @@ export function ChangeRows({ l, rows, title, selected, reduced, onOpen }: {
 }
 
 function Section({ l, group, list, filter, selected, reduced, onOpen, onSignOut }: {
-  l: Locale; group: "open" | "closed"; list: PagedList<TrustChangePage>; filter: ListFilter; selected: string; reduced: boolean; onOpen: (id: string) => void; onSignOut: () => void;
+  l: Locale; group: "open" | "closed"; list: PagedList<TrustChangePage>; filter: ListFilter; selected: string; reduced: boolean; onOpen: (id: string, number: number) => void; onSignOut: () => void;
 }) {
   const open = group === "open";
   const page = list.read.state === "ready" ? list.read.page : null;
@@ -88,7 +88,7 @@ function Section({ l, group, list, filter, selected, reduced, onOpen, onSignOut 
 
 function PagedSection({ l, api, group, state, filter, generation, selected, reduced, onOpen, onSignOut }: {
   l: Locale; api: AdminClient; group: "open" | "closed"; state: TrustFilter; filter: ListFilter; generation: number; selected: string; reduced: boolean;
-  onOpen: (id: string) => void; onSignOut: () => void;
+  onOpen: (id: string, number: number) => void; onSignOut: () => void;
 }) {
   const limit = group === "open" ? openPageSize : closedPageSize;
   const list = usePagedList((after) => api.trustChanges({ state, limit, ...(filter.q ? { q: filter.q } : {}), ...(after ? { after } : {}) }), group + "/" + state + "/" + filter.q, generation);
@@ -123,7 +123,7 @@ function Filters({ l, applied, onApply }: { l: Locale; applied: ListFilter; onAp
 }
 
 export function TrustLists({ l, api, generation, selected, reduced, onOpen, onSignOut }: {
-  l: Locale; api: AdminClient; generation: number; selected: string; reduced: boolean; onOpen: (id: string) => void; onSignOut: () => void;
+  l: Locale; api: AdminClient; generation: number; selected: string; reduced: boolean; onOpen: (id: string, number: number) => void; onSignOut: () => void;
 }) {
   const [filter, setFilter] = useState<ListFilter>(noFilter);
   const [applied, setApplied] = useState(0);

@@ -45,6 +45,9 @@ func (s *Server) Document() ([]byte, error) {
 		reads[path] = entry
 	}
 	reads["/identity/access/subjects"] = subjectsReadPath()
+	for path, entry := range accessListPaths() {
+		reads[path] = entry
+	}
 	doc["x-reads"] = reads
 	doc["x-self"] = selfPaths()
 	return json.MarshalIndent(doc, "", "  ")

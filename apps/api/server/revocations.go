@@ -148,20 +148,24 @@ func (h delegationCommand) Apply(ctx commands.Context) (commands.Outcome, error)
 func (s *Server) revocationRows() []revocationRow {
 	out := []revocationRow{}
 	for _, v := range s.changes.Revocations(s.bootWorkspace) {
-		job, reason := accesschange.JobState(v.State)
-		row := revocationRow{ID: v.ID, Origin: v.Origin, RecordedAt: stamp(v.RecordedAt), TargetKind: v.Target.Kind, Target: v.Target.ID, TargetVersion: v.Target.Version,
-			TargetPresent: v.TargetPresent, Replay: v.Replay, State: v.State, History: []transitionRow{}, EndedDelegs: append([]string{}, v.Ended...),
-			DenyGeneration: v.DenyGeneration, JobState: job, JobReason: reason, RequestedBy: v.RequestedBy, ApprovedBy: v.ApprovedBy, Request: v.Request,
-			DenyAt: stamp(v.DenyAt), Receipt: receiptRow{Sequence: v.Receipt.Sequence, Watermark: v.Receipt.Watermark, Reason: v.Reason},
-			Verified: v.Reason == "" && v.Receipt.Sequence > 0, Cleanup: []itemRow{}, CompletedAt: stampOrEmpty(v.CompletedAt)}
-		for _, h := range v.History {
-			row.History = append(row.History, transitionRow{State: h.State, At: stamp(h.At)})
-		}
-		row.ReceivedAt = row.History[0].At
-		for _, it := range v.Cleanup {
-			row.Cleanup = append(row.Cleanup, itemRow{Item: it.Item, State: it.State, Reason: it.Reason, Refs: append([]string{}, it.Refs...)})
-		}
-		out = append(out, row)
+		out = append(out, revocationRowOf(v))
 	}
 	return out
+}
+
+func revocationRowOf(v accesschange.RevocationView) revocationRow {
+	job, reason := accesschange.JobState(v.State)
+	row := revocationRow{ID: v.ID, Origin: v.Origin, RecordedAt: stamp(v.RecordedAt), TargetKind: v.Target.Kind, Target: v.Target.ID, TargetVersion: v.Target.Version,
+		TargetPresent: v.TargetPresent, Replay: v.Replay, State: v.State, History: []transitionRow{}, EndedDelegs: append([]string{}, v.Ended...),
+		DenyGeneration: v.DenyGeneration, JobState: job, JobReason: reason, RequestedBy: v.RequestedBy, ApprovedBy: v.ApprovedBy, Request: v.Request,
+		DenyAt: stamp(v.DenyAt), Receipt: receiptRow{Sequence: v.Receipt.Sequence, Watermark: v.Receipt.Watermark, Reason: v.Reason},
+		Verified: v.Reason == "" && v.Receipt.Sequence > 0, Cleanup: []itemRow{}, CompletedAt: stampOrEmpty(v.CompletedAt)}
+	for _, h := range v.History {
+		row.History = append(row.History, transitionRow{State: h.State, At: stamp(h.At)})
+	}
+	row.ReceivedAt = row.History[0].At
+	for _, it := range v.Cleanup {
+		row.Cleanup = append(row.Cleanup, itemRow{Item: it.Item, State: it.State, Reason: it.Reason, Refs: append([]string{}, it.Refs...)})
+	}
+	return row
 }

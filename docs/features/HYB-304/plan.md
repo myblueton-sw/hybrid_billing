@@ -50,7 +50,7 @@ B. Implement M04 account/credential/owner queries plus authoritative metadata pr
 
 C. Implement M03 grant/delegation/request/revocation and subject queries; preserve current visibility, authority checks, independent controls and canonical references.
 
-D. Implement M02 policy/trust-change and connection inventory query surfaces against reviewed actual producers. An absent external-adapter capability is explicit and cannot be faked by local policy fields; parent completion remains unproven while applicable filters lack a real source.
+D. (Design: [M02 query design](m02-query-design.md), 2026-11-27; the five areas without a producer are HYB-374.) Implement M02 policy/trust-change and connection inventory query surfaces against reviewed actual producers. An absent external-adapter capability is explicit and cannot be faked by local policy fields; parent completion remains unproven while applicable filters lack a real source.
 
 Each increment includes API/OpenAPI/read parser, models/UI, affected binding register/field map/glossary, fail-first regression cases, independent re-review and rendered QA. Ownership is root-only for writes. Before editing a large existing file, split by responsibility under1500 physical lines. Do not manufacture completion from partial PR merges.
 

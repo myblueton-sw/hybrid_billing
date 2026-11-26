@@ -3,6 +3,7 @@ import { sessionQueryClient } from "./session-query";
 import { serviceQueryClient } from "./service-query";
 import { accessQueryClient } from "./access-query";
 import { accessListClient } from "./access-lists";
+import { trustChangeClient } from "./trust-changes";
 import { catalogOf, settingsOf as accessSettingsOf, previewsOf } from "./access-read";
 import { credentialOf, selfPageOf } from "./account-read";
 import { organizationsPageOf, organizationTreeOf } from "./organization-read";
@@ -521,6 +522,8 @@ export type PolicyPage = {
   rights: TrustRights;
   holders: TrustHolders;
   changes: TrustChange[];
+  waiting_activation: string;
+  earlier_run_kept: boolean;
 };
 
 const str = (v: unknown) => (typeof v === "string" ? v : "");
@@ -611,6 +614,8 @@ export function policyPageOf(body: Record<string, unknown>): PolicyPage {
     holders: { qualifying_people: num(holders.qualifying_people), members: num(holders.members), needed: num(holders.needed) || 3, enrolment: str(holders.enrolment), ready: holders.ready === true,
       missing: Array.isArray(holders.missing) ? holders.missing.map((x) => String(x)) : [] },
     changes: list(body.changes).map(trustChangeOf),
+    waiting_activation: str(body.waiting_activation),
+    earlier_run_kept: body.earlier_run_kept === true,
   };
 }
 
@@ -945,6 +950,7 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis), ste
     ...serviceQueryClient(send, () => attempt().request, validatedRead),
     ...accessQueryClient(send, () => attempt().request, validatedRead),
     ...accessListClient(send, () => attempt().request, validatedRead),
+    ...trustChangeClient(send, () => attempt().request, validatedRead),
     async users(query: UsersQuery = {}): Promise<UsersPage> {
       const body = await send("/identity/users?" + usersQueryString(query), { method: "GET" }, attempt().request);
       const methods = (body.auth_methods ?? {}) as Record<string, unknown>;

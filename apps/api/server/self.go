@@ -96,10 +96,6 @@ func (s *Server) readSelf(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	if found.owner != (sessionOwner{answer.User(), answer.Workspace(), answer.Epoch()}) {
-		failCode(w, commands.Unauthenticated, request)
-		return
-	}
 	now := s.clock()
 	person := s.dir.people[answer.User()]
 	page := selfPage{UserID: answer.User(), Login: found.login, Email: person.email, Workspace: answer.Workspace(), Role: string(answer.Role()),

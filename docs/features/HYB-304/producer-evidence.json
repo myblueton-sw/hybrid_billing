@@ -1,0 +1,437 @@
+{
+  "type": "VerificationEvidence",
+  "ticket": "HYB-304",
+  "machine": "mac_mini",
+  "base_commit": "bdc26c35dbbcf73d49d3e76a8798fd0e8811eae2",
+  "recorded_at": "2026-11-20T08:23:38.302563+00:00",
+  "scope": "Required authoritative service declaration producer and new-issuance/reactivation enforcement; working branch checkpoint, not separately mergeable full M04",
+  "sources": [
+    {
+      "path": "apps/api/cmd/hb-api/main.go",
+      "sha256": "1f8b091ea405d71d710555773194a321972379b8051e1b0e24a62b80a21e26ee",
+      "bytes": 7946
+    },
+    {
+      "path": "apps/api/cmd/hb-api/servicedeclaration_test.go",
+      "sha256": "6452f69523740c0459ed9bc71cbcf3289afbbcc325bda30938a90e4c2b8616d5",
+      "bytes": 1809
+    },
+    {
+      "path": "apps/api/server/server.go",
+      "sha256": "d78f45891bd2a666202ff9bf85b085dc72459a1ca6efa6763e83ec2d8b7949c5",
+      "bytes": 14574
+    },
+    {
+      "path": "apps/api/server/servicedeclaration.go",
+      "sha256": "b4c4ff6ee06c392ffaf48db9ba9e97baa56eccb73c63e8314ce3332db7e1d83d",
+      "bytes": 10286
+    },
+    {
+      "path": "apps/api/server/servicedeclaration_boundary_test.go",
+      "sha256": "70cca7e4d5d024d662293b8929bc565d61f1b39d04ac084c93302fec3775e666",
+      "bytes": 783
+    },
+    {
+      "path": "apps/api/server/servicedeclaration_eligibility_test.go",
+      "sha256": "9e377fafe29d1c5201bcce84924d111d2da72fb8066c30cd050c8b8a3622c062",
+      "bytes": 7067
+    },
+    {
+      "path": "apps/api/server/servicedeclaration_failure_test.go",
+      "sha256": "b1273090d14476b0ce6528d5366c313fe8bf5424acf1f59b69ef549b2999e9f4",
+      "bytes": 3634
+    },
+    {
+      "path": "apps/api/server/servicedeclaration_fixture_test.go",
+      "sha256": "a247ef50a71387d58bc3d91cb6c2eef49704c35272f17df20b778a000540d895",
+      "bytes": 1058
+    },
+    {
+      "path": "apps/api/server/servicedeclaration_parse_test.go",
+      "sha256": "50661a6b3d8541c7a0f9d7b86e50feef19a0c4a5ff7dcca902d4658840c80817",
+      "bytes": 2276
+    },
+    {
+      "path": "apps/api/server/servicedeclaration_replay_test.go",
+      "sha256": "9d6a6965e44fc05942a211f045298fca9a3e96bc7e35d54e42a1f0e5bf981aa5",
+      "bytes": 1877
+    },
+    {
+      "path": "apps/api/server/servicedeclaration_test.go",
+      "sha256": "c891d065295f08a58326fac022f877699cc60f7a3467b2afb88b715affb4c7ac",
+      "bytes": 8268
+    },
+    {
+      "path": "apps/api/server/servicedeclaration_wire_test.go",
+      "sha256": "93145ee7bcdcff038c1b21611f24513197a0c131af87438df7c3cc67a5927ac4",
+      "bytes": 2794
+    },
+    {
+      "path": "apps/api/server/servicedeclarationsettings.go",
+      "sha256": "238f2a20ca2043edec09c766d8d2b8203c710827eb42b1d101b12eff538ad35b",
+      "bytes": 702
+    },
+    {
+      "path": "apps/api/server/services.go",
+      "sha256": "fd1b920db7e4ab759cf5bcad9fce08c7b0c6dee3cec1b29b5ac483d7c24778c6",
+      "bytes": 15116
+    },
+    {
+      "path": "apps/api/server/services_test.go",
+      "sha256": "2594d53c810db578de952f47f6a967400212133f72eeec75a1dfc850d0960700",
+      "bytes": 21931
+    },
+    {
+      "path": "apps/api/server/settings.go",
+      "sha256": "e46dea6a8c411e3a9021fa8b9b9eb41fb3882ceafeecab6e8bd6c6e03f94cb17",
+      "bytes": 11033
+    },
+    {
+      "path": "apps/api/server/trust_hold_test.go",
+      "sha256": "2314a497534fba0c650fbd53a3c768eecb4462bab92a277a46e89cea1887b95b",
+      "bytes": 10293
+    },
+    {
+      "path": "apps/api/server/trusthold.go",
+      "sha256": "a00ed14c37322c0a143fb302b060bedb25b127f260df693947a927c7dbd18e64",
+      "bytes": 9853
+    },
+    {
+      "path": "apps/api/server/users_edges_test.go",
+      "sha256": "b81039a54186ccdfef4ad15aed6b68e45f9c2ccb0bb296e296281a33ed093bde",
+      "bytes": 15481
+    },
+    {
+      "path": "apps/api/server/world_test.go",
+      "sha256": "f4af583baa429cbf942a76a2cbf333ab9e2d4f31ba0dc1b250fecf68133ed38f",
+      "bytes": 5910
+    },
+    {
+      "path": "apps/console/src/service/admin.ts",
+      "sha256": "4abcaee048034d6e90c276d3aa0f092fbd298ccb95146986552b9a71f337fa8f",
+      "bytes": 51642
+    },
+    {
+      "path": "docs/features/HYB-304/m04-declarations.md",
+      "sha256": "6f22a64a0d1e998898e6ddf9d0591cd2468ad8c720cb84abf01955e69c4777f0",
+      "bytes": 34028
+    },
+    {
+      "path": "docs/ops/installation/service-catalog.md",
+      "sha256": "a69c1055693281322d73ce428e0d425848eb804a92a69c6a15a12b12d4c506ba",
+      "bytes": 10534
+    },
+    {
+      "path": "docs/ui/screen-binding-fields/identity.md",
+      "sha256": "403ba9ad5c2654fab0223bc438f8c3a1029643dea0c945abc007432ff1195cbe",
+      "bytes": 96488
+    },
+    {
+      "path": "docs/ui/screen-binding-register.md",
+      "sha256": "1db69d683c0020eadf7bafcdc82de30858dd46156c0107043f5205cd9ebf598e",
+      "bytes": 58325
+    },
+    {
+      "path": "modules/identity/servicequery.go",
+      "sha256": "7a50fe061fc18ac0254b6e93a67f7768ec9887f198ea98d9f55c312904e6846e",
+      "bytes": 3046
+    },
+    {
+      "path": "modules/identity/servicequery_test.go",
+      "sha256": "00fef9f203ac132ab91fa1e3bac9146428eb236341ea59796b14b513274ca62d",
+      "bytes": 10335
+    }
+  ],
+  "artifacts": [
+    {
+      "local_evidence": "hb304-declaration-command-before.log",
+      "sha256": "fadddc8fce1af96b7fe97fef660a7780638f5b57502d28e8f2c1f604ef1373a1",
+      "bytes": 258
+    },
+    {
+      "local_evidence": "hb304-declaration-command-after.log",
+      "sha256": "5a03e9e4227dd0e8f4f8deb218480dbd2d49ddc9eb16027fca4ad474c34bedae",
+      "bytes": 67
+    },
+    {
+      "local_evidence": "hb304-declaration-eligibility.log",
+      "sha256": "3dcaceb6d8ad7bdf3a7574caa01e7b0fb69b13ad2f9bacd9fa27388d5a55bacf",
+      "bytes": 501
+    },
+    {
+      "local_evidence": "hb304-declaration-eligibility-fixed.log",
+      "sha256": "71da84cc8a1b7ced9093cc1380e1937a10e265c1935efbd576e529ff483b4733",
+      "bytes": 135
+    },
+    {
+      "local_evidence": "hb304-declaration-contract.log",
+      "sha256": "cab6ca8325fbbcd0a8f8c5cd7886cd2e69b8793975d411f359cda378afd1c662",
+      "bytes": 138
+    },
+    {
+      "local_evidence": "hb304-declaration-wire.log",
+      "sha256": "5f1ce6f89f9d91211bd756f5fbe2631267c29900a8db0f496de1a926b0ce2821",
+      "bytes": 67
+    },
+    {
+      "local_evidence": "hb304-declaration-failures.log",
+      "sha256": "d1201dc60a58514809af2f6aa94f3bb506664db6cfc35cb2d144adde0b8251f3",
+      "bytes": 2379
+    },
+    {
+      "local_evidence": "hb304-declaration-failures-fixed.log",
+      "sha256": "34f51c9ba0fddddb5fa754710a7244be07cfa2f00d2faa4f4c5133a9dc938abc",
+      "bytes": 67
+    },
+    {
+      "local_evidence": "hb304-declaration-full.log",
+      "sha256": "342ae5893cf6d4e54455804743b7c8af94816df4590c7efa25730e4ff446bef2",
+      "bytes": 71
+    },
+    {
+      "local_evidence": "hb304-declaration-short.log",
+      "sha256": "93090456fddf0f235f1666b90ad4d47159884d637a5e142dd8861899744b4667",
+      "bytes": 5333
+    },
+    {
+      "local_evidence": "hb304-declaration-console.log",
+      "sha256": "c45a9d3ac821280705671afe973fd778911b828baaa40eb8022e0f26f347d0f6",
+      "bytes": 135345
+    },
+    {
+      "local_evidence": "hb304-declaration-vet-all.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "local_evidence": "hb304-declaration-vet-linux-all.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "local_evidence": "hb304-declaration-vet-windows-all.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "local_evidence": "hb304-declaration-restored-race.log",
+      "sha256": "983644233d9fa0561e363c7c81512792ebf6008d4c6bab709fc800a8ba249d5b",
+      "bytes": 207
+    },
+    {
+      "local_evidence": "hb304-declaration-restored-coverage.log",
+      "sha256": "6c906c4e666fe85437b8fb3df2a4e8ce5143ad32120b097799852a32144f8536",
+      "bytes": 97
+    },
+    {
+      "local_evidence": "hb304-declaration-restored.cover",
+      "sha256": "0c6c8c940bb3903209900007271a20f945af567bbf9a284056f14df9e42ea11a",
+      "bytes": 635220
+    },
+    {
+      "local_evidence": "hb304-declaration-docs-format.log",
+      "sha256": "4f0e4ba72b485c09d9c7e4df258758e447e3eb3631233243972314664a5aaa4e",
+      "bytes": 100
+    },
+    {
+      "local_evidence": "hb304-declaration-command-mutations.log",
+      "sha256": "003fafb08c38825b8345d18e2bc750f1a38de887d20e1a302e4033f9ecf0310a",
+      "bytes": 1429
+    },
+    {
+      "mutation_evidence": "baseline.log",
+      "sha256": "fde703d38cf60b504576181aa6105d020dda391ee09cb16ef6cd5355f5fb6189",
+      "bytes": 67
+    },
+    {
+      "mutation_evidence": "contract_current_state.log",
+      "sha256": "39083b498809df868aa2494d78ea7aff0b555273ec82b6067148f74bd2c1fa26",
+      "bytes": 608
+    },
+    {
+      "mutation_evidence": "declaration_version.log",
+      "sha256": "07911c79e3d4b526ba940bcd9e1b88b74811bf5af5c9115143eb35a7875995f2",
+      "bytes": 590
+    },
+    {
+      "mutation_evidence": "history_suffix.log",
+      "sha256": "741bc58163a73426fdfea90b43ece9f392b7dc7f8c418699bb187a14952942dc",
+      "bytes": 221
+    },
+    {
+      "mutation_evidence": "issue_declaration.log",
+      "sha256": "305a474827ae3c17279b4ccf33399c88be5cf843549455c1853eac23b6236e53",
+      "bytes": 658
+    },
+    {
+      "mutation_evidence": "legacy_key_capacity.log",
+      "sha256": "e347795a666e13b651799f2f5e3c20bf6fd56518520cca8f893eeeb8156019a1",
+      "bytes": 592
+    },
+    {
+      "mutation_evidence": "named_reference_eligibility.log",
+      "sha256": "c8dd92e536f200fc1871f1bbf699480b88829f8d328ea9f0778967cccd69c273",
+      "bytes": 1957
+    },
+    {
+      "mutation_evidence": "owner_current.log",
+      "sha256": "62dff920d85d66a67213dfdc7ed8469f4e6aa723bbfbdb5e79894ce5199832d2",
+      "bytes": 2093
+    },
+    {
+      "mutation_evidence": "report.json",
+      "sha256": "4a53613469c9458b669f5e31b61399e74cec69fda1ef925e4e3cb0a435727412",
+      "bytes": 1725
+    },
+    {
+      "mutation_evidence": "restored.log",
+      "sha256": "a6c808660b0a64bdb76c417fd47657e06a36f511d3afb833ad5723956aa851db",
+      "bytes": 67
+    },
+    {
+      "mutation_evidence": "scope_pair_uniqueness.log",
+      "sha256": "5f90b392b3338821baee27c9a4c066b66cd52dec586a6efa74a6adfb5de39e42",
+      "bytes": 299
+    }
+  ],
+  "verification": {
+    "fail_before": "TestServiceCreationRequiresAnAuthoritativeDeclaration: old API accepted missing metadata with HTTP200; corrected refuses without identity/declaration effects",
+    "short_regression": {
+      "command": "go test -short ./...",
+      "status": "PASS",
+      "package_results": 75,
+      "cached": 69,
+      "server_seconds": "170.554",
+      "cli_seconds": "4.855",
+      "identity_seconds": "1.370"
+    },
+    "nonshort_regression": {
+      "command": "go test ./...",
+      "status": "INTERRUPTED",
+      "detail": "Interrupted at approximately6minutes for bounded validation scope; no terminal server or whole-suite PASS"
+    },
+    "restored_race": {
+      "command": "go test -race ./apps/api/server ./apps/api/cmd/hb-api ./modules/identity -run '^(TestService|TestCredential|TestHoldTable)' -count=1",
+      "status": "PASS",
+      "seconds": {
+        "server": "13.069",
+        "cli": "4.985",
+        "identity": "1.443"
+      }
+    },
+    "static": {
+      "commands": [
+        "go vet ./...",
+        "GOOS=linux GOARCH=arm64 go vet ./...",
+        "GOOS=windows GOARCH=arm64 go vet ./..."
+      ],
+      "status": "PASS",
+      "host": "darwin arm64 go1.25.7",
+      "cross_runtime": "UNVERIFIED"
+    },
+    "console": {
+      "commands": [
+        "npm test",
+        "npm run build"
+      ],
+      "status": "PASS",
+      "tests": 965,
+      "limitations": [
+        "Existing large-chunk advisory; CommandId only, no rendered UI change or complete metadata form"
+      ]
+    },
+    "docs": {
+      "command": "python3 -m unittest discover -s tests/docs_format",
+      "status": "PASS",
+      "tests": 2
+    },
+    "coverage": {
+      "command": "go test ./apps/api/server -coverprofile=LOCAL_PROFILE -run '^(TestService|TestCredential|TestHoldTable)' -count=1",
+      "status": "OBSERVED_SCOPED",
+      "declaration_statements_covered": 160,
+      "declaration_statements_total": 169,
+      "detail": "94.7% for declaration source; not full-server coverage or no-regression certification. Defensive-path and full M04 coverage reconciliation pending."
+    },
+    "mutations": {
+      "results": [
+        {
+          "name": "owner_current",
+          "killed": true,
+          "test": "^TestServiceDeclarationEveryIncreaseRequiresCurrentResponsibleOwner$",
+          "returncode": 1
+        },
+        {
+          "name": "named_reference_eligibility",
+          "killed": true,
+          "test": "^TestServiceDeclarationNamedResourcesAreCanonicalAndCurrentlyEligible$",
+          "returncode": 1
+        },
+        {
+          "name": "contract_current_state",
+          "killed": true,
+          "test": "^TestServiceDeclarationContractUsesAcceptanceDateNotFinalScheduledState$",
+          "returncode": 1
+        },
+        {
+          "name": "declaration_version",
+          "killed": true,
+          "test": "^TestServiceDeclarationsCreateUpdateRetainAndIsolateVersions$",
+          "returncode": 1
+        },
+        {
+          "name": "history_suffix",
+          "killed": true,
+          "test": "^TestServiceDeclarationsCreateUpdateRetainAndIsolateVersions$",
+          "returncode": 1
+        },
+        {
+          "name": "scope_pair_uniqueness",
+          "killed": true,
+          "test": "^TestServiceDeclarationScopeParsingPreservesPairsAndRejectsAmbiguity$",
+          "returncode": 1
+        },
+        {
+          "name": "legacy_key_capacity",
+          "killed": true,
+          "test": "^TestServiceDeclarationLegacyCompletionAndCapacity$",
+          "returncode": 1
+        },
+        {
+          "name": "issue_declaration",
+          "killed": true,
+          "test": "^TestServiceDeclarationReplaySurvivesLaterIneligibilityWithoutAnotherEffect$",
+          "returncode": 1
+        }
+      ],
+      "restored_sha256": {
+        "apps/api/server/servicedeclaration.go": "b4c4ff6ee06c392ffaf48db9ba9e97baa56eccb73c63e8314ce3332db7e1d83d",
+        "apps/api/server/services.go": "fd1b920db7e4ab759cf5bcad9fce08c7b0c6dee3cec1b29b5ac483d7c24778c6"
+      },
+      "disposable_cache_removed": true
+    },
+    "fixture_repairs": [
+      "Existing cap test now uses an eligible SampleAdmin owner so it isolates capacity rather than relying on old check ordering",
+      "Role-expiry test sweeps before current-revision command; existing periods regression separately verifies first-command revision_conflict",
+      "Dependency test runWith uses empty object, not null; authoritative postcondition uses explicit current root verifier outside command context"
+    ],
+    "independent_review": {
+      "producer_source": "PASS by /root/hyb310_review",
+      "added_tests": "PASS by /root/hyb310_review",
+      "technical_writing": "PASS by /root/hyb310_copy_render",
+      "limits": "Read-only inspections; no reviewer tests, services, mutations, edits or full-M04 approval. Dependency test proves no new effects from its empty credential/pickup premise."
+    }
+  },
+  "remaining": [
+    "Dedicated bounded service/credential/owner/organization/catalog reads and truthful counts/cursors",
+    "Declaration current/history read-back and scope-safe known-ID resolution",
+    "Console required creation metadata/declaration editor, bounded independent views and HYB-333 recovery bindings",
+    "Complete coverage reconciliation and EN/KO/AR four-width rendered verification",
+    "Final independent re-review, QA, PR, authorized merge/read-back; parent M03/M02 remain open"
+  ],
+  "artifact_layout": {
+    "local_evidence": "Basenames relative to the temporary local verification root",
+    "mutation_evidence": "Basenames in hb304-declaration-command-mutations/ beneath the same temporary local verification root"
+  },
+  "artifact_retention": "Raw synthetic logs/profile/mutation records remain in the temporary local verification directory; only nonsecret digest summaries are Git-bound. Their durable availability is not promised.",
+  "authorization": "Existing user authorization includes continued implementation and Git merge after required checks; no deployment, real-account/customer-data or recipient-network certification."
+}

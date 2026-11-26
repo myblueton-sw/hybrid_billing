@@ -1,15 +1,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { AdminError, type CredentialRow, type ServiceRow, type ServicesPage } from "../../../../service/admin";
-import { attemptState, credentials, credentialState, formVisible, initialService, keepsHold, issueBlock, liveCount, neverCollected, nextPhase, outsideWindow, panelShown, pickupLabel, pinIssue, returnFocus, serviceState, settleFailure, split, takenByMe, validName, wholeDays, canRotate, rotationEnd, utcTime, wholeMinutes } from "./live-model";
+import { AdminError, type CredentialRow } from "../../../../service/admin";
+import { canRotate, rotationEnd, utcTime, wholeMinutes, attemptState, credentialState, formVisible, keepsHold, nextPhase, outsideWindow, panelShown, pickupLabel, pinIssue, returnFocus, serviceState, settleFailure, validName, wholeDays } from "./live-model";
 import { v } from "./live-copy";
 
 const cred = (change: Partial<CredentialRow>): CredentialRow => ({ id: "cred-1", not_before: "2026-11-16T00:00:00Z", not_after: "2026-12-16T00:00:00Z", state: "active", usable: true, ...change });
-const svc = (change: Partial<ServiceRow>): ServiceRow => ({
-  id: "svc-a", state: "active", version: 1, creator: "u1", creator_login: "a@x", owner: "u1", owner_login: "a@x", credentials: [], ...change,
-});
-const page = (services: ServiceRow[]): ServicesPage => ({ revision: "r", services, owners: [], limits: { credential_days: 30, credentials_per_service: 2, services: 200, replay_seconds: 3600, credential_overlap_minutes: 1440, credential_overlap_max_minutes: 10080, secret_pickup_minutes: 10 }, now: "2026-11-16T00:00:00Z" });
-
 test("names mirror the API rule", () => {
   for (const ok of ["abc", "a-b-c", "0x9", "a".repeat(48)]) assert.equal(validName(ok), true, ok);
   for (const bad of ["", "ab", "a".repeat(49), "-ab", "ab-", "a--b", "Abc", "a_b", "a b", "é12"]) assert.equal(validName(bad), false, bad);
@@ -21,38 +16,12 @@ test("days are whole and bounded", () => {
   for (const raw of ["0", "31", "", "01", "1.5", "-1", "1234"]) assert.equal(wholeDays(raw, 30), null, raw);
 });
 
-test("states, groups and limits", () => {
-  const live = svc({ id: "svc-b", credentials: [cred({}), cred({ id: "cred-2", state: "revoked" }), cred({ id: "cred-3", state: "expired" })] });
-  const p = page([svc({ id: "svc-r", state: "retired" }), svc({ id: "svc-s", state: "suspended" }), live]);
-  assert.deepEqual(split(p).current.map((s) => s.id), ["svc-s", "svc-b"]);
-  assert.deepEqual(split(p).retired.map((s) => s.id), ["svc-r"]);
-  assert.equal(liveCount(live), 1);
-  assert.deepEqual(credentials(live).current.map((c) => c.id), ["cred-1"]);
-  assert.deepEqual(credentials(live).ended.map((c) => c.id), ["cred-2", "cred-3"]);
-  assert.equal(issueBlock(svc({ state: "retired" }), 2), "retired");
-  assert.equal(issueBlock(svc({ state: "suspended" }), 2), "suspended");
-  assert.equal(issueBlock(svc({ credentials: [cred({}), cred({ id: "c2" })] }), 2), "limit");
-  assert.equal(issueBlock(live, 2), "");
-  assert.equal(serviceState("en", "retired"), v.stRetired("en"));
-  assert.equal(serviceState("ko", "suspended"), v.stSuspended("ko"));
-  assert.equal(serviceState("ar", "active"), v.stActive("ar"));
-});
-
 test("credential labels follow usable and the account state", () => {
   assert.equal(credentialState("en", cred({}))[0], v.cActive("en"));
   assert.equal(credentialState("en", cred({ usable: false }))[0], v.cOnHold("en"));
   assert.equal(credentialState("en", cred({ usable: false }), true)[0], v.cRevokeRequired("en"));
   assert.equal(credentialState("en", cred({ state: "revoked" }), true)[0], v.cRevoked("en"));
   assert.equal(credentialState("en", cred({ state: "expired" }))[0], v.cExpired("en"));
-});
-
-test("the initial service prefers the wanted one, then an active one", () => {
-  const p = page([svc({ id: "svc-r", state: "retired" }), svc({ id: "svc-s", state: "suspended" }), svc({ id: "svc-a" })]);
-  assert.equal(initialService(p, "svc-r"), "svc-r");
-  assert.equal(initialService(p, "ghost"), "svc-a");
-  assert.equal(initialService(page([svc({ id: "svc-r", state: "retired" }), svc({ id: "svc-s", state: "suspended" })]), ""), "svc-s");
-  assert.equal(initialService(page([svc({ id: "svc-r", state: "retired" })]), ""), "svc-r");
-  assert.equal(initialService(page([]), ""), "");
 });
 
 test("an unknown issue outcome holds the attempt and only a definitive answer releases it", () => {
@@ -214,18 +183,7 @@ test("the pickup sub-line and the never-collected list", () => {
   assert.equal(pickupLabel("en", cred({})), null);
   assert.equal(pickupLabel("en", cred({ state: "revoked", secret_pickup: "never_collected" })), null);
   assert.equal(pickupLabel("en", cred({ secret_pickup: "open" })), null);
-  const p = page([
-    svc({ id: "svc-b", credentials: [cred({ id: "cred-2", secret_pickup: "never_collected" }), cred({ id: "cred-1", secret_pickup: "never_collected" })] }),
-    svc({ id: "svc-a", credentials: [cred({ id: "cred-9", secret_pickup: "never_collected" }), cred({ id: "cred-3", state: "expired", secret_pickup: "never_collected" }), cred({ id: "cred-4", secret_pickup: "open" })] }),
-  ]);
-  assert.deepEqual(neverCollected(p).map((r) => `${r.service}/${r.credential.id}`), ["svc-a/cred-9", "svc-b/cred-1", "svc-b/cred-2"]);
-});
 
-test("a taken name is the person's own only when they created it", () => {
-  const p = page([svc({ id: "svc-mine", creator: "me" }), svc({ id: "svc-other", creator: "you" })]);
-  assert.equal(takenByMe(p, "mine", "me"), true);
-  assert.equal(takenByMe(p, "other", "me"), false);
-  assert.equal(takenByMe(p, "none", "me"), false);
 });
 
 test("the issue form is visible only when all five conditions hold (N7)", () => {
@@ -259,7 +217,7 @@ test("a rotation ends the current credential at the earlier of its present end a
 test("only a live credential of an active account that no rotation has bounded can be rotated", () => {
   const now = "2026-11-16T00:00:00Z";
   const cred = (patch: Partial<CredentialRow> = {}): CredentialRow => ({ id: "cred-1", not_before: "2026-11-01T00:00:00Z", not_after: "2026-12-01T00:00:00Z", state: "active", usable: true, ...patch });
-  const svc = (state: ServiceRow["state"]): ServiceRow => ({ id: "svc-a", state, version: 1, creator: "", creator_login: "", owner: "", owner_login: "", credentials: [] });
+  const svc = (state: "active" | "suspended" | "retired") => state;
   assert.equal(canRotate(svc("active"), cred(), now), true);
   assert.equal(canRotate(svc("active"), cred({ rotation: "replacing", replaces: "cred-0" }), now), true);
   assert.equal(canRotate(svc("active"), cred({ rotation: "ending", replaced_by: "cred-2" }), now), false);

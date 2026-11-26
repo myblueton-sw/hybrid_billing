@@ -89,6 +89,8 @@ export default function RemainingSecurity(props: Props) {
         lang={props.locale}
       >
         <LiveServices
+          params={props.params}
+          onParams={toParams}
           locale={props.locale}
           view={props.view}
           session={service.session}

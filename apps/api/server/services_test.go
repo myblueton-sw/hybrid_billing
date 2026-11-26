@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
-	"net/http"
+	"sort"
 	"strings"
 	"testing"
 	"time"
@@ -17,12 +17,7 @@ import (
 
 func (f world) servicesRead(a actor) reply {
 	f.t.Helper()
-	return f.do("GET", "/api/v1/identity/services", "", func(r *http.Request) {
-		if a.cookie != nil {
-			r.AddCookie(a.cookie)
-		}
-		r.Header.Set(csrfHeader, a.csrf)
-	})
+	return f.legacyServicesFixture(a)
 }
 
 func (f world) service(a actor, id string) map[string]any {
@@ -37,7 +32,7 @@ func (f world) service(a actor, id string) map[string]any {
 
 func (f world) newService(a actor, name string) string {
 	f.t.Helper()
-	got := f.run(a, "service.create", servicesTarget, map[string]string{"name": name, "owner": SampleAdmin})
+	got := f.run(a, "service.create", servicesTarget, f.declaredFields(map[string]string{"name": name, "owner": SampleAdmin}))
 	if got.status != 200 || got.body["business_state"] != "service_created" {
 		f.t.Fatalf("create %s %+v", name, got)
 	}
@@ -87,7 +82,7 @@ func TestServicesReadShape(t *testing.T) {
 		t.Fatalf("empty read %+v", got)
 	}
 	limits := got.body["limits"].(map[string]any)
-	if fmt.Sprint(limits["credential_days"], limits["credentials_per_service"], limits["services"]) != "30 10 200" {
+	if fmt.Sprint(limits["credential_days"]) != "30" || limits["credentials_per_service"] != "10" || fmt.Sprint(limits["services"]) != "200" {
 		t.Errorf("limits %v", limits)
 	}
 	owners := fmt.Sprint(got.body["owners"])
@@ -118,27 +113,27 @@ func TestServiceCreateRules(t *testing.T) {
 	f.setPassword(MemberLogin, pw)
 	root := f.as(AdminLogin)
 	for _, name := range []string{"", "ab", strings.Repeat("a", 49), "-ab", "ab-", "a--b", "Abc", "a_b", "a b", "é12"} {
-		f.failed(t, "name "+name, f.run(root, "service.create", servicesTarget, map[string]string{"name": name, "owner": SampleMember}), commands.InvalidRequest)
+		f.failed(t, "name "+name, f.run(root, "service.create", servicesTarget, f.declaredFields(map[string]string{"name": name, "owner": SampleMember})), commands.InvalidRequest)
 	}
 	for _, name := range []string{"abc", strings.Repeat("a", 48), "a-b-c", "0x9"} {
 		f.newService(root, name)
 	}
-	f.failed(t, "duplicate", f.run(root, "service.create", servicesTarget, map[string]string{"name": "abc", "owner": SampleMember}), commands.InvalidRequest)
-	f.failed(t, "unknown owner", f.run(root, "service.create", servicesTarget, map[string]string{"name": "own", "owner": "ghost"}), commands.InvalidRequest)
-	f.failed(t, "service owner", f.run(root, "service.create", servicesTarget, map[string]string{"name": "own", "owner": "svc-abc"}), commands.InvalidRequest)
-	self := f.run(root, "service.create", servicesTarget, map[string]string{"name": "mine", "owner": SampleAdmin})
+	f.failed(t, "duplicate", f.run(root, "service.create", servicesTarget, f.declaredFields(map[string]string{"name": "abc", "owner": SampleMember})), commands.InvalidRequest)
+	f.failed(t, "unknown owner", f.run(root, "service.create", servicesTarget, f.declaredFields(map[string]string{"name": "own", "owner": "ghost"})), commands.InvalidRequest)
+	f.failed(t, "service owner", f.run(root, "service.create", servicesTarget, f.declaredFields(map[string]string{"name": "own", "owner": "svc-abc"})), commands.InvalidRequest)
+	self := f.run(root, "service.create", servicesTarget, f.declaredFields(map[string]string{"name": "mine", "owner": SampleAdmin}))
 	if self.status != 200 {
 		t.Errorf("self-owned %+v", self)
 	}
-	f.failed(t, "wrong target", f.run(root, "service.create", "elsewhere", map[string]string{"name": "x12", "owner": SampleMember}), commands.PermissionDenied)
-	f.failed(t, "member", f.runWith(f.as(MemberLogin), f.revision(root), "service.create", servicesTarget, map[string]string{"name": "x12", "owner": SampleMember}), commands.PermissionDenied)
+	f.failed(t, "wrong target", f.run(root, "service.create", "elsewhere", f.declaredFields(map[string]string{"name": "x12", "owner": SampleMember})), commands.PermissionDenied)
+	f.failed(t, "member", f.runWith(f.as(MemberLogin), f.revision(root), "service.create", servicesTarget, f.declaredFields(map[string]string{"name": "x12", "owner": SampleMember})), commands.PermissionDenied)
 	rev := f.revision(root)
 	f.s.fault = func(at string) bool { return at == "roster" }
-	f.failed(t, "roster", f.runWith(root, rev, "service.create", servicesTarget, map[string]string{"name": "x12", "owner": SampleAdmin}), commands.DependencyUnavailable)
+	f.failed(t, "roster", f.runWith(root, rev, "service.create", servicesTarget, f.declaredFields(map[string]string{"name": "x12", "owner": SampleAdmin})), commands.DependencyUnavailable)
 	f.s.fault = func(at string) bool { return at == "services" }
-	f.failed(t, "services", f.runWith(root, rev, "service.create", servicesTarget, map[string]string{"name": "x12", "owner": SampleAdmin}), commands.DependencyUnavailable)
+	f.failed(t, "services", f.runWith(root, rev, "service.create", servicesTarget, f.declaredFields(map[string]string{"name": "x12", "owner": SampleAdmin})), commands.DependencyUnavailable)
 	f.s.fault = nil
-	got := f.run(root, "service.create", servicesTarget, map[string]string{"name": "x12", "owner": SampleMember, "extra": "1"})
+	got := f.run(root, "service.create", servicesTarget, f.declaredFields(map[string]string{"name": "x12", "owner": SampleMember, "extra": "1"}))
 	f.failed(t, "extra field", got, commands.InvalidRequest)
 }
 
@@ -154,7 +149,7 @@ func TestServiceCap(t *testing.T) {
 	if err := f.s.identity.Workspace().RetireServiceUser(v, SampleWorkspace, "svc-cap000", 1); err != nil {
 		t.Fatal(err)
 	}
-	f.failed(t, "at the cap", f.run(root, "service.create", servicesTarget, map[string]string{"name": "over", "owner": SampleMember}), commands.PrerequisiteFailed)
+	f.failed(t, "at the cap", f.run(root, "service.create", servicesTarget, f.declaredFields(map[string]string{"name": "over", "owner": SampleAdmin})), commands.PrerequisiteFailed)
 	if got := f.servicesRead(root); got.status != 200 || len(got.body["services"].([]any)) != maxServices {
 		t.Errorf("paged read %d", len(got.body["services"].([]any)))
 	}
@@ -212,7 +207,7 @@ func TestCredentialIssueAndPickup(t *testing.T) {
 	f.code(t, "pickup of a revoked credential", f.collect(root, dropped), 403, string(commands.PermissionDenied))
 }
 
-func TestCredentialLimitAndOrder(t *testing.T) {
+func TestCredentialLimitAndCanonicalOrder(t *testing.T) {
 	f := setup(t, SeedSample).ready()
 	root := f.as(AdminLogin)
 	svc := f.newService(root, "limit")
@@ -229,13 +224,15 @@ func TestCredentialLimitAndOrder(t *testing.T) {
 	}
 	f.run(root, "service.revoke_credential", ids[1], nil)
 	rows := f.service(root, svc)["credentials"].([]any)
-	states := []string{}
+	states := map[string]int{}
+	orderedIDs := []string{}
 	for _, r := range rows {
 		m := r.(map[string]any)
-		states = append(states, m["state"].(string))
+		states[m["state"].(string)]++
+		orderedIDs = append(orderedIDs, m["id"].(string))
 	}
-	if strings.Join(states, ",") != "active,active,active,active,active,revoked,expired,expired,expired,expired,expired" {
-		t.Errorf("order %v", states)
+	if len(rows) != 11 || states["active"] != 5 || states["revoked"] != 1 || states["expired"] != 5 || !sort.StringsAreSorted(orderedIDs) {
+		t.Errorf("canonical order or retained lifecycle counts changed: %v / %v", orderedIDs, states)
 	}
 	f.failed(t, "revoke twice", f.run(root, "service.revoke_credential", ids[1], nil), commands.InvalidStage)
 	if got := f.run(root, "service.revoke_credential", ids[0], nil); got.status != 200 {
@@ -324,12 +321,12 @@ func TestPartialRetireAndFaults(t *testing.T) {
 	if _, err := (serviceCommand{s: f.s, kind: "revoke_credential"}).Apply(commands.Context{Target: "cred-ghost"}); err.(*commands.Failure).Code != commands.InvalidStage {
 		t.Errorf("vanished credential %v", err)
 	}
-	if _, err := (serviceCommand{s: f.s, kind: "create"}).Apply(commands.Context{Fields: map[string]string{"name": "partial", "owner": SampleAdmin}}); err.(*commands.Failure).Fields[0] != "name" {
+	if _, err := (serviceCommand{s: f.s, kind: "create"}).Apply(commands.Context{Fields: f.declaredFields(map[string]string{"name": "partial", "owner": SampleAdmin})}); err.(*commands.Failure).Fields[0] != "name" {
 		t.Errorf("conflict %v", err)
 	}
 	saved := f.s.caller
 	f.s.caller = identity.Verifier{9}
-	if _, err := (serviceCommand{s: f.s, kind: "create"}).Apply(commands.Context{Fields: map[string]string{"name": "lost", "owner": SampleMember}}); err.(*commands.Failure).Code != commands.PermissionDenied {
+	if _, err := (serviceCommand{s: f.s, kind: "create"}).Apply(commands.Context{Fields: f.declaredFields(map[string]string{"name": "lost", "owner": SampleMember})}); err.(*commands.Failure).Code != commands.PermissionDenied {
 		t.Errorf("create without session %v", err)
 	}
 	f.s.caller = saved
@@ -413,7 +410,7 @@ func TestServiceOrderingAndLookups(t *testing.T) {
 	}
 	f.code(t, "first credentials read fails", f.servicesRead(root), 503, string(commands.DependencyUnavailable))
 	f.s.fault = nil
-	f.failed(t, "no owner", f.run(root, "service.create", servicesTarget, map[string]string{"name": "nobody"}), commands.InvalidRequest, "owner")
+	f.failed(t, "no owner", f.run(root, "service.create", servicesTarget, f.declaredFields(map[string]string{"name": "nobody"})), commands.InvalidRequest, "owner")
 }
 
 func TestServiceReplayRecoveryAndStalePickups(t *testing.T) {

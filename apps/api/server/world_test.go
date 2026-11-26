@@ -38,7 +38,7 @@ func setupWithFields(t testing.TB, seed string, fields map[string]gate.FieldClas
 	t.Helper()
 	now := start
 	mu := &sync.Mutex{}
-	s, err := New(Config{Data: t.TempDir() + "/data", Seed: seed, Fields: fields, Passwords: fastPasswords(), Clock: func() time.Time {
+	s, err := New(Config{ServiceCatalog: testServiceCatalog(), Data: t.TempDir() + "/data", Seed: seed, Fields: fields, Passwords: fastPasswords(), Clock: func() time.Time {
 		mu.Lock()
 		defer mu.Unlock()
 		return now

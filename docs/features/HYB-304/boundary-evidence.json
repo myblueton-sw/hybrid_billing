@@ -1,0 +1,268 @@
+{
+  "schema_version": 1,
+  "ticket": "HYB-304",
+  "machine": "mac_mini",
+  "parent_revision": "1e5ecffc191d0e97e377946b2bff251f8a49a72d",
+  "status": "boundary_checkpoint_not_merge_ready",
+  "environment": {
+    "actual_host": "macOS arm64",
+    "go": "1.25.7 darwin/arm64",
+    "cross_compile_targets": [
+      "linux/amd64",
+      "windows/amd64"
+    ],
+    "foreign_runtime_execution": "UNVERIFIED"
+  },
+  "checks": {
+    "targeted": {
+      "status": "PASS",
+      "tests": 11,
+      "raw": "/private/tmp/hb304-boundaries-restored.log",
+      "boundary": "Already-correct newly asserted paths passed unchanged production; setup/compiler mistakes are not product failures"
+    },
+    "server_short": {
+      "status": "PASS",
+      "scope": "apps/api/server package only",
+      "statement_coverage_percent": "98.4",
+      "required_coverage_percent": "100",
+      "target": "NOT_MET",
+      "uncovered_weighted_statements": 192,
+      "servicequery_uncovered_weighted_statements": 62,
+      "raw": "/private/tmp/hb304-boundaries-server.log"
+    },
+    "race": {
+      "status": "PASS",
+      "tests": 11,
+      "scope": "New top-level boundary tests only",
+      "raw": "/private/tmp/hb304-boundaries-race.log"
+    },
+    "vet": {
+      "status": "PASS",
+      "scope": "apps/api/server",
+      "exit_code": 0,
+      "raw": "/private/tmp/hb304-boundaries-vet.log"
+    },
+    "cross_compile": {
+      "status": "PASS",
+      "targets": [
+        "linux/amd64",
+        "windows/amd64"
+      ],
+      "exit_codes": [
+        0,
+        0
+      ],
+      "observed_formats": [
+        "ELF64 x86-64",
+        "PE32+ x86-64 Windows"
+      ],
+      "runtime_success": false
+    },
+    "mutations": {
+      "status": "PASS",
+      "semantic_kills": 2,
+      "private_caches_deleted": true,
+      "source_bytes_and_sha_restored": true,
+      "excluded": "Initial aggregate guard deletion left an unused import and was compile-invalid; not counted. Corrected comparison mutation compiled and failed the intended assertion."
+    },
+    "console": {
+      "status": "UNCHANGED_PREVIOUS_EVIDENCE",
+      "reference": "interaction-evidence.json",
+      "boundary": "No Console source changed; its checks were not rerun for this Go-only increment"
+    }
+  },
+  "review": {
+    "test_source": {
+      "reviewer": "/root/hyb310_review",
+      "status": "PASS",
+      "resolved": [
+        "MFA requires all applicable flags present and false",
+        "Logout requires exactly one authentication-error object with no trailing content or projected metadata"
+      ],
+      "tests_executed_by_reviewer": false
+    },
+    "reachability": {
+      "reviewer": "/root/hyb310_review",
+      "status": "CLASSIFIED_NOT_WAIVED",
+      "boundary": "Concrete scalar serialization, maintained session/continuation invariants and validated immutable catalog guards are distinguished from reachable public/helper failures"
+    },
+    "narrative": {
+      "reviewer": "/root/hyb310_copy_render",
+      "status": "PASS",
+      "boundary": "Scoped narrative reviewed; execution and final hash reconciliation separately attributed",
+      "tests_executed_by_reviewer": false
+    }
+  },
+  "pending": [
+    "Required server package100% statement coverage and complete coverage reconciliation",
+    "Remaining M04 full journey/form/auth-notice verification and final feature reviews",
+    "Claude visual leadership, native/practitioner/AT/BFCache and owner FIX are not certified",
+    "Feature PR, authorized merge and remote/main read-back",
+    "Parent M03/M02 and subsequent planning work"
+  ],
+  "artifact_retention": "Root-owned temporary logs/profiles/test binaries, not committed and not promised permanent. No activation/password, pickup reference, returned secret or command envelope bodies included.",
+  "sources": [
+    {
+      "path": "apps/api/server/servicequery_cursor_codec_test.go",
+      "sha256": "0df5755ebb783385b452f0171f4e22b854d090b29f1b76060ff001f09715b939",
+      "bytes": 3904
+    },
+    {
+      "path": "apps/api/server/servicequery_counter_boundary_test.go",
+      "sha256": "9f3909a38489965ff3cb63bb1bf4b587cc95f41d7349040fe00414781c012621",
+      "bytes": 2057
+    },
+    {
+      "path": "apps/api/server/servicequery_choice_semantics_test.go",
+      "sha256": "da9848f5c38fe02947568a6682be2634ba0576305431ffc4722032f01f7d67f7",
+      "bytes": 5305
+    },
+    {
+      "path": "apps/api/server/servicequery_admission_lifetime_test.go",
+      "sha256": "0138a5f64380734131d8dec9fc55d5d043f5d47c7cc107489afb098ed9ef5686",
+      "bytes": 5545
+    },
+    {
+      "path": "apps/api/server/servicequery_cursor.go",
+      "sha256": "58920ec74e2c607e147eb395f1a4d326bac9c9f655aa3e178d8eb14fb5391cc7",
+      "bytes": 8976
+    },
+    {
+      "path": "apps/api/server/servicequery_accounts.go",
+      "sha256": "4af07295b7148ca5f8545c2661d4fc80cf4152f17a35323082d4ff869c465916",
+      "bytes": 7920
+    },
+    {
+      "path": "apps/api/server/servicequery_choices.go",
+      "sha256": "487c9e6152463c365d2da40dc1eb4262c2203ba07aa52c8cf356020bb222f057",
+      "bytes": 9014
+    },
+    {
+      "path": "apps/api/server/servicequery_credentials.go",
+      "sha256": "d86a15751f30ee0c588dfc82338872f10151ffb5cce0fa2ba50ee2e7823419ee",
+      "bytes": 5049
+    },
+    {
+      "path": "apps/api/server/servicequery_detail.go",
+      "sha256": "3b6e56fb89003691bcb7c25ed52fbd01f781633d76131e9d150d3f073f9b12c0",
+      "bytes": 12274
+    },
+    {
+      "path": "apps/api/server/servicequery_history.go",
+      "sha256": "26f07b188df4c51d4276c676851ee20b23048d0804c467436187657959fb642f",
+      "bytes": 2170
+    },
+    {
+      "path": "apps/api/server/servicequery_model.go",
+      "sha256": "f8a2338a1cbe5ccb0da110fc86f86099f27759334097a3281f07195768380530",
+      "bytes": 4756
+    },
+    {
+      "path": "apps/api/server/servicedeclaration.go",
+      "sha256": "d40422444222bff0b4d525caf008721cfcae5620ba5884ede3a833cc5bfd3598",
+      "bytes": 10192
+    },
+    {
+      "path": "apps/api/server/stepup.go",
+      "sha256": "181c50b55a8f192471788d497e828a322d83772f15711443110d2a47733f261a",
+      "bytes": 3935
+    },
+    {
+      "path": "apps/api/server/sessionending.go",
+      "sha256": "a24418d0af60d88db14c00de6454e694e02298a94935ffa433dc0a7ec1643859",
+      "bytes": 4433
+    },
+    {
+      "path": "apps/api/server/signin.go",
+      "sha256": "9c36cb49b888cbba62ad60def7474b42e87e5810a77e5c5fc5e89dd8c416f62b",
+      "bytes": 15175
+    },
+    {
+      "path": "apps/api/server/servicequery_fixture_test.go",
+      "sha256": "a735abb8876e72485470ec2c58f1968a1cb8be071e03077f09525f32435bd3d4",
+      "bytes": 2052
+    },
+    {
+      "path": "modules/identity/types.go",
+      "sha256": "4352b1a075a05f5b278c26b2cd838d2a89542cbdbe24dcb614d222fbc119cd3d",
+      "bytes": 7064
+    },
+    {
+      "path": "go.mod",
+      "sha256": "0d022ac40891da0e29e6544a11246fb2427bc2362ba8a8a0fe4e9e3f4f2dabd2",
+      "bytes": 57
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "/private/tmp/hb304-boundaries-restored.log",
+      "sha256": "36813a5c8341cb5bb9bf8bef48738389a84a0323e148f53ef9cd7abed8818c56",
+      "bytes": 97
+    },
+    {
+      "path": "/private/tmp/hb304-boundaries-restored.cover",
+      "sha256": "ae7d8856dfa37e080067ab823495c575fb2b5f5195bf6b0622aadf46d1f7e8bf",
+      "bytes": 687017
+    },
+    {
+      "path": "/private/tmp/hb304-boundaries-server.log",
+      "sha256": "90ee68e257c0a9b3c36114385c44be42bc08596fffbb6a17d2896af44cbb6c28",
+      "bytes": 99
+    },
+    {
+      "path": "/private/tmp/hb304-boundaries-server.cover",
+      "sha256": "72674cce0f585623ffc5f72a50004057c336d4e5f29ff50fdabe0133c61d3e64",
+      "bytes": 687017
+    },
+    {
+      "path": "/private/tmp/hb304-boundaries-race.log",
+      "sha256": "23bd0b6600a216059ab0828a53a23fffdec5e2ce52c2d66dd72ddfcc5ce99a1b",
+      "bytes": 67
+    },
+    {
+      "path": "/private/tmp/hb304-boundaries-vet.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/private/tmp/hb304-boundaries-linux-build.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/private/tmp/hb304-boundaries-windows-build.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/private/tmp/hb304-boundaries-linux-amd64.test",
+      "sha256": "fa34456c68a0c0764a9d482b2f490e47510a0ff3e2b5df21c6272170a2406aca",
+      "bytes": 27832008
+    },
+    {
+      "path": "/private/tmp/hb304-boundaries-windows-amd64.test.exe",
+      "sha256": "a355208c9c1d85808ab5bd048ad73f8fea4ce5509ff00538fcfd8af3c0b1ac20",
+      "bytes": 28173312
+    },
+    {
+      "path": "/private/tmp/hb304-codec-mutant-result.json",
+      "sha256": "3ba5c30209550440f0bcd80bb5c3b550b8b43a464766fbbbe68a9d9fa8161c77",
+      "bytes": 432
+    },
+    {
+      "path": "/private/tmp/hb304-cursor-unknown-fields-mutant.log",
+      "sha256": "91c22f31939b7bdb80dd2ff76e9e50de0489020848e606e69fdbec9242a6cc22",
+      "bytes": 334
+    },
+    {
+      "path": "/private/tmp/hb304-counter-mutant-result.json",
+      "sha256": "bce568fa6d60a9f43569bc100fd8b23c84258c793c419c9e065392bb5ed95c31",
+      "bytes": 439
+    },
+    {
+      "path": "/private/tmp/hb304-aggregate-wrap-mutant.log",
+      "sha256": "27b67bd3dce0dad9b8d6778e6717426649d57f0a852a5c76dadbb0a0b1acf4fd",
+      "bytes": 753
+    }
+  ]
+}

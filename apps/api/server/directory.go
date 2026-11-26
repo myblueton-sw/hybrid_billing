@@ -57,11 +57,14 @@ type directory struct {
 	generations map[string]uint64
 	pickups     map[string]pickup
 	collected   map[string]delivery
+
+	pickupByCredential map[string]string
+	deliveryVersion    uint64
 }
 
 func newDirectory() *directory {
 	return &directory{people: map[string]person{}, byLogin: map[string]string{}, taken: map[string]bool{}, holders: map[string]time.Time{}, invites: map[string]invite{},
-		links: map[string]outstanding{}, generations: map[string]uint64{}, pickups: map[string]pickup{}, collected: map[string]delivery{}}
+		links: map[string]outstanding{}, generations: map[string]uint64{}, pickups: map[string]pickup{}, collected: map[string]delivery{}, pickupByCredential: map[string]string{}}
 }
 
 func (d *directory) position(user, login string) int {
@@ -192,7 +195,7 @@ func (d *directory) holds(user string, now time.Time) bool {
 func (d *directory) prune(now time.Time) {
 	for ref, found := range d.pickups {
 		if !now.Before(found.expires) {
-			delete(d.pickups, ref)
+			d.dropPickup(ref)
 		}
 	}
 	for login, found := range d.links {
@@ -205,21 +208,21 @@ func (d *directory) prune(now time.Time) {
 func (d *directory) dropPickups(match func(pickup) bool) {
 	for ref, found := range d.pickups {
 		if match(found) {
-			delete(d.pickups, ref)
+			d.dropPickup(ref)
 		}
 	}
 }
 
 func (d *directory) dropPickupRefs(refs []string) {
 	for _, ref := range refs {
-		delete(d.pickups, ref)
+		d.dropPickup(ref)
 	}
 }
 
 func (d *directory) forget(service string, keep map[string]bool) {
 	for id, found := range d.collected {
 		if found.service == service && !keep[id] {
-			delete(d.collected, id)
+			d.dropDelivery(id)
 		}
 	}
 }

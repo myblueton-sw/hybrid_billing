@@ -121,6 +121,11 @@ type Registry struct {
 	memberIndex        map[string][]string
 	usersVersion       uint64
 	membersVersion     map[string]uint64
+	serviceIndex       map[string][]string
+	credentialIndex    map[string][]string
+	querySubjects      uint64
+	queryCredentials   map[string]uint64
+	credentialExpiry   map[string][]credentialExpiry
 }
 
 type Installation struct{ r *Registry }
@@ -139,7 +144,8 @@ func New(installation string, limits Limits, clock func() time.Time) (*Registry,
 		users: map[string]*user{}, identities: map[Triple]*identityRecord{}, invitations: map[string]*invitation{}, pendingInvitations: map[string]map[string]struct{}{},
 		memberships: map[string]map[string]*membership{}, sessions: map[Verifier]*session{}, serials: map[uint64]*session{},
 		byUser: map[string]map[Verifier]struct{}{}, credentials: map[string]*credential{},
-		memberIndex: map[string][]string{}, membersVersion: map[string]uint64{}}
+		serviceIndex: map[string][]string{}, credentialIndex: map[string][]string{},
+		memberIndex: map[string][]string{}, membersVersion: map[string]uint64{}, queryCredentials: map[string]uint64{}, credentialExpiry: map[string][]credentialExpiry{}}
 	if _, err := rand.Read(r.instance[:]); err != nil {
 		return nil, ErrUnavailable
 	}
@@ -423,9 +429,19 @@ func insertSorted(ids []string, id string) []string {
 }
 
 func (r *Registry) putUser(id string, found *user) {
+	if previous := r.users[id]; previous != nil && previous.kind == Service {
+		r.serviceIndex[previous.workspace] = removeSorted(r.serviceIndex[previous.workspace], id)
+		if len(r.serviceIndex[previous.workspace]) == 0 {
+			delete(r.serviceIndex, previous.workspace)
+		}
+	}
+	if found.kind == Service {
+		r.serviceIndex[found.workspace] = insertSorted(r.serviceIndex[found.workspace], id)
+	}
 	r.users[id] = found
 	r.userIndex = insertSorted(r.userIndex, id)
 	r.usersVersion++
+	r.querySubjectChanged()
 }
 
 func (r *Registry) putMembership(workspace, id string, found *membership) {
@@ -435,6 +451,7 @@ func (r *Registry) putMembership(workspace, id string, found *membership) {
 	r.memberships[workspace][id] = found
 	r.memberIndex[workspace] = insertSorted(r.memberIndex[workspace], id)
 	r.membersVersion[workspace]++
+	r.querySubjectChanged()
 }
 
 func (r *Registry) pageable(after string, limit int) bool {

@@ -1,8 +1,20 @@
 package server
 
-import "testing"
+import (
+	"testing"
+	"time"
+)
 
 func TestSessionSelectionCapacityEvictsSettledRecordsAndReleasesAllIndexes(t *testing.T) {
+	assertSessionSelectionPressure(t, false)
+}
+
+func TestSessionSelectionChronologicalPressureEvictsOldestSettledOperation(t *testing.T) {
+	assertSessionSelectionPressure(t, true)
+}
+
+func assertSessionSelectionPressure(t *testing.T, advance bool) {
+	t.Helper()
 	f := setupWith(t, func(c *Config) {
 		c.Identity.SessionsPerUser = 500
 		c.Access = DefaultAccessSettings()
@@ -13,6 +25,9 @@ func TestSessionSelectionCapacityEvictsSettledRecordsAndReleasesAllIndexes(t *te
 	a := f.signedIn(MemberLogin, pw)
 	firstRef, firstOperation := "", ""
 	for round := 0; round < 6; round++ {
+		if advance {
+			f.advance(time.Second)
+		}
 		for i := 0; i < 20; i++ {
 			if _, _, err := f.s.openFor(LoginTriple(MemberLogin), SampleWorkspace, false); err != nil {
 				t.Fatal(err)

@@ -37,8 +37,11 @@ func (s *Server) Document() ([]byte, error) {
 			item.(map[string]any)["post"].(map[string]any)["x-step-up"] = true
 		}
 	}
-	doc["x-reads"] = map[string]any{"/identity/users": usersReadPath(), "/identity/users/count": usersCountPath(), "/identity/bulk-revocations": bulkReadsPath(),
-		"/identity/services": servicesReadPath(), "/integrations": integrationsReadPath(), "/charge-candidates": candidateReadPath(false), "/charge-candidates/{id}": candidateReadPath(true)}
+	reads := map[string]any{"/identity/users": usersReadPath(), "/identity/users/count": usersCountPath(), "/identity/bulk-revocations": bulkReadsPath(), "/integrations": integrationsReadPath(), "/charge-candidates": candidateReadPath(false), "/charge-candidates/{id}": candidateReadPath(true)}
+	for path, entry := range s.serviceQueryReadPaths() {
+		reads[path] = entry
+	}
+	doc["x-reads"] = reads
 	doc["x-self"] = selfPaths()
 	return json.MarshalIndent(doc, "", "  ")
 }
@@ -144,27 +147,4 @@ func (s *Server) openapi(w http.ResponseWriter, r *http.Request) {
 	headers(w, request)
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write(doc)
-}
-
-func servicesReadPath() map[string]any {
-	str := map[string]any{"type": "string"}
-	pickup := map[string]any{"type": "string", "enum": []string{pickupOpen, pickupCollected, pickupNever},
-		"x-present-when": "the credential state is active and the server recorded its issue",
-		"x-meaning": map[string]string{pickupOpen: "the issuing session could collect the secret now", pickupCollected: "the server returned the secret once; it does not confirm the secret was stored",
-			pickupNever: "the pickup ended without a successful read; no one can obtain this secret from the server"}}
-	until := map[string]any{"type": "string", "format": "date-time", "x-present-when": "secret_pickup is open",
-		"x-meaning": "estimated end: the earliest of the pickup expiry and the issuing session's absolute and idle ends at this read; activity can move it later and a sign-out can end it sooner"}
-	credential := map[string]any{"type": "object", "properties": map[string]any{"id": str, "not_before": str, "not_after": str, "state": str, "usable": map[string]any{"type": "boolean"},
-		"secret_pickup": pickup, "secret_pickup_until": until,
-		"replaces":    map[string]any{"type": "string", "x-present-when": "this credential was issued by a rotation and the credential it replaced is still kept"},
-		"replaced_by": map[string]any{"type": "string", "x-present-when": "a rotation replaced this credential and the credential that replaced it is still kept"},
-		"rotation": map[string]any{"type": "string", "enum": []string{rotationReplacing, rotationEnding}, "x-present-when": "the credential is active and either was replaced by a rotation (ending, which takes precedence) or replaced a credential that is still active (replacing)",
-			"x-meaning": map[string]string{rotationReplacing: "the credential it replaced is still active", rotationEnding: "a rotation fixed this credential's end at not_after; the end is not moved back"}}}}
-	limits := map[string]any{"type": "object", "properties": map[string]any{"credential_days": map[string]any{"type": "integer"}, "credentials_per_service": map[string]any{"type": "integer"},
-		"services": map[string]any{"type": "integer"}, "replay_seconds": map[string]any{"type": "integer", "x-meaning": "how long a command's idempotency key replays its stored outcome"},
-		"credential_overlap_minutes":     map[string]any{"type": "integer", "x-meaning": "how long a replaced credential stays valid when a rotation names no overlap"},
-		"credential_overlap_max_minutes": map[string]any{"type": "integer", "x-meaning": "the longest overlap a rotation may name"},
-		"secret_pickup_minutes":          map[string]any{"type": "integer", "x-meaning": "how long a new secret can be collected; also the shortest overlap a rotation may name"}}}
-	return map[string]any{"get": map[string]any{"operationId": "identity.services", "x-credential": credential, "x-limits": limits,
-		"x-never": "the secret and its pickup reference are never part of this read"}}
 }

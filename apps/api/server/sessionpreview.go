@@ -38,12 +38,8 @@ func (s *Server) previewSessionSelection(w http.ResponseWriter, r *http.Request)
 	request := r.Header.Get("X-Request-Id")
 	s.domain.Lock()
 	defer s.domain.Unlock()
-	found, answer, ok := s.self(w, r)
+	found, _, ok := s.self(w, r)
 	if !ok {
-		return
-	}
-	if found.owner != (sessionOwner{answer.User(), answer.Workspace(), answer.Epoch()}) {
-		failCode(w, commands.Unauthenticated, request)
 		return
 	}
 	now := s.clock()

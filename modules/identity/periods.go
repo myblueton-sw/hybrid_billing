@@ -90,7 +90,7 @@ func (h *Installation) ExpireRoles(operator Operator, workspace string, now time
 		out = append(out, record)
 	}
 	if changed {
-		r.generation++
+		r.subjectChanged()
 	}
 	return out, nil
 }
@@ -160,7 +160,7 @@ func (h *Installation) ApplyRecorded(operator Operator, workspace string, rec Re
 			*own = next
 		}
 	}
-	r.generation++
+	r.subjectChanged()
 	return nil
 }
 

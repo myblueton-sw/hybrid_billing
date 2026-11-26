@@ -1,8 +1,14 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { AdminError, type Attempt, type Outcome, type ServicesPage } from "../../../../service/admin";
+import { AdminError, type Attempt, type Outcome } from "../../../../service/admin";
 import { leaveDeliberately, stayAgain } from "../../../../shared/unload-intent";
-import { issueAttempts, type Exec } from "./issue-attempts";
+import { issueAttempts as createIssueAttempts, type Exec } from "./issue-attempts";
+
+function issueAttempts(...args: Parameters<typeof createIssueAttempts>) {
+  const store = createIssueAttempts(...args);
+  store.activate();
+  return store;
+}
 
 const counter = () => {
   let n = 0;
@@ -54,9 +60,16 @@ function deferred() {
 }
 
 const values = { days: "1", reason: "why" };
-const page = (rows: { id: string; state?: "active" | "revoked"; secret_pickup?: "open" | "collected" | "never_collected" }[]): ServicesPage => ({
-  revision: "r", owners: [], now: "", limits: { credential_days: 30, credentials_per_service: 10, services: 200, replay_seconds: 3600, credential_overlap_minutes: 1440, credential_overlap_max_minutes: 10080, secret_pickup_minutes: 10 },
-  services: [{ id: "svc-a", state: "active", version: 1, creator: "", creator_login: "", owner: "", owner_login: "", credentials: rows.map((r) => ({ not_before: "", not_after: "", usable: true, state: "active", ...r })) }],
+
+const observed = { service: "svc-a", id: "cred-0123456789abcdef", current_state: "active" as const, secret_pickup: "open" as const };
+
+test("incomplete pages and not-open observations preserve the issued reference", async () => {
+  for (const row of [null, { ...observed, secret_pickup: "never_collected" as const }]) {
+    const store = issueAttempts(counter(), clocks().clocks);
+    await store.submit("u", "svc-a", values, "rev-1", 3600, scripted([ok()]).exec);
+    store.observe("u", row, store.readStarted());
+    assert.equal(store.get("u", "svc-a")?.issued?.ref, "R".repeat(22), "page absence or current not-open state is not terminal evidence");
+  }
 });
 
 test("an unknown outcome keeps the attempt, values and expected revision across a remount, and the retry resends them", async () => {
@@ -75,7 +88,7 @@ test("an unknown outcome keeps the attempt, values and expected revision across 
   assert.equal(store.get("u", "svc-a")?.phase, "issued");
 });
 
-test("a success that arrives after the form is gone is still recorded, and only Show secret or Revoke consumes it (F6)", async () => {
+test("a late issuance remains recorded and opening Reveal does not consume the reference (F6)", async () => {
   const { clocks: c } = clocks();
   const store = issueAttempts(counter(), c);
   const d = deferred();
@@ -90,8 +103,8 @@ test("a success that arrives after the form is gone is still recorded, and only 
   assert.equal(e?.issued?.ref, "R".repeat(22));
   assert.deepEqual(await store.submit("u", "svc-a", values, "rev-1", 3600, () => d.promise), { kind: "refused" });
   assert.equal(store.discard("u", "svc-a"), false);
-  assert.equal(store.consume("u", "svc-a")?.credential, "cred-0123456789abcdef");
-  assert.equal(store.get("u", "svc-a"), undefined);
+  assert.equal(store.open("u", "svc-a")?.credential, "cred-0123456789abcdef");
+  assert.equal(store.get("u", "svc-a")?.phase, "issued");
   await store.submit("u", "svc-b", values, "rev-1", 3600, scripted([ok("cred-00000000000000bb")]).exec);
   store.revoked("u", "cred-00000000000000bb");
   assert.equal(store.get("u", "svc-b"), undefined);
@@ -185,21 +198,26 @@ test("a refused retry near or after the window lapses, and an unknown window lap
   assert.equal(u.sent.length, 2);
 });
 
-test("reads drop an issued entry only when they started after it and its pickup is no longer open (F4, N2)", async () => {
+test("only post-issuance matching terminal observations retire the issued reference", async () => {
   const store = issueAttempts(counter(), clocks().clocks);
   const stale = store.readStarted();
   await store.submit("u", "svc-a", values, "rev-1", 3600, scripted([ok()]).exec);
-  store.reconcile("u", page([]), stale);
-  assert.equal(store.get("u", "svc-a")?.phase, "issued", "a read that started before the outcome");
+  store.observe("u", { ...observed, secret_pickup: "collected" }, stale);
+  assert.equal(store.get("u", "svc-a")?.phase, "issued");
   const fresh = store.readStarted();
-  store.reconcile("u", page([{ id: "cred-0123456789abcdef", secret_pickup: "open" }]), fresh);
-  assert.equal(store.get("u", "svc-a")?.phase, "issued", "still open");
-  for (const rows of [[], [{ id: "cred-0123456789abcdef", secret_pickup: "never_collected" as const }], [{ id: "cred-0123456789abcdef", secret_pickup: "collected" as const }],
-    [{ id: "cred-0123456789abcdef" }], [{ id: "cred-0123456789abcdef", state: "revoked" as const, secret_pickup: "open" as const }]]) {
+  for (const row of [observed, { ...observed, id: "other" }, { ...observed, service: "svc-other" }, { ...observed, secret_pickup: undefined }]) store.observe("u", row, fresh);
+  assert.equal(store.get("u", "svc-a")?.phase, "issued");
+  for (const row of [{ ...observed, current_state: "revoked" as const }, { ...observed, current_state: "expired" as const }, { ...observed, secret_pickup: "collected" as const }]) {
     const s = issueAttempts(counter(), clocks().clocks);
     await s.submit("u", "svc-a", values, "rev-1", 3600, scripted([ok()]).exec);
-    s.reconcile("u", page(rows), s.readStarted());
-    assert.equal(s.get("u", "svc-a"), undefined, JSON.stringify(rows));
+    s.observe("u", row, s.readStarted());
+    assert.equal(s.get("u", "svc-a"), undefined);
+    if (row.secret_pickup === "collected") {
+      assert.deepEqual(s.marks("u"), [{ service: "svc-a", credential: observed.id }]);
+      s.unmark("u", observed.id);
+      s.observe("u", row, s.readStarted());
+      assert.deepEqual(s.marks("u"), []);
+    }
   }
 });
 
@@ -220,15 +238,15 @@ test("the unload guard follows sending, unknown, issued and unstored marks, and 
   await store.submit("u", "svc-a", values, "rev-1", 3600, scripted([fail("stale", "idempotency_key_expired")]).exec);
   assert.equal(store.get("u", "svc-a")?.phase, "lapsed");
   assert.equal(store.guarded(), false);
-  store.mark("u", "cred-1");
+  store.mark("u", "cred-1", "svc-a");
   assert.equal(store.listening(), true);
   store.unmark("u", "cred-1");
   assert.equal(store.listening(), false);
   await store.submit("u", "svc-b", values, "rev-1", 3600, scripted([ok()]).exec);
   assert.equal(store.listening(), true);
-  store.reconcile("u", page([]), 0);
+  store.observe("u", null, 0);
   assert.equal(store.listening(), true, "a read that started earlier keeps the issued entry");
-  store.mark("u", "cred-2");
+  store.mark("u", "cred-2", "svc-b");
   leaveDeliberately();
   assert.equal(w.fire(), false);
   assert.equal(store.guarded(), false);
@@ -244,16 +262,36 @@ test("users are isolated", async () => {
   await store.submit("a", "svc-a", values, "rev-1", 3600, scripted([fail("busy")]).exec);
   assert.equal(store.get("b", "svc-a"), undefined);
   assert.deepEqual(store.list("b"), []);
-  store.mark("a", "cred-1");
+  store.mark("a", "cred-1", "svc-a");
   assert.deepEqual(store.marks("b"), []);
   assert.equal(store.discard("b", "svc-a"), false);
   assert.equal(store.get("a", "svc-a")?.phase, "unknown");
 });
 
+
+test("the original issuance replay window survives metadata refresh", async () => {
+ const { now, clocks: c } = clocks();
+ const store = issueAttempts(counter(), c);
+ const s = scripted([fail("busy"), ok()]);
+ await store.submit("u", "svc-a", values, "rev-1", 10, s.exec);
+ now.mono += 9000;
+ assert.deepEqual(await store.submit("u", "svc-a", values, "rev-new", 3600, s.exec), { kind: "lapsed" });
+ assert.equal(s.sent.length, 1);
+});
+
+test("issuance accepts only a completed credential-issued result", async () => {
+  for (const patch of [{ status: "accepted" }, { state: "other" }, { job_id: "pending-job" }]) {
+    const store = issueAttempts(counter(), clocks().clocks);
+    const result = await store.submit("u", "svc-a", values, "rev-1", 300, async () => ({ ...ok(), ...patch }));
+    assert.equal(result.kind, "unknown");
+    assert.equal(store.open("u", "svc-a"), null);
+  }
+});
+
 test("a held rotation remembers which credential and overlap it named, and an issue attempt carries none", async () => {
   const { clocks: c } = clocks();
   const store = issueAttempts(counter(), c);
-  const { exec } = scripted([fail("busy"), ok()]);
+  const { exec, sent } = scripted([fail("busy"), { ...ok(), state: "credential_rotated" }]);
   const rotate = { credential: "cred-00000000000000aa", overlap: "60" };
   const given = { ...values, rotate };
   assert.equal((await store.submit("u", "svc-a", given, "rev-1", 3600, exec)).kind, "unknown");
@@ -264,4 +302,13 @@ test("a held rotation remembers which credential and overlap it named, and an is
   const plain = issueAttempts(counter(), c);
   await plain.submit("u", "svc-a", values, "rev-1", 3600, scripted([fail("busy")]).exec);
   assert.equal(plain.get("u", "svc-a")?.rotate, undefined);
+  assert.equal(sent.length, 2);
+  const mixed = issueAttempts(counter(), c);
+  assert.equal((await mixed.submit("u", "svc-a", given, "rev-1", 3600, scripted([ok()]).exec)).kind, "unknown", "a rotation is not settled by an issue result");
+  const issue = issueAttempts(counter(), c);
+  assert.equal((await issue.submit("u", "svc-a", values, "rev-1", 3600, scripted([{ ...ok(), state: "credential_rotated" }]).exec)).kind, "unknown", "an issue is not settled by a rotation result");
+  const seen: unknown[] = [];
+  const frozen = issueAttempts(counter(), c);
+  await frozen.submit("u", "svc-a", { ...values, rotate: { credential: "cred-00000000000000aa", overlap: "60" } }, "rev-1", 3600, async (_tried, _expected, v) => { seen.push(v.rotate); return { ...ok(), state: "credential_rotated" }; });
+  assert.deepEqual(seen, [{ credential: "cred-00000000000000aa", overlap: "60" }]);
 });

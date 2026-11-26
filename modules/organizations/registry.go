@@ -16,12 +16,14 @@ type versioned[T any] struct {
 }
 
 type Registry struct {
-	mu           sync.RWMutex
-	installation string
-	workspaces   map[string]versioned[Workspace]
-	parties      map[scoped]versioned[Party]
-	profiles     map[scoped]versioned[BillingProfile]
-	contracts    map[scoped][]ContractRevision
+	mu            sync.RWMutex
+	installation  string
+	workspaces    map[string]versioned[Workspace]
+	parties       map[scoped]versioned[Party]
+	partyIndex    map[string][]string
+	profiles      map[scoped]versioned[BillingProfile]
+	contracts     map[scoped][]ContractRevision
+	queryVersions map[string]uint64
 }
 
 func NewRegistry(installationID string) (*Registry, error) {
@@ -29,11 +31,13 @@ func NewRegistry(installationID string) (*Registry, error) {
 		return nil, ErrInvalid
 	}
 	return &Registry{
-		installation: installationID,
-		workspaces:   make(map[string]versioned[Workspace]),
-		parties:      make(map[scoped]versioned[Party]),
-		profiles:     make(map[scoped]versioned[BillingProfile]),
-		contracts:    make(map[scoped][]ContractRevision),
+		installation:  installationID,
+		workspaces:    make(map[string]versioned[Workspace]),
+		parties:       make(map[scoped]versioned[Party]),
+		partyIndex:    make(map[string][]string),
+		profiles:      make(map[scoped]versioned[BillingProfile]),
+		contracts:     make(map[scoped][]ContractRevision),
+		queryVersions: make(map[string]uint64),
 	}, nil
 }
 
@@ -58,6 +62,7 @@ func (r *Registry) PutWorkspace(workspace Workspace, expected uint64) (uint64, e
 		return 0, err
 	}
 	r.workspaces[workspace.ID] = versioned[Workspace]{workspace, version}
+	r.queryChanged(workspace.ID)
 	return version, nil
 }
 
@@ -117,7 +122,7 @@ func (r *Registry) PutParty(party Party, expected uint64) (uint64, error) {
 			if err != nil {
 				return 0, err
 			}
-			r.parties[key] = versioned[Party]{party, version}
+			r.putParty(key, versioned[Party]{party, version})
 			return version, nil
 		}
 	}
@@ -147,7 +152,7 @@ func (r *Registry) PutParty(party Party, expected uint64) (uint64, error) {
 	if old.version != 0 && (old.value.Kind != party.Kind || old.value.ParentID != party.ParentID) {
 		return 0, ErrInvalid
 	}
-	r.parties[key] = versioned[Party]{party, version}
+	r.putParty(key, versioned[Party]{party, version})
 	return version, nil
 }
 
@@ -201,6 +206,7 @@ func (r *Registry) PutBillingProfile(profile BillingProfile, expected uint64) (u
 				return 0, err
 			}
 			r.profiles[key] = versioned[BillingProfile]{profile, version}
+			r.queryChanged(profile.WorkspaceID)
 			return version, nil
 		}
 	}
@@ -248,6 +254,7 @@ func (r *Registry) PutBillingProfile(profile BillingProfile, expected uint64) (u
 		return 0, err
 	}
 	r.profiles[key] = versioned[BillingProfile]{profile, version}
+	r.queryChanged(profile.WorkspaceID)
 	return version, nil
 }
 
@@ -348,6 +355,7 @@ func (r *Registry) AppendContractRevision(revision ContractRevision) error {
 	stored := revision
 	stored.Components = append([]Component(nil), revision.Components...)
 	r.contracts[key] = append(history, stored)
+	r.queryChanged(revision.WorkspaceID)
 	return nil
 }
 

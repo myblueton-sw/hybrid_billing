@@ -1,7 +1,8 @@
 import type { SessionRow } from "./session-query";
 import { sessionQueryClient } from "./session-query";
+import { serviceQueryClient } from "./service-query";
 import { grantsOf, delegationsOf, catalogOf, subjectsOf, settingsOf as accessSettingsOf, requestsOf, revocationsOf, previewsOf } from "./access-read";
-import { credentialOf, servicesPageOf, selfPageOf } from "./account-read";
+import { credentialOf, selfPageOf } from "./account-read";
 import { organizationsPageOf, organizationTreeOf } from "./organization-read";
 import { ReadParseError, text as readText } from "./strict-read";
 import { accessHistoryOf, HistoryParseError, type AccessHistoryPage, type AccessHistoryQuery } from "./access-history";
@@ -273,26 +274,6 @@ export type CredentialRow = {
   replaces?: string;
   replaced_by?: string;
   rotation?: "replacing" | "ending";
-};
-export type ServiceRow = {
-  id: string;
-  state: "active" | "suspended" | "retired";
-  version: number;
-  creator: string;
-  creator_login: string;
-  owner: string;
-  owner_login: string;
-  credentials: CredentialRow[];
-};
-export type ServicesPage = {
-  revision: string;
-  services: ServiceRow[];
-  owners: { user_id: string; login: string }[];
-  limits: {
-    credential_days: number; credentials_per_service: number; services: number; replay_seconds: number;
-    credential_overlap_minutes: number; credential_overlap_max_minutes: number; secret_pickup_minutes: number;
-  };
-  now: string;
 };
 export type Secret = { secret: string; credential: string };
 export type { SelfSession, SelfEnd, SelfEndRow, SelfItem, SelfRef } from "./self-end";
@@ -739,6 +720,7 @@ export type CommandId =
   | "access.withdraw_request"
   | "access.revoke_delegation"
   | "service.create"
+  | "service.declare"
   | "service.suspend"
   | "service.reinstate"
   | "service.retire"
@@ -993,6 +975,7 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis), ste
       return () => { authenticationListeners.delete(listener); };
     },
     ...sessionQueryClient(send, () => attempt().request, validatedRead),
+    ...serviceQueryClient(send, () => attempt().request, validatedRead),
     async users(query: UsersQuery = {}): Promise<UsersPage> {
       const body = await send("/identity/users?" + usersQueryString(query), { method: "GET" }, attempt().request);
       const methods = (body.auth_methods ?? {}) as Record<string, unknown>;
@@ -1046,10 +1029,6 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis), ste
       if (customer) q.set("customer", customer);
       const body = await send("/identity/access/preview?" + q.toString(), { method: "GET" }, attempt().request);
       return validatedRead(() => previewsOf(body.decisions));
-    },
-    async services(): Promise<ServicesPage> {
-      const body = await send("/identity/services", { method: "GET" }, attempt().request);
-      return validatedRead(() => servicesPageOf(body));
     },
     async secret(ref: string): Promise<Secret> {
       const body = await send("/identity/links/" + encodeURIComponent(ref), { method: "GET" }, attempt().request);

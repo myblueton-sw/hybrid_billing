@@ -210,10 +210,6 @@ func (s *Server) querySessions(w http.ResponseWriter, r *http.Request) {
 		invalidFields(w, request, field)
 		return
 	}
-	if found.owner != (sessionOwner{answer.User(), answer.Workspace(), answer.Epoch()}) {
-		failCode(w, commands.Unauthenticated, request)
-		return
-	}
 	index, expires := s.sessionBasis(found, answer)
 	now := s.clock()
 	cursor := sessionCursor{Owner: found.owner, Caller: found.handle, Query: query.digest(), Version: index.Version, Operations: index.Operations, Revision: s.Revision(), Reference: now, Expires: expires}

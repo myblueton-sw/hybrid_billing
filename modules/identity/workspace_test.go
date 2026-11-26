@@ -702,7 +702,7 @@ func TestCredentialLookupAndPruning(t *testing.T) {
 	f.must(err)
 	f.must(f.w.RevokeCredential(admin(), "w1", "reuse"))
 	f.r.mu.Lock()
-	delete(f.r.credentials, "reuse")
+	f.r.removeCredential("reuse")
 	f.r.mu.Unlock()
 	f.refusal("an answer for a pruned credential", f.b.Recheck(old), ReasonAnswer)
 	f.must(f.w.AddCredential(admin(), "w1", "svc", "reuse", v("other"), Validity{NotBefore: *f.now, NotAfter: f.now.Add(time.Hour)}))

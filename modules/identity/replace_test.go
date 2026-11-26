@@ -345,3 +345,35 @@ func TestAReplacementDoesNotNameAnUnrelatedCredentialThatReusesTheReplacedIdenti
 		t.Fatalf("a replacement names an unrelated credential that reuses the replaced identifier: %+v", got)
 	}
 }
+
+func TestReplaceCredentialKeepsThePagesCountsAndQueryVersionCurrent(t *testing.T) {
+	f, admin := replaceFixture(t, 3)
+	long := Validity{NotBefore: start, NotAfter: start.Add(100 * time.Hour)}
+	f.must(f.w.AddCredential(admin(), "w1", "svc", "old", v("old"), long))
+	before, err := f.w.ServiceQueryBasis(admin(), "w1")
+	f.must(err)
+	end := start.Add(24 * time.Hour)
+	f.must(f.w.ReplaceCredential(admin(), "w1", "old", "new", v("new"), Validity{NotBefore: start, NotAfter: start.Add(200 * time.Hour)}, end))
+	after, err := f.w.ServiceQueryBasis(admin(), "w1")
+	if err != nil || after.Credentials <= before.Credentials {
+		t.Fatalf("the credential query version did not advance: %+v then %+v %v", before, after, err)
+	}
+	page, err := f.w.CredentialPage(admin(), "w1", "svc", "", 2)
+	if err != nil || len(page) != 2 || page[0].ID != "new" || page[0].Replaces != "old" || page[1].ID != "old" || page[1].ReplacedBy != "new" || !page[1].Validity.NotAfter.Equal(end) {
+		t.Fatalf("the bounded page after a replacement: %+v %v", page, err)
+	}
+	controls, err := f.w.ServiceControls(admin(), "w1", "svc")
+	if err != nil || controls.LiveCredentials != 2 {
+		t.Fatalf("live credentials during the overlap: %+v %v", controls, err)
+	}
+	*f.now = end
+	controls, err = f.w.ServiceControls(admin(), "w1", "svc")
+	if err != nil || controls.LiveCredentials != 1 {
+		t.Fatalf("live credentials once the replaced one has reached its new end: %+v %v", controls, err)
+	}
+	f.must(f.w.AddCredential(admin(), "w1", "svc", "third", v("third"), Validity{NotBefore: end, NotAfter: end.Add(time.Hour)}))
+	f.must(f.w.AddCredential(admin(), "w1", "svc", "fourth", v("fourth"), Validity{NotBefore: end, NotAfter: end.Add(time.Hour)}))
+	if err := f.w.AddCredential(admin(), "w1", "svc", "fifth", v("fifth"), Validity{NotBefore: end, NotAfter: end.Add(time.Hour)}); err == nil {
+		t.Fatal("a fourth live credential was added beyond the limit of three")
+	}
+}

@@ -1,0 +1,238 @@
+{
+  "schema_version": 1,
+  "ticket": "HYB-304",
+  "machine": "mac_mini",
+  "parent_revision": "f0614b4440a2e35184f1ae81f4f2ea00d7bc6916",
+  "scope": "execution_dependency_and_staged_public_module_create_conflict",
+  "production_unchanged": true,
+  "checks": {
+    "initial": "PASS0.816s before Creator/Epoch premise tightening",
+    "focused": "PASS0.823s separate native profile",
+    "full_server_short": "ok  \tgithub.com/myblueton-sw/hybrid_billing/apps/api/server\t195.198s\tcoverage: 99.7% of statements",
+    "coverage": {
+      "matching_production_sources": 107,
+      "weighted_statements": 11779,
+      "uncovered": 30,
+      "previous_uncovered": 35,
+      "newly_covered_blocks": [
+        {
+          "location": "github.com/myblueton-sw/hybrid_billing/apps/api/server/servicedeclaration.go:281.16,283.3",
+          "weighted_statements": 1,
+          "also_hit_by_focused_contract": true
+        },
+        {
+          "location": "github.com/myblueton-sw/hybrid_billing/apps/api/server/services.go:277.53,279.3",
+          "weighted_statements": 1,
+          "also_hit_by_focused_contract": true
+        },
+        {
+          "location": "github.com/myblueton-sw/hybrid_billing/apps/api/server/services.go:286.103,287.43",
+          "weighted_statements": 1,
+          "also_hit_by_focused_contract": true
+        },
+        {
+          "location": "github.com/myblueton-sw/hybrid_billing/apps/api/server/services.go:287.43,289.4",
+          "weighted_statements": 1,
+          "also_hit_by_focused_contract": true
+        },
+        {
+          "location": "github.com/myblueton-sw/hybrid_billing/apps/api/server/services.go:290.3,290.22",
+          "weighted_statements": 1,
+          "also_hit_by_focused_contract": true
+        }
+      ],
+      "newly_covered_weighted_statements": 5,
+      "no_profile_union": true
+    },
+    "race": "PASS5groups6.492s",
+    "vet": "PASS server",
+    "portable_compilation": "PASS Linux/Windows amd64; no foreign execution",
+    "mutations": "3 assertion-killed; exact restoration/private cache removed",
+    "docs": "two status checks plus manual metadata/local links PASS; limited scope",
+    "required100": "NOT_MET",
+    "all_packages_frontend_browser": "NOT_RERUN historical source-bound evidence unchanged"
+  },
+  "independent_source_review": "/root/hyb310_review PASS direct Apply caller/lock restoration, genuine interleaving and bounded state oracle; no test execution",
+  "limits": [
+    "Direct component execution, not concurrent HTTP or command ledger",
+    "Intentional public competitor insertion changes identity query generations; unrelated resources and server revision preserved",
+    "Conflict mutation proves exact field attribution, not all interleavings",
+    "No product changes/private map fabrication/new hooks/coverage waiver",
+    "Merge/read-back and parent M03/M02 remain pending"
+  ],
+  "source_files": [
+    {
+      "path": "apps/api/server/service_command_dependency_test.go",
+      "sha256": "aadf948ba9deaa6d8cb670154026c4c6af1c0014ae51d87d18f4362c127c4fa8",
+      "bytes": 4959
+    },
+    {
+      "path": "apps/api/server/service_detail_clock_fixture_test.go",
+      "sha256": "4c3936122d595e293255c9f3af416de9491780d0287a47fe74796667fdf20c9d",
+      "bytes": 4645
+    },
+    {
+      "path": "apps/api/server/services.go",
+      "sha256": "699e5867439a9c44eb4d0bef1ebb06a4ddd180cbbbf72043ff7f8ee9b56c43a3",
+      "bytes": 12586
+    },
+    {
+      "path": "apps/api/server/servicedeclaration.go",
+      "sha256": "d40422444222bff0b4d525caf008721cfcae5620ba5884ede3a833cc5bfd3598",
+      "bytes": 10192
+    },
+    {
+      "path": "apps/api/server/server.go",
+      "sha256": "4b51eed55298f047cbfcfc19b6b8e9865eb7e61a16c0e4ad374f08ecff502f81",
+      "bytes": 14634
+    },
+    {
+      "path": "modules/identity/types.go",
+      "sha256": "4352b1a075a05f5b278c26b2cd838d2a89542cbdbe24dcb614d222fbc119cd3d",
+      "bytes": 7064
+    },
+    {
+      "path": "docs/features/HYB-304/m04-command-dependency-contracts.md",
+      "sha256": "45e28d5dd367b5794ac01935e25f4e0cff8e4997316d031607ec9478d1ebd2d6",
+      "bytes": 4331
+    },
+    {
+      "path": "docs/features/HYB-304/m04-consumer.md",
+      "sha256": "995d7cf4335b291cef08c761aee7d050a397df8480c9298e5f707fb1f94f35ca",
+      "bytes": 42267
+    },
+    {
+      "path": "docs/features/HYB-304/m04-completion.md",
+      "sha256": "55230e7d4efa6ba2fad759b07c2084e4dad110dd9e4f671ab0beaca5808ba318",
+      "bytes": 17607
+    },
+    {
+      "path": "docs/ui/screen-binding-register.md",
+      "sha256": "0b89b131619dc20532c9d6759f82546432f85ac0035399a8d300bc5c18505cf1",
+      "bytes": 60378
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "/private/tmp/hb304-command-dependency-coverage-summary.json",
+      "sha256": "c44ba1adea9a7a78b3c8b5b8982fb36df9278fe6aa5b99956b71888afe98cbc7",
+      "bytes": 1179
+    },
+    {
+      "path": "/private/tmp/hb304-command-dependency-evidence.py",
+      "sha256": "728c693037ad90cbbb2ec363b2f304658af5ea8b1e5d5c387a8d4ecfe5aacc01",
+      "bytes": 7169
+    },
+    {
+      "path": "/private/tmp/hb304-command-dependency-focused.cover",
+      "sha256": "7b3ffa95a1237d4bd4c4509f550be1142b23e472df9735e3849ea3a32d0abfb6",
+      "bytes": 684312
+    },
+    {
+      "path": "/private/tmp/hb304-command-dependency-focused.log",
+      "sha256": "dcaa4e79fd53ac2e5960f0641d338315a32a8851b5aa93068f20ac768d35c83e",
+      "bytes": 97
+    },
+    {
+      "path": "/private/tmp/hb304-command-dependency-linux-amd64.test",
+      "sha256": "ac6589884a0406b45fefdbe8880d9bdfac39f3c428102ffee0c4ff246788bee7",
+      "bytes": 28229288
+    },
+    {
+      "path": "/private/tmp/hb304-command-dependency-linux-format.log",
+      "sha256": "b8a3a93e08cd302b3ba6d7cbbb86cae6b2625869d976c28cc3f44369c5ef78dc",
+      "bytes": 214
+    },
+    {
+      "path": "/private/tmp/hb304-command-dependency-linux.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/private/tmp/hb304-command-dependency-mutant-create-conflict-field.log",
+      "sha256": "a5b11a68f82d048c0ac4ddeefb9003137f3f906aa7e7935694966f7dd86ec7bb",
+      "bytes": 279
+    },
+    {
+      "path": "/private/tmp/hb304-command-dependency-mutant-create-lookup-refusal.log",
+      "sha256": "3eece4531a1e8bf71ffb4abf0f1b283bf931eb84be704fbde6bfc09a0f59f6e2",
+      "bytes": 362
+    },
+    {
+      "path": "/private/tmp/hb304-command-dependency-mutant-declare-lookup-refusal.log",
+      "sha256": "b41f205639387d004b488b1cf8466ba6e6ae85da297cab3f6d6a9bbfa13f3f4a",
+      "bytes": 363
+    },
+    {
+      "path": "/private/tmp/hb304-command-dependency-mutants.json",
+      "sha256": "561376fd3448e440e045d4fa8520f3208c769ac801625762559c525b0a0cd5a2",
+      "bytes": 1365
+    },
+    {
+      "path": "/private/tmp/hb304-command-dependency-mutants.log",
+      "sha256": "e09df23562c471a1e20c41708375ae39cd5c0a62d6e9b2f3c25f064bcbe3e9fd",
+      "bytes": 88
+    },
+    {
+      "path": "/private/tmp/hb304-command-dependency-mutants.py",
+      "sha256": "fa6bd73a111bd21bfb75aa9b2ed49be457da581eea82ac327725777c1fd6f4eb",
+      "bytes": 2558
+    },
+    {
+      "path": "/private/tmp/hb304-command-dependency-okf.log",
+      "sha256": "2c169e2f074ec76d96db30d5daabb7432794aada29aa977c815b81e1fd8c206c",
+      "bytes": 376
+    },
+    {
+      "path": "/private/tmp/hb304-command-dependency-race.log",
+      "sha256": "a4cc104c52a541e249c773e491c603a3f5d6a12e1253c0b730f21454090db83d",
+      "bytes": 67
+    },
+    {
+      "path": "/private/tmp/hb304-command-dependency-scoped.log",
+      "sha256": "c3a470a190a38eaa591fcbda1a24ef472998c642c182c941fc548f1839623084",
+      "bytes": 67
+    },
+    {
+      "path": "/private/tmp/hb304-command-dependency-server.cover",
+      "sha256": "5bd92fdce59db01aa5b91f109053ee63b8d2adc0ec93b6245ee33940a47eca4c",
+      "bytes": 684312
+    },
+    {
+      "path": "/private/tmp/hb304-command-dependency-server.log",
+      "sha256": "65febb22b8fc726beaf67662a12fa57acc8081fb1b390ba58bddc4d39ce6aa57",
+      "bytes": 99
+    },
+    {
+      "path": "/private/tmp/hb304-command-dependency-source-binding.json",
+      "sha256": "c2c0bbca206999c9aad480b7c99147c6470605e2f0a04e9e51aa27292da3de47",
+      "bytes": 14629
+    },
+    {
+      "path": "/private/tmp/hb304-command-dependency-source-checks.log",
+      "sha256": "a28f7c78c49d17e62495c3a8b8839771e74adcdf22a11dc3c603701c9f53e46a",
+      "bytes": 134
+    },
+    {
+      "path": "/private/tmp/hb304-command-dependency-vet.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/private/tmp/hb304-command-dependency-windows-amd64.test.exe",
+      "sha256": "086d5765f43ec392b6d959bcf3d75b7059efbb91bafd5eae4987a8f4508ff2ee",
+      "bytes": 28572672
+    },
+    {
+      "path": "/private/tmp/hb304-command-dependency-windows-format.log",
+      "sha256": "ef31422bafb32a25fd001eeb3a96c8fa567749f6b90797926f7fa00042bb2f52",
+      "bytes": 112
+    },
+    {
+      "path": "/private/tmp/hb304-command-dependency-windows.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    }
+  ],
+  "independent_evidence_review": "/root/hyb310_copy_render PASS10source/24artifact/107production bindings, five focused-proven native units, logs/restores and bounded direct Apply narrative; no tests/services; no feature/merge approval"
+}

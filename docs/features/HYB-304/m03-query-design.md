@@ -93,6 +93,8 @@ Each increment has its own independent review; C2, C4 and C5 change a public rea
 
 - **C2, 2026-11-26.** `apps/api/server/accessquery.go`: the permissions read and the two detail reads, as designed. Rows carry what the whole read's grant and delegation rows carry, with `source`, and a delegation's delegate as `subject`. States are the whole read's (`active`, `pending`, `expired`, `revoked`, `revocation_unconfirmed`, and `ended` for a delegation that is active by date but not effective). Unknown, hidden and wrong-source identifiers answer `422 invalid_request` alike, the convention of the other reads of this service. The cursor continues only its own query, caller and basis within its lifetime. `work_units` counts every stored row examined, so on a complete unfiltered walk it exceeds the rows listed by the number of installation-action grants; readers are installation administrators and the API description says so. No eligibility is returned by the detail reads yet: M03's commands act through change requests, whose eligibility belongs to the requests read of C4.
 
+- **C3a, 2026-11-26.** The console's strict reader and client for the permissions read and its detail reads (`apps/console/src/service/access-query.ts`): closed shapes that refuse unknown fields, the source-then-identifier order, the facts a row must agree with itself on (a grant has a subject or a client and no delegator; effective only when active; a selector is any or an identifier), a page that agrees with its count, cursor and the query that was asked, and every returned row satisfying the filters asked. The shape was taken from the answers of a local service. No screen uses it yet.
+
 # Decided by the owner
 
 Asked in the working session on 2026-11-26:

@@ -27,7 +27,7 @@ const emptyOr = <T>(parse: Parser<T>): Parser<T | ""> => (v) => v === "" ? "" : 
 const nonempty: Parser<string> = (v) => { const s = text(v); requireRead(s.length > 0); return s; };
 const digest: Parser<string> = (v) => { const s = text(v); requireRead(/^[a-f0-9]{64}$/.test(s)); return s; };
 const bounded = <T>(parse: Parser<T>, max = 100): Parser<T[]> => (v) => { requireRead(Array.isArray(v) && v.length <= max); return array(parse)(v); };
-function closed<T>(fields: { [K in keyof T]-?: Parser<T[K]> }): Parser<T> {
+export function closed<T>(fields: { [K in keyof T]-?: Parser<T[K]> }): Parser<T> {
   const parse = shape<T>(fields);
   return (v) => {
     const r = record(v);

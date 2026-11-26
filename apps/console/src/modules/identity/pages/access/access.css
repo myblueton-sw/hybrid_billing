@@ -77,12 +77,6 @@
 .remaining-security .live-access .live-col-d {
   inline-size: 24%;
 }
-.remaining-security .access-grants .live-col-a {
-  inline-size: 22%;
-}
-.remaining-security .access-grants .live-col-d {
-  inline-size: 28%;
-}
 .remaining-security .live-access td {
   overflow-wrap: anywhere;
 }
@@ -118,5 +112,146 @@
   .remaining-security .live-access .live-revoke {
     white-space: normal;
     max-inline-size: 100%;
+  }
+}
+.access-list-body {
+  container-type: inline-size;
+  display: grid;
+  gap: 16px;
+}
+.access-filter-note {
+  margin: 0 0 8px;
+}
+.access-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+  gap: 16px;
+  align-items: end;
+  margin-block-end: 12px;
+}
+.access-filter-grid .service-field {
+  margin: 0;
+  max-inline-size: 20rem;
+}
+.access-filter-grid input,
+.access-filter-grid select {
+  inline-size: 100%;
+  box-sizing: border-box;
+}
+.access-filters-toggle {
+  display: none;
+}
+.access-count p {
+  margin: 0;
+}
+.remaining-security .access-permissions table {
+  inline-size: 100%;
+  min-inline-size: 0;
+  table-layout: fixed;
+}
+.remaining-security .access-permissions td,
+.remaining-security .access-permissions th {
+  min-inline-size: 0;
+  overflow-wrap: break-word;
+  white-space: normal;
+  vertical-align: top;
+}
+.remaining-security .access-permissions .live-mono,
+.remaining-security .access-permissions .acc-login {
+  overflow-wrap: anywhere;
+}
+.remaining-security .access-permissions td > span {
+  display: block;
+}
+.remaining-security .access-permissions .live-revoke {
+  max-inline-size: 100%;
+  white-space: normal;
+}
+.remaining-security .access-permissions td.live-strong {
+  font-weight: inherit;
+}
+.remaining-security .access-permissions td.live-strong > .acc-state {
+  font-weight: 600;
+}
+.remaining-security .access-paging button:disabled {
+  cursor: not-allowed;
+  color: var(--hb-text-faint);
+  border-color: var(--hb-line-row);
+  background: var(--c-subtle);
+}
+.acc-col-holder { inline-size: 15%; }
+.acc-col-access { inline-size: 17%; }
+.acc-col-scope { inline-size: 15%; }
+.acc-col-source { inline-size: 9%; }
+.acc-col-parent { inline-size: 10%; }
+.acc-col-validity { inline-size: 12%; }
+.acc-col-effective { inline-size: 13%; }
+.acc-col-action { inline-size: 9%; }
+.remaining-security .access-permissions td > .acc-folded {
+  display: none;
+}
+@container (max-width: 960px) {
+  .remaining-security .access-permissions .acc-parent,
+  .remaining-security .access-permissions .acc-validity,
+  .access-permissions .acc-col-parent,
+  .access-permissions .acc-col-validity {
+    display: none;
+  }
+  .remaining-security .access-permissions td > .acc-folded {
+    display: block;
+  }
+  .acc-col-holder { inline-size: 20%; }
+  .acc-col-access { inline-size: 16%; }
+  .acc-col-scope { inline-size: 16%; }
+  .acc-col-source { inline-size: 14%; }
+  .acc-col-effective { inline-size: 18%; }
+  .acc-col-action { inline-size: 16%; }
+  .remaining-security .access-permissions td,
+  .remaining-security .access-permissions th {
+    padding-inline: 8px;
+  }
+  .remaining-security .access-permissions .live-revoke {
+    padding-inline: 8px;
+  }
+}
+@container (max-width: 600px) {
+  .access-filters-toggle {
+    display: inline-flex;
+    margin-block-end: 12px;
+  }
+  .access-filters[data-open="false"] .access-filter-form {
+    display: none;
+  }
+  .access-permissions colgroup,
+  .access-permissions thead {
+    display: none;
+  }
+  .remaining-security .access-permissions table,
+  .remaining-security .access-permissions tbody,
+  .remaining-security .access-permissions tr,
+  .remaining-security .access-permissions td {
+    display: block;
+    inline-size: auto;
+  }
+  .remaining-security .access-permissions tr {
+    padding-block: 12px;
+    border-block-end: 1px solid var(--hb-line-row);
+  }
+  .remaining-security .access-permissions td {
+    padding: 2px 0;
+    border: 0;
+  }
+  .remaining-security .access-permissions td.acc-parent {
+    display: none;
+  }
+  .remaining-security .access-permissions td.acc-validity {
+    display: block;
+  }
+  .remaining-security .access-permissions td > .acc-folded-validity,
+  .remaining-security .access-permissions td.acc-validity > .live-sub {
+    display: none;
+  }
+  .remaining-security .access-permissions .acc-action .live-secondary {
+    inline-size: auto;
   }
 }

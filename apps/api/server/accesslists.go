@@ -202,12 +202,7 @@ func (s *Server) queryAccessRequests(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	facts, err := s.accessFacts(read.found.verifier)
-	if err != nil {
-		failCode(w, commands.DependencyUnavailable, read.request)
-		return
-	}
-	facts.now = read.cursor.Reference
+	facts, failure := s.boundedFacts(read.found.verifier)
 	you := read.found.owner.User
 	rows := []listedRequest{}
 	exhausted := false
@@ -248,6 +243,10 @@ func (s *Server) queryAccessRequests(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 		exhausted = !more
+	}
+	if *failure != nil {
+		failCode(w, commands.DependencyUnavailable, read.request)
+		return
 	}
 	closeList(s, w, read, requestsCursorDomain, requestsOrder, rows, exhausted)
 }
@@ -300,7 +299,7 @@ func accessListPaths() map[string]any {
 		return map[string]any{"get": map[string]any{"operationId": operation, "x-row": row, "x-filters": filters, "x-order": order,
 			"responses": serviceReadResponses(map[string]any{"type": "object", "properties": map[string]any{"rows": map[string]any{"type": "array", "items": row}}}, true),
 			"x-listed":  listed, "x-filter": filter,
-			"x-time":   "a row's state is its state at the reference time; what the caller may do with it is evaluated when the page is read, and the command decides",
+			"x-time":   "a row's state is its state at the reference time; what the caller may do with it is evaluated when the page is read, and the command decides; the facts behind a row are looked up per person and per holder, each lookup up to the scan limit, and 503 dependency_unavailable answers when one holds more",
 			"x-cursor": "bound to the filters, the caller's session, the reference time and the versions of the access, membership and directory sources; 409 revision_conflict when it no longer fits"}}
 	}
 	return map[string]any{

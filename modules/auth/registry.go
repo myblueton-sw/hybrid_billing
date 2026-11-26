@@ -29,6 +29,8 @@ type Registry struct {
 	sessions              map[string]versioned[SupportSession]
 	source                SubjectSource
 	grantJoined           map[string]uint64
+	grantOrder            []string
+	delegationOrder       []string
 	chainJoined           map[string][2]uint64
 	actorJoined           map[string]uint64
 	installationWorkspace string
@@ -291,6 +293,7 @@ func (r *Registry) AddGrant(grant Grant) error {
 		return ErrConflict
 	}
 	r.grants[grant.ID] = versioned[Grant]{value: grant, version: 1}
+	r.grantOrder = insertOrdered(r.grantOrder, grant.ID)
 	r.grantJoined[grant.ID] = joined
 	r.changed()
 	return nil
@@ -424,6 +427,7 @@ func (r *Registry) AddDelegation(delegation Delegation) error {
 	}
 	delegation.Terms = terms
 	r.delegations[delegation.ID] = versioned[Delegation]{value: delegation, version: 1}
+	r.delegationOrder = insertOrdered(r.delegationOrder, delegation.ID)
 	r.chainJoined[delegation.ID] = [2]uint64{delegatorJoined, delegateJoined}
 	r.changed()
 	return nil

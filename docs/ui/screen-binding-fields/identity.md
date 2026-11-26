@@ -22,8 +22,8 @@ sources:
 This is part of the [screen binding register](../screen-binding-register.md#identity-administration-m01m05), as `HB-257/plan.md:177-178` requires: it records which screen fields come from which module read or command. The register entries list the reads and commands per screen; this file adds the field level. It is based on main `82c9272`. Owner acceptance is pending for every screen here.
 
 - **Short paths.** `admin.ts` is `apps/console/src/service/admin.ts`; `identity-bulk.ts` is `apps/console/src/service/identity-bulk.ts`. Page paths start at `apps/console/src/modules/identity/pages/`, so `users/Live.tsx` is `apps/console/src/modules/identity/pages/users/Live.tsx`. Go files (`users.go`, `policy.go`, `access.go` and so on) are under `apps/api/server/`; routes are registered in `boundary.go:21-59`.
-- **Commands.** Every command goes through `POST /api/v1/commands/{command}` (`boundary.go:24`), sent by `admin.ts:871`. The answer envelope is `resultBody` (`errors.go:41-52`); `outcomeOf` (`admin.ts:735-744`) maps `status`, `business_state`, `job_id`, `result_revision` and `fields`. "Result `fields.x`" below means `Outcome.fields.x`.
-- **Failures.** A refused read or command becomes an `AdminError` through `failureOf` (`admin.ts:776-783`, code table `admin.ts:750-772`). The message comes from the screen's describe function named in each row.
+- **Commands.** Every command goes through `POST /api/v1/commands/{command}` (`boundary.go:25`), sent by `command()` (`admin.ts:976`). The answer envelope is `resultBody` (`errors.go:41-52`); `outcomeOf` (`admin.ts:796-805`) maps `status`, `business_state`, `job_id`, `result_revision` and `fields`. "Result `fields.x`" below means `Outcome.fields.x`.
+- **Failures.** A refused read or command becomes an `AdminError` through `failureOf` (`admin.ts:841-851`, code table `admin.ts:811-833`). The message comes from the screen's describe function named in each row.
 - **Copy.** Headings, labels and messages are fixed copy (`w.*`, `b.*`, `p.*`, `ty.*`, `a.*`, `q.*`, `v.*`, `s.*`, `m.*` from the page's `*-copy.ts`). They are not service data unless the Source column names a JSON field.
 - **Typed values.** Values the person types are request fields of the command named in the row, not read fields.
 - **Derived.** "derived" means the value is computed in the console; the cited line is the computation.
@@ -258,136 +258,232 @@ Reads: `GET /api/v1/identity/bulk-revocations` (`boundary.go:26`), `/{id}` (`:27
 
 ## M02 Authentication policy and trust changes
 
-Read: `GET /api/v1/identity/policy` (`boundary.go:31`), client `admin.ts:883-885`, parser `policyPageOf` (`admin.ts:550-583`) with `trustChangeOf` (`admin.ts:517-548`), `revisionOf` (`admin.ts:505-513`) and `epochOf` (`admin.ts:500-503`); called at `authentication/Live.tsx:96` for the policies view only (`:116`). Server shape `policyPage` (`policy.go:105-120`) with `trustRow` (`policy.go:56-76`), `trustLedgerRow` (`policy.go:78-87`), `rightsRow` (`policy.go:89-94`), `holdersRow` (`policy.go:96-103`), `policyRow` (`policy.go:40-49`) and `changeRow` (`trustrows.go:81-109`).
+Rewritten on 2026-11-27 for HYB-304 after the list of trust changes moved from the policy read to bounded reads (increments M2a to M2e of the [M02 query design](../../features/HYB-304/m02-query-design.md); composition in the [M02 composition](../../features/HYB-304/m02-composition.md)). Paths under `authentication/` are `apps/console/src/modules/identity/pages/authentication/`; `service/` is `apps/console/src/service/`; server files are under `apps/api/server/`. A reference names a function and the line it starts at. Routes are registered at `boundary.go:33-35`.
+
+Reads:
+
+| Read | Server | Client and parser | Used for |
+| --- | --- | --- | --- |
+| `GET /api/v1/identity/policy` | `listPolicy` (`policy.go:145`), built by `policyPage` (`policy.go:179`), shape `policyPage` (`policy.go:105`): `revision`, `now`, `signed_in_at`, `authenticated_at`, `act_until`, `step_up_seconds`, `you`, `started_at`, `trust`, `policy`, `ledger`, `rights`, `holders`, `waiting_activation`, `earlier_run_kept`; rows `trustRow` (`policy.go:56`), `trustLedgerRow` (`:78`), `rightsRow` (`:89`), `holdersRow` (`:96`), `policyRow` (`:40`) over `revisionRow` (`:27`) | `policy()` (`service/admin.ts:988`), `policyPageOf` (`:583`) with `revisionOf` (`:538`) and `epochOf` (`:533`) | the command revision, the notices, the current rules, the changes head, the current side of every settings comparison; it carries no list of changes and no change |
+| `GET /api/v1/identity/policy/changes` | `queryTrustChanges` (`trustlists.go:88`) through `openList` (`accesslists.go:133`) and `closeList` (`:181`); row `listedChange` (`trustlists.go:35`) built by `listed` (`:65`); page `listPage` (`accesslists.go:57`) | `trustChanges` (`service/trust-changes.ts:96`), `trustChangePageOf` (`:61`), `listedTrustChangeOf` (`:47`) | the open and the closed list |
+| `GET /api/v1/identity/policy/changes/{id}` | `readTrustChange` (`trustlists.go:118`), shape `trustChangeDetail` (`:59`): `change`, `revision`, `observed_at`; `change` is `changeRow` (`trustrows.go:81`) built by `row` (`:190`) | `trustChange` (`service/trust-changes.ts:110`), `trustChangeDetailOf` (`:68`) with `trustChangeOf` (`service/admin.ts:550`) | the detail panel, the revise form's starting values, the confirm dialog's facts about a change |
+
+The two change reads come from `trustChangeClient` (`service/trust-changes.ts:94`). The policy read is called by `LivePolicy` (`authentication/Live.tsx:69`) for the policies view only.
+
+The list read takes `state`, `q`, `limit` and `after` (`parseListQuery`, `accesslists.go:71`). `state` is one of the eight states or a group (`trustChangeGroups`, `trustlists.go:20`): `open` is `draft`, `validated`, `independently_approved` and `activation_unknown`; `closed` is `activated`, `rejected`, `cancelled` and `superseded`. `q` matches a part of the change identifier. A page answers `rows`, `next`, `count` (`value`; `certainty` is always `exact` on this list), `reference_at`, `observed_at` and the echoed `query`, in the order `created_desc` (newest first). A continuation is bound to the registry's run and version (`trustBasis`, `trustlists.go:84`) and answers `revision_conflict` once a change was recorded since.
+
+**What a list row carries and what only the detail read carries.** A list row is `id`, `number`, `state`, `change_revision`, `old_epoch`, `old_policy`, `candidate`, `proposer`, `validator`, `approver`, `activator`, `superseded_by`, `earlier_run`, `run_started_at`, `validation_result`, `evidence_current`, `invalidation_state`, `decide_in_detail`, `can.revise`, `can.validate`, `can.reject`, `can.cancel`, `why_not.approve`, `why_not.activate` and `act_until`. It does not carry evidence currency: `evidence_current` is `not_evaluated` (a change in `draft`, `validated` or `independently_approved` that has a validation) or `not_applicable`, and `why_not` is computed with the evidence taken as current, so it never says `evidence_stale`. It does not carry `can.approve`, `can.activate`, the impact, the validation's time, digest and items, the activation, the job, the invalidation items, the history, the digests or `superseded_epoch`. `decide_in_detail` is true for `draft`, `validated` and `independently_approved` and false for every other state, that is `activation_unknown` and the four closed states (`listed`, `trustlists.go:65`; `Open`, `modules/trustchange/types.go:160`). The detail read answers all of these (`row`, `trustrows.go:190`; `actions`, `:231`; `whyApprove`, `:152`; `whyActivate`, `:168`).
 
 ### Views marked unavailable in pre-launch
 
-| View/area | Displayed field, column or state | Source | Parser | Rendered at |
-| --- | --- | --- | --- | --- |
-| Providers view | Method table: password active, SAML, OIDC, LDAP not available | fixed rows; no read | none | `authentication/Live.tsx:34-64`, chosen at `:117` |
-| Test login view | Not available | fixed copy | none | `authentication/Live.tsx:118` |
-| Keys view | Not available | fixed copy | none | `authentication/Live.tsx:119` |
-| Sync view | Not available, go to Users | fixed copy | none | `authentication/Live.tsx:120` |
-| Recovery view | Not available, go to Users | fixed copy | none | `authentication/Live.tsx:121` |
+| View/area | Displayed field, column or state | Source | Rendered at |
+| --- | --- | --- | --- |
+| Providers view | Method table: password active; SAML, OIDC, LDAP not available; a button to the policies view | fixed rows; no read | `Providers` (`authentication/Live.tsx:37`), chosen in `LivePolicy` (`:69`) |
+| Test login view | Not available | fixed copy | `Unavailable` (`authentication/Live.tsx:25`), chosen in `LivePolicy` |
+| Keys view | Not available | fixed copy | as above |
+| Sync view | Not available, go to Users | fixed copy | as above |
+| Recovery view | Not available, go to Users | fixed copy | as above |
 
 ### Page states
 
-| View/area | Displayed field, column or state | Source | Parser | Rendered at |
-| --- | --- | --- | --- | --- |
-| Policies | Loading | derived: no page yet | none | `authentication/Live.tsx:184-189` |
-| Policies | Load failed, Try again or Sign in again | failed policy read; `policyFailure` for `unauthenticated` (`authentication/live-model.ts:56`) | `admin.ts:776-783` | `authentication/Live.tsx:163-171` |
-| Policies | Denied on first load | `permission_denied` before any page | `admin.ts:755` | `authentication/Live.tsx:132` |
-| Policies | Rights removed (denied after a page was shown) | `permission_denied` on a later read | `admin.ts:755` | `authentication/Live.tsx:107-110, 129-131`; `authentication/TrustChanges.tsx:447-457` |
-| Policies | Busy while reloading | derived: `status === "loading"` | none | `authentication/Live.tsx:173`; reload button `authentication/TrustChanges.tsx:67` |
-| Narrow step view | Short notices above the panel | as Notices below, first sentence only | as below | `authentication/TrustChanges.tsx:52-54`, used at `authentication/Live.tsx:178` |
+All in `LivePolicy` (`authentication/Live.tsx:69`) unless another component is named.
+
+| View/area | Displayed field, column or state | Source | Rendered at |
+| --- | --- | --- | --- |
+| Policies | Loading | no policy page yet and the policy read in flight | `LivePolicy` |
+| Policies | Load failed, with Try again; or the session-ended sentence with Sign in again; a line that the shown data is kept when a page is still shown | the policy read failed; `unauthenticated` takes its sentence from `policyFailure` (`authentication/live-model.ts:56`) | `LivePolicy` |
+| Policies | Denied on first load | the policy read refused `permission_denied` before any page was shown | `Unavailable` (`authentication/Live.tsx:25`) |
+| Policies | Rights removed, with Reload | the policy read refused `permission_denied` after a page had been shown; the page, the open change, the form and the dialog are dropped | `Revoked` (`authentication/TrustChanges.tsx:388`) |
+| Policies | Busy while reloading | the policy read in flight | `LivePolicy` (the view's root); the Reload button in `CurrentRules` (`authentication/TrustChanges.tsx:57`) |
+| Policies | Done announcement after a command | command copy with the change's number | `LivePolicy` |
+| Narrow step view | Back to trust changes; the load failure; short notices; the form or the detail | shown below the wide breakpoint (`useWide`, `users/Live.tsx:48`) while the form or a change is open; the notices are the first sentence of each notice below, without the hold notice when the shown change is in `activation_unknown` | `LivePolicy`; `ShortConditions` (`authentication/TrustChanges.tsx:53`) |
+
+In the step view the notices, the current rules and both lists stay mounted and hidden, so the filter and the page of each list are kept while a panel is open. The changes section (head, filter row, lists, panel) is drawn only while a policy page is present.
 
 ### Notices
 
-| View/area | Displayed field, column or state | Source | Parser | Rendered at |
-| --- | --- | --- | --- | --- |
-| Notices | Held after an unconfirmed activation, since, link to the change | `trust.hold`, `hold.since` (`policy.go:51-54, 75`); change with `state = "activation_unknown"` | `admin.ts:552, 572, 526` | `authentication/TrustChanges.tsx:26-50`; rule `authentication/trust-model.ts:82` |
-| Notices | Trust ledger isolated, problem line, older record ignored | `ledger.state = "isolated"`, `isolation_reason`, `problem_line` (`policy.go:79-81`); `trust.older_record_ignored` (`policy.go:68`) | `admin.ts:575, 571` | `authentication/trust-model.ts:83-86, 102`; `authentication/TrustChanges.tsx:38` |
-| Notices | Not durable | `trust.durable_unconfirmed` (`policy.go:65`) or `ledger.not_durable` (`policy.go:86`) | `admin.ts:571, 576` | `authentication/trust-model.ts:87, 103` |
-| Notices | Ledger stopped | `ledger.state = "stopped"` without a hold | `admin.ts:575` | `authentication/trust-model.ts:88, 104` |
-| Notices | Trust reset at | `trust.reset_at` (`policy.go:67`) | `admin.ts:571` | `authentication/trust-model.ts:89, 105`; `authentication/TrustChanges.tsx:29` |
-| Notices | Carried from line | `trust.origin = "carried"`, `carried_line` (`policy.go:62, 64`) | `admin.ts:570` | `authentication/trust-model.ts:90, 106` |
+Component `Conditions` (`authentication/TrustChanges.tsx:27`); which notices apply comes from `conditions` (`authentication/trust-model.ts:80`), their sentences from `conditionText` (`:99`). Every source is the policy read.
+
+| Area | Displayed field, column or state | Source |
+| --- | --- | --- |
+| Hold | Held after an unconfirmed activation; since | `trust.hold` present; `trust.hold.since` |
+| Hold | "Open the change waiting for activation" | shown when `waiting_activation` is not empty; it opens that identifier through the detail read. `waiting_activation` is the identifier of a kept change in `activation_unknown`, or empty (`Summary`, `modules/trustchange/pages.go:82`) |
+| Isolated | Trust ledger isolated; the problem line; an older record was ignored | `ledger.state = "isolated"`; `ledger.problem_line` when `ledger.isolation_reason` is `integrity_failed` or `epoch_order`; `trust.older_record_ignored` |
+| Not durable | Not confirmed as durable | `trust.durable_unconfirmed` or `ledger.not_durable` |
+| Stopped | Ledger stopped | `ledger.state = "stopped"` with no hold, and only when the not-durable notice does not apply |
+| Reset | Trust reset at | `trust.reset_at` |
+| Carried | Carried from line | `trust.origin = "carried"` with `trust.carried_line` above zero |
 
 ### Current rules
 
-| View/area | Displayed field, column or state | Source | Parser | Rendered at |
-| --- | --- | --- | --- | --- |
-| Current rules | Loaded at | `now` (`policy.go:107`) | `admin.ts:561` | `authentication/TrustChanges.tsx:65` |
-| Current rules | No policy | `policy` null (`policy.go:115`) | `admin.ts:557, 560` | `authentication/TrustChanges.tsx:81` |
-| Current rules | Sign-in methods | `policy.methods` (`policy.go:28`) via `methodsText` (`authentication/live-model.ts:42-44`) | `admin.ts:508, 560` | `authentication/TrustChanges.tsx:74` |
-| Current rules | MFA | `policy.mfa` (`policy.go:29`) | `admin.ts:509` | `authentication/TrustChanges.tsx:75` |
-| Current rules | Maximum sign-in age | `policy.max_age_seconds` (`policy.go:30`) | `admin.ts:510` | `authentication/TrustChanges.tsx:76` |
-| Current rules | Step-up for policy changes | `policy.step_up[]` entry with `action = "policy.change"` and no MFA (`policy.go:21-25`); default 900 s when absent (`authentication/live-model.ts:21-30`) | `admin.ts:511` | `authentication/TrustChanges.tsx:77` |
-| Current rules | Effective step-up window | `step_up_seconds` (`policy.go:111`), default 900 (`authentication/live-model.ts:32-34`) | `admin.ts:565` | `authentication/TrustChanges.tsx:78` |
-| Trust | Version | `trust.epoch_generation`, `epoch_number` (`policy.go:58-59`) via `currentVersion` (`authentication/trust-model.ts:14-16`) | `admin.ts:569` | `authentication/TrustChanges.tsx:85` |
-| Trust | Policy revision | `trust.policy_number` (`policy.go:60`); "not recorded" without a policy | `admin.ts:569` | `authentication/TrustChanges.tsx:86` |
-| Trust | Origin | `trust.origin` (`policy.go:62`) | `admin.ts:570` | `authentication/TrustChanges.tsx:87` |
-| Trust | Activated at | `trust.activated_at` (`policy.go:66`) | `admin.ts:571` | `authentication/TrustChanges.tsx:88` |
-| Trust | Proposed, validated, approved, activated by | `trust.proposer`, `validator`, `approver`, `activator` (`policy.go:70-73`) | `admin.ts:571-572` | `authentication/TrustChanges.tsx:89-92` |
-| Trust | Ledger records and generation | `ledger.records`, `ledger.generation` (`policy.go:82, 84`) | `admin.ts:575-576` | `authentication/TrustChanges.tsx:96` |
-| Trust | Carried from | `trust.carried_from` (`policy.go:63`) | `admin.ts:570` | `authentication/TrustChanges.tsx:97` |
-| Trust | You may act until / sign-in too old | `act_until`, `now` (`policy.go:107, 110`) via `stale` (`authentication/live-model.ts:46-48`) | `admin.ts:561, 564` | `authentication/TrustChanges.tsx:98` |
+Component `CurrentRules` (`authentication/TrustChanges.tsx:57`). Every source is the policy read.
 
-### Changes list
+| Area | Displayed field, column or state | Source |
+| --- | --- | --- |
+| Head | Loaded at; Reload | `now` |
+| Rules | No policy | `policy` is null |
+| Rules | Sign-in methods | `policy.methods` through `methodsText` (`authentication/live-model.ts:42`) |
+| Rules | MFA | `policy.mfa` |
+| Rules | Maximum sign-in age | `policy.max_age_seconds` through `duration` (`authentication/live-model.ts:9`) |
+| Rules | Step-up for policy changes | the `policy.step_up[]` entry with `action = "policy.change"` and no MFA (`policyStep`, `authentication/live-model.ts:21`); the default of 900 seconds when absent (`stepText`, `:27`; `defaultStepUp`, `:25`) |
+| Rules | Effective step-up window | `step_up_seconds`, or 900 when it is not above zero (`effectiveStep`, `authentication/live-model.ts:32`) |
+| Trust | Version | `trust.epoch_generation`, `trust.epoch_number` through `currentVersion` (`authentication/trust-model.ts:14`) |
+| Trust | Policy revision | `trust.policy_number`; "not recorded" when `policy` is null |
+| Trust | Origin | `trust.origin` |
+| Trust | Stricter fields: the names, none, or unknown | `trust.stricter_fields`; the parser gives null unless it is a list of strings, shown as unknown |
+| Trust | Activated at | `trust.activated_at`; "not recorded" when empty |
+| Trust | Proposed, validated, approved, activated by | `trust.proposer`, `trust.validator`, `trust.approver`, `trust.activator` |
+| Ledger line | Ledger records and generation | `ledger.records`, `ledger.generation` |
+| Note | Carried from | `trust.carried_from` when `trust.origin = "carried"` |
+| Window line | You may act until; or sign-in too old | `act_until` when not empty; too old when `now` is after `act_until` (`stale`, `authentication/live-model.ts:46`) |
 
-| View/area | Displayed field, column or state | Source | Parser | Rendered at |
-| --- | --- | --- | --- | --- |
-| Changes head | Propose button | `rights.propose` (`policy.go:90`) and not unavailable (`authentication/trust-model.ts:70-76`) | `admin.ts:578` | `authentication/TrustChanges.tsx:109` |
-| Changes head | Holders ready, qualifying people | `holders.ready`, `qualifying_people` (`policy.go:97, 99`) | `admin.ts:579` | `authentication/TrustChanges.tsx:111-112` |
-| Changes head | Enrolment blocked, missing roles | `holders.ready` false, `holders.missing[]` (`policy.go:100`) | `admin.ts:579-580` | `authentication/TrustChanges.tsx:113-121` |
-| Changes head | Your trust rights | `rights.propose`, `validate`, `approve`, `activate` (`policy.go:90-93`) via `rightsList` (`authentication/trust-model.ts:170-173`) | `admin.ts:578` | `authentication/TrustChanges.tsx:122` |
-| Changes head | Trust changes unavailable | `trust.hold` or `ledger.state` not `ok`, `recovered`, `full` | `admin.ts:552, 575` | `authentication/TrustChanges.tsx:123` |
-| Changes head | Changes before this start not kept | any `changes[].earlier_run`, or `trust.origin` `ledger_replay`/`carried`; `started_at` (`policy.go:113`) | `admin.ts:531, 567, 570` | `authentication/TrustChanges.tsx:104, 124` |
-| Lists | Open and closed counts, empty lines | derived grouping by `changes[].state` (`authentication/trust-model.ts:7-8, 110-114`) | `admin.ts:526, 581` | `authentication/TrustChanges.tsx:188-198` |
-| Changes table | Column headings | fixed copy | none | `authentication/TrustChanges.tsx:152-155` |
-| Changes table | Change N (opens detail) | `changes[].number`, `id` (`trustrows.go:82-83`) | `admin.ts:528` | `authentication/TrustChanges.tsx:161` |
-| Changes table | From an earlier run | `earlier_run`, `run_started_at` (`trustrows.go:98-99`) | `admin.ts:531` | `authentication/TrustChanges.tsx:163` |
-| Changes table | State, evidence changed | `state` (`trustrows.go:84`); stale from `validation.evidence_current` (`trustrows.go:22`) via `stale` (`authentication/trust-model.ts:120-122`) | `admin.ts:526, 533` | `authentication/TrustChanges.tsx:133-141, 173` |
-| Changes table | Proposed by | `proposer` (`trustrows.go:92`) | `admin.ts:529` | `authentication/TrustChanges.tsx:174` |
-| Changes table | Based on version and policy | `old_epoch.generation`, `.number`, `old_policy` (`trustrows.go:87-88`) | `admin.ts:528-529` | `authentication/TrustChanges.tsx:129-131, 175` |
-| Changes table | Next step | derived `nextStep` from `state`, validation result, `invalidation.state` (`authentication/trust-model.ts:130-140`) | `admin.ts:526, 532-542` | `authentication/TrustChanges.tsx:176` |
-| Changes table (reduced) | One cell with change, state, next | as above | as above | `authentication/TrustChanges.tsx:169` |
+### Changes head
+
+Component `ChangesHead` (`authentication/TrustChanges.tsx:105`). Every source is the policy read.
+
+| Area | Displayed field, column or state | Source |
+| --- | --- | --- |
+| Propose button | shown or not | `rights.propose` and trust changes available (`canPropose`, `authentication/trust-model.ts:74`) |
+| Holders line | qualifying people | `holders.ready` true (`enrolled`, `authentication/trust-model.ts:169`); `holders.qualifying_people` |
+| Enrolment blocked | lead, missing roles, qualifying people | `holders.ready` false; `holders.missing[]`; `holders.qualifying_people` |
+| Rights line | your trust rights, or none | `rights.propose`, `rights.validate`, `rights.approve`, `rights.activate` through `rightsList` (`authentication/trust-model.ts:164`) |
+| Unavailable line | trust changes unavailable | `trust.hold` present, or `ledger.state` not `ok`, `recovered` or `full` (`unavailable`, `authentication/trust-model.ts:70`) |
+| Note | changes before this start are not kept, with the start time | `earlier_run_kept`, or `trust.origin` `ledger_replay` or `carried`; `started_at` |
+
+### Filter row
+
+Component `Filters` (`authentication/TrustLists.tsx:98`) inside `TrustLists` (`:125`); the filter is held by `TrustLists`, not in the address.
+
+| Area | Displayed field, column or state | Source |
+| --- | --- | --- |
+| Change ID | input with a hint | typed; accepted while the trimmed text fits 64 UTF-8 bytes (`searchFits`, `authentication/trust-list-model.ts:17`); sent as `q` when not empty |
+| State | All, then `draft`, `validated`, `independently_approved`, `activation_unknown`, `activated`, `rejected`, `cancelled`, `superseded` under their state names | fixed choices from `trustGroups` (`service/trust-changes.ts:6`); decides which section is drawn and its `state` |
+| Buttons | Apply filters, Reset filters | applying or resetting starts both lists again at their first page |
+
+### Open and closed lists
+
+`TrustLists` draws up to two sections, each its own paged read: `PagedSection` (`authentication/TrustLists.tsx:89`) through `usePagedList` (`access/paged.tsx:17`), drawn by `Section` (`authentication/TrustLists.tsx:65`). Which section is drawn and with which `state` comes from `sectionState` (`authentication/trust-list-model.ts:11`):
+
+- With no state chosen, the open section reads `state=open` and the closed section `state=closed`.
+- With one state chosen, only the section whose group holds that state is drawn, and it reads `state=<that state>`; the other section is not drawn.
+- The open section sends `limit=50` (`openPageSize`, `authentication/trust-list-model.ts:8`) and the closed section `limit=25` (`closedPageSize`, `:9`). Both send the same `q`.
+
+Both lists start again at their first page whenever the policy read succeeds again (after a command, after Reload) and whenever filters are applied: `LivePolicy` advances a generation on each successful policy read and `TrustLists` combines it with a count of applied filters.
+
+| Area | Displayed field, column or state | Source |
+| --- | --- | --- |
+| Heading | "Open (n)" or "Closed (n)" only while the section's read is ready; the bare title while a read is in flight or has failed | `count.value` of that section's read, the exact number of matches for the current filter |
+| Loading | status line | the section's read in flight |
+| Failure | title for the open or the closed list; wording; Reload, or Sign in again; First when not on the first page | the section's read failed; `ListFailure` (`access/paged.tsx:49`); wording from `readFailure` (`access/Permissions.tsx:80`): denied, "query changed" for `revision_conflict` or `invalid_request`, otherwise unavailable. One section's failure leaves the other section and the current rules |
+| Order, open section | sorted by state priority: `activation_unknown`, `independently_approved`, `validated`, `draft`, then the higher number, then the higher identifier | derived in the browser (`byStatePriority`, `authentication/trust-list-model.ts:29`) only when the group is whole on one page: the first page with an empty `next` (`wholeOnOnePage`, `:25`) |
+| Order note, open section | "Newest first. The open changes fill more than one page, so they are not sorted by state." | shown when the open section is not whole on one page; the rows are then in the service's order |
+| Order, closed section | newest first | always the service's order; no note |
+| Empty | no open changes, no closed changes | `rows` empty with no filter |
+| No match | no open change, or no closed change, matches the filters | `rows` empty with a search or a state applied (`filtered`, `authentication/trust-list-model.ts:21`) |
+| Evidence note, open section | "Whether a change's evidence is still current is checked when you open it." | shown when a listed row is in `validated` or `independently_approved` (`evidenceLeftToDetail`, `authentication/trust-list-model.ts:48`) |
+| Reference time | list reference time under each table | `reference_at`; `Reference` (`access/paged.tsx:78`) |
+| Paging | First, Previous, Next; after moving, focus rests on the reference line | `next`; drawn only off the first page or when `next` is not empty; `Paging` (`access/paged.tsx:66`) |
+
+### Changes table
+
+Component `ChangeRows` (`authentication/TrustLists.tsx:18`). Every source is a row of the list read.
+
+| Area | Displayed field, column or state | Source |
+| --- | --- | --- |
+| Column headings | Change, State, Proposed by, Based on, Next step | fixed copy |
+| Change | "Change N", which opens the detail | `number`; `id` is the key and what the detail read is asked for; the number is passed to the panel for its heading |
+| Change | Selected tag and current-row mark | derived: the row's `id` is the open change |
+| Change | From an earlier run, with that run's start | `earlier_run`, `run_started_at` |
+| State | state name; emphasised for `activation_unknown` and for a `draft` whose validation was blocked | `state`; `validation_result = "blocked"` (`listedBlocked`, `authentication/trust-list-model.ts:33`). The list has no "evidence changed" line |
+| Proposed by | user ID, or not recorded | `proposer` |
+| Based on | version and policy revision | `old_epoch.generation`, `old_epoch.number` through `versionOf` (`authentication/trust-model.ts:10`); `old_policy` |
+| Next step | next step | derived by `listedNext` (`authentication/trust-list-model.ts:37`) from `state`, `validation_result` and `invalidation_state`; it never says the evidence is stale, which only the detail can |
+| Reduced table | one cell with the change, the state and the next step | as above; used at the wide layout while a panel is open beside the list |
+
+Not displayed from a row: `change_revision`, `old_epoch.value`, `candidate`, `validator`, `approver`, `activator`, `superseded_by`, `evidence_current`, `invalidation_state` other than through the next step, `decide_in_detail`, `can`, `why_not`, `act_until`. No action button is drawn in the list; actions are offered in the detail from the detail read's `can`.
+
+### Detail panel read and states
+
+`useChangeDetail` (`authentication/TrustDetail.tsx:23`) reads the detail once for each opened identifier, again for each generation of the policy read, and again on Try again. The policy read's generation advances on every successful policy read, so the detail is read again after each command that returns to this view and after Reload, as both lists are. No detail is read outside the policies view or while the after-activation screen is shown.
+
+| Area | Displayed field, column or state | Source |
+| --- | --- | --- |
+| Openers | a list row; the hold notice's button; the superseded change's successor button; the change a command answered | the row's `id` with its `number`; `waiting_activation`; the detail's `superseded_by`; result `fields.change` |
+| Heading before the answer | "Change N", or the identifier in mono | the number passed by the list row or known from the command; the identifier when opened from the hold notice or as a successor |
+| Loading | "Loading the change…"; Close in the head at the wide layout | no answer yet for the open identifier (`shownRead`, `authentication/TrustDetail.tsx:17`); `DetailPending` (`:39`) |
+| Failure | "The change could not be loaded"; wording; Try again, or Sign in again; Close | the detail read failed otherwise than `invalid_request`; wording from `readFailure` (`access/Permissions.tsx:80`) |
+| No longer kept | "This change is no longer kept. Older changes are removed when the list reaches its limit."; one Close | the detail read refused `invalid_request` (`goneFrom`, `authentication/TrustDetail.tsx:13`). The service answers `invalid_request` for an unknown identifier and also for a malformed one, a request with a query string and a session of another workspace (`readTrustChange`, `trustlists.go:118`); the screen shows this sentence for all of them |
+| Leaving a change no longer kept | Close, or Back in the step view, reads the policy again and so both lists, and rests focus on the changes heading | `LivePolicy` |
+| Shown while read again | an earlier loaded change stays; actions are ignored; the panel is marked busy at the wide layout. An earlier failure or no-longer-kept result does not stay: loading is shown | a loaded answer for the same identifier from an earlier read (`shownRead`; the `stale` flag of `useChangeDetail`) |
+
+The detail body is drawn only while a policy page is present, because it compares against `policy` and reads `trust.hold` and `ledger.state` from it.
 
 ### Change detail
 
-| View/area | Displayed field, column or state | Source | Parser | Rendered at |
-| --- | --- | --- | --- | --- |
-| Detail | Heading, earlier run | `number`, `earlier_run`, `run_started_at` | `admin.ts:528, 531` | `authentication/TrustChanges.tsx:392-395` |
-| Detail | State sentence; hold see-notice | derived `stateSentence` (`authentication/trust-model.ts:124-128`); `trust.hold` | `admin.ts:526, 552` | `authentication/TrustChanges.tsx:398-400` |
-| Detail | Next step | derived `nextStep` | as above | `authentication/TrustChanges.tsx:401` |
-| Detail | Action buttons | `can.revise`, `validate`, `approve`, `activate`, `reject`, `cancel` (`trustrows.go:60-67`) via `actions` (`authentication/trust-model.ts:159-168`) | `admin.ts:543` | `authentication/TrustChanges.tsx:402-407` |
-| Detail | Why you cannot approve or activate | `why_not.approve`, `why_not.activate` (`trustrows.go:69-72`) via `whyNot` (`authentication/trust-model.ts:144-155`) | `admin.ts:544` | `authentication/TrustChanges.tsx:408` |
-| Outcome (activated) | New version, ledger sequence, activated at | `activation.epoch`, `ledger_sequence`, `at` (`trustrows.go:34-39`) | `admin.ts:537` | `authentication/TrustChanges.tsx:315-319` |
-| Outcome (activated) | Session ending progress | `invalidation.items[].item`, `result`, `ended`, `remaining`, `reason` (`trustrows.go:47-58`) | `admin.ts:539-542` | `authentication/TrustChanges.tsx:320-341` |
-| Outcome (activation unknown) | Job, waiting, reason | `job.id`, `job.reason` (`trustrows.go:41-45`) | `admin.ts:538` | `authentication/TrustChanges.tsx:346-355` |
-| Outcome (superseded) | Superseded by change and version | `superseded_by`, `superseded_epoch` (`trustrows.go:96-97`) | `admin.ts:530-531` | `authentication/TrustChanges.tsx:357-370` |
-| Settings compare | Current and proposed maximum age, step-up, MFA | current `policy`; proposed `candidate` (`trustrows.go:91`) | `admin.ts:529, 560` | `authentication/TrustChanges.tsx:200-227, 410-413` |
-| Settings compare | Current may be older | derived: `ledger.state` `isolated` or `stopped` | `admin.ts:575` | `authentication/TrustChanges.tsx:387, 224` |
-| Validation | Not validated | `validation` null (`trustrows.go:100`) | `admin.ts:519, 532` | `authentication/TrustChanges.tsx:231` |
-| Validation | Blocked or validated at, by | `validation.result`, `at` (`trustrows.go:19-20`), `validator` | `admin.ts:533, 530` | `authentication/TrustChanges.tsx:237-239` |
-| Validation | Check, result, reason | `validation.items[].item`, `result`, `reason`, `detail` (`trustrows.go:11-16`), fixed check order (`authentication/trust-model.ts:189`), text from `findingReason` (`authentication/trust-model.ts:179-187`) | `admin.ts:534` | `authentication/TrustChanges.tsx:240-264` |
-| Validation | MFA weakening, affected subjects, session impact | items `mfa_weakening` (`reason`), `affected_subjects` and `session_impact` (`detail`) | `admin.ts:534` | `authentication/TrustChanges.tsx:265-269` |
-| Impact (open changes) | Not computed | `impact` is `null` when the change is not open or its facts could not be read (HYB-314); the screen then says "Not computed. This is not zero." and still shows the sign-out sentence | `admin.ts` `trustChangeOf` | `authentication/TrustChanges.tsx` `Impact` |
-| Impact (open changes) | Signs out everyone | `impact.signs_out_everyone` (`trustrows.go:31`), always true when the impact is computed | `admin.ts:536` | `authentication/TrustChanges.tsx:279` |
-| Impact (open changes) | Members, sessions now | `impact.members`, `sessions` (`trustrows.go:27-28`) | `admin.ts:536` | `authentication/TrustChanges.tsx:281-282` |
-| Impact (open changes) | Affected member IDs, showing N of M | `impact.affected_ids[]` (`trustrows.go:29`), `members` | `admin.ts:536` | `authentication/TrustChanges.tsx:284-290` |
-| People | Proposed, validated, approved, activated or attempted by | `proposer`, `validator`, `approver`, `activator` (`trustrows.go:92-95`) | `admin.ts:529-530` | `authentication/TrustChanges.tsx:419-426` |
-| History | State, by, at, rationale; approval invalidated | `history[].state`, `by`, `at`, `rationale` (`trustrows.go:74-79`) | `admin.ts:546` | `authentication/TrustChanges.tsx:295-309` |
-| Technical | Change ID, revision, base version and raw epoch, base policy, old, new and change digests, evidence digest, ledger sequence and watermark, superseded by | `id`, `change_revision`, `old_epoch.value`, `old_policy`, `old_digest`, `new_digest`, `change_digest`, `validation.evidence_digest`, `activation.ledger_sequence`, `activation.watermark`, `superseded_by`, `superseded_epoch` (`trustrows.go:82-97`) | `admin.ts:528-537` | `authentication/TrustChanges.tsx:428-442` |
+Component `Detail` (`authentication/TrustChanges.tsx:319`). Unless a row says "policy read", every source is `change` of the detail read.
+
+| Area | Displayed field, column or state | Source |
+| --- | --- | --- |
+| Heading | "Change N"; from an earlier run | `number`; `earlier_run`, `run_started_at` |
+| State sentence | the state; evidence changed since validation or approval; validation blocked | `stateSentence` (`authentication/trust-model.ts:118`) from `state`, `validation.result` (`blocked`, `:110`) and `validation.evidence_current` false on a `validated` or `independently_approved` change (`stale`, `:114`) |
+| State sentence | "see the notice" for a waiting activation | `state = "activation_unknown"` at the wide layout with `trust.hold` of the policy read present |
+| Next step | next step, with the stale case | `nextStep` (`authentication/trust-model.ts:124`) from `state`, `validation.result`, `validation.evidence_current`, `invalidation.state` |
+| Action buttons | Activate, Approve, Validate, Revise, Reject, Cancel | `can.activate`, `can.approve`, `can.validate`, `can.revise`, `can.reject`, `can.cancel` through `actions` (`authentication/trust-model.ts:153`) |
+| Why not | why you cannot approve or activate | `why_not.approve`, `why_not.activate` through `whyNot` (`authentication/trust-model.ts:138`); only for `draft`, `validated` and `independently_approved`, and not when the evidence is stale; for `independently_approved` only `why_not.activate` is used |
+| Outcome, activated | new version, ledger sequence, activated at | `activation.epoch`, `activation.ledger_sequence`, `activation.at`; `Outcome` (`authentication/TrustChanges.tsx:252`) |
+| Outcome, activated | session-ending progress: item, result, ended and remaining, reason | `invalidation.items[].item`, `result`, `ended`, `remaining` (for `console_sessions`), `reason` |
+| Outcome, activation unknown | job, waiting, reason | `job.id`, fixed "waiting", `job.reason` shown twice: worded and raw |
+| Outcome, superseded | superseded by: the successor's identifier and version; "Open the replacing change" | `superseded_by`, `superseded_epoch`; the button opens that identifier through the detail read. The successor's number is not shown |
+| Settings compare | current and proposed maximum age, step-up and MFA | current: `policy` of the policy read; proposed: `candidate`; `Compare` (`authentication/TrustChanges.tsx:131`) |
+| Settings compare | current may be older | `ledger.state` of the policy read is `isolated` or `stopped` |
+| Validation | not validated | `validation` is null; `Findings` (`authentication/TrustChanges.tsx:160`) |
+| Validation | blocked at, by, with the number of blocked checks; or validated at, by | `validation.result`, `validation.at`, `validator`, the `validation.items[]` whose `result` is `blocked` |
+| Validation | check, result, reason | `validation.items[].item`, `result`, `reason`, `detail`, in the fixed order of `checkItems` (`authentication/trust-model.ts:183`); wording from `findingReason` (`:173`) |
+| Validation | MFA weakening, affected subjects, session impact | the items `mfa_weakening` (`reason`), `affected_subjects` and `session_impact` (`detail`) |
+| Impact | section shown | only for `draft`, `validated` and `independently_approved`; `Impact` (`authentication/TrustChanges.tsx:205`) |
+| Impact | signs out everyone; "Not computed. This is not zero." | `impact` is null: the service could not read the facts for this change |
+| Impact | signs out everyone; members; sessions now | `impact.signs_out_everyone`, `impact.members`, `impact.sessions` |
+| Impact | affected member IDs; showing a part of them | `impact.affected_ids[]` (at most 100: `maxAffectedShown`, `trustevidence.go:33`); the part note when `impact.members` exceeds the listed IDs |
+| People | proposed, validated, approved by; activated by, or attempted by for a waiting activation | `proposer`, `validator`, `approver`, `activator`; "not yet" when empty |
+| History | state, by, at, rationale; "approval invalidated" | `history[].state`, `by`, `at`, `rationale`; `History` (`authentication/TrustChanges.tsx:236`) |
+| Technical details | change ID, change revision, base version with the raw epoch, base policy, old, new and change digests, evidence digest, ledger sequence and watermark, superseded by | `id`, `change_revision`, `old_epoch`, `old_epoch.value`, `old_policy`, `old_digest`, `new_digest`, `change_digest`, `validation.evidence_digest`, `activation.ledger_sequence`, `activation.watermark`, `superseded_by`, `superseded_epoch` |
 
 ### Propose form, confirm dialog and result
 
-| View/area | Displayed field, column or state | Source | Parser | Rendered at |
-| --- | --- | --- | --- | --- |
-| Propose form | Maximum age and step-up, prefilled | typed; prefilled from the revised change's `candidate` or the current `policy` | `admin.ts:505-513` | `authentication/TrustActions.tsx:21-25, 62-68` |
-| Propose form | Same as current | derived against `policy` (`authentication/TrustActions.tsx:14-16`) | none | `authentication/TrustActions.tsx:33, 39, 69` |
-| Confirm | Change, base version, policy revision, change revision, current state | the change's `number`, `id`, `old_epoch`, `old_policy`, `change_revision`, `state`; for a new proposal `trust.epoch_*` and `trust.policy_number` | `admin.ts:528, 569` | `authentication/TrustConfirmBody.tsx:35-43` |
-| Confirm (propose) | Workspace | session `workspace` (`GET /api/v1/session`), not the policy read | `apps/console/src/service/api.ts:101` | `authentication/TrustConfirmBody.tsx:52`; passed at `authentication/Live.tsx:204` |
-| Confirm (propose) | Members affected | `impact.members` of the change, else `holders.members` (`policy.go:98`) | `admin.ts:536, 579` | `authentication/TrustConfirmBody.tsx:29, 54` |
-| Confirm (propose) | Old digest | `trust.digest` (`policy.go:61`) | `admin.ts:569` | `authentication/TrustConfirmBody.tsx:56` |
-| Confirm (propose) | Expected new digest | derived: SHA-256 of the candidate encoding in the browser (`authentication/trust-model.ts:42-68`); marked expected, server authoritative | none | `authentication/TrustConfirm.tsx:38-43`; `authentication/TrustConfirmBody.tsx:57` |
-| Confirm (propose) | Proposed settings compare | derived candidate (`authentication/trust-model.ts:29-34`) against `policy` | none | `authentication/TrustConfirmBody.tsx:60-63` |
-| Confirm (validate) | Change digest; what is checked and not applicable | `change_digest`; fixed lists | `admin.ts:528` | `authentication/TrustConfirmBody.tsx:67-80` |
-| Confirm (approve) | Proposed by, validated by and at, change and evidence digests, lockout finding, members, sessions | `proposer`, `validator`, `validation.at`, `change_digest`, `validation.evidence_digest`, item `recovery_path`, `impact.members`, `impact.sessions` | `admin.ts:528-536` | `authentication/TrustConfirmBody.tsx:83-95` |
-| Confirm (activate) | Digests, people, expected version, sessions, test login and lockout findings, affected IDs | as above plus `approver`; expected version derived from `trust.epoch_*` and `ledger.generation` (`authentication/trust-model.ts:18-25`) | `admin.ts:528-536, 569, 576` | `authentication/TrustConfirmBody.tsx:98-121` |
-| Confirm (reject, cancel) | Proposed by (reject) | `proposer` | `admin.ts:529` | `authentication/TrustConfirmBody.tsx:125-131` |
-| Confirm | Lead, consequences, boundary | fixed copy | none | `authentication/TrustConfirmBody.tsx:132-140` |
-| Confirm | Command | `trust.propose`, `validate`, `approve`, `activate`, `reject`, `cancel` (`authentication/TrustConfirm.tsx:13-15`); target `trust` or the change ID; values from `valuesFor` (`authentication/trust-model.ts:236-255`) | `admin.ts:871` | `authentication/TrustConfirm.tsx:63-64` |
-| Confirm | Failure, Reload and close | `self_approval_denied`, `authority_epoch_conflict`, `approval_stale`, `evidence_stale`, `independent_approval_required` and others via `trustFailure` (`authentication/trust-model.ts:202-222`); busy while unavailable becomes `trust_unavailable` (`authentication/trust-model.ts:197-200`) | `admin.ts:767-771` | `authentication/TrustConfirm.tsx:74-77, 96, 101` |
-| Confirm | Signed out during the command | `unauthenticated` | `admin.ts:757` | `authentication/TrustConfirm.tsx:69-73`; `authentication/Live.tsx:153` |
-| After a non-activate command | Done announcement, change opened | result `fields.change` (`trust.go:143`) | `admin.ts:742` | `authentication/Live.tsx:142-152` |
-| After activation | Activated, waiting or unclear | result `status`, `business_state`, `job_id` (`errors.go:43, 47-48`) via `afterKind` (`authentication/TrustAfter.tsx:9-13`) | `admin.ts:738-740` | `authentication/TrustAfter.tsx:22-28`; chosen at `authentication/Live.tsx:122-128` |
-| After activation | New version | result `fields.epoch_generation`, `fields.epoch_number`, else `fields.epoch` (`trust.go:317-318`) | `admin.ts:742` | `authentication/TrustAfter.tsx:21, 38` |
-| After activation | Ledger sequence, sessions ended, sessions remaining | result `fields.ledger_sequence`, `sessions_ended`, `sessions_remaining` (`trust.go:319-320`) | `admin.ts:742` | `authentication/TrustAfter.tsx:39-41` |
-| After activation (waiting) | Job, waiting | result `job_id` (`trust.go:314`) | `admin.ts:740` | `authentication/TrustAfter.tsx:33-34` |
+A change named in this part is the detail read's `change` that the panel showed when the action was pressed; the list rows are not used.
 
-**Source changed on 2026-11-27 (HYB-304 M2d and M2e): the policy read no longer carries `changes`. Every row below that names `changes[]` as its source is now read from the list read (list cells) or the detail read (the detail panel) named in this paragraph; the rows are rewritten in the next change.** Served by the service: the policy read's `waiting_activation` (identifier of the newest change in `activation_unknown`, or empty) and `earlier_run_kept`; `GET /api/v1/identity/policy/changes` (rows `id`, `number`, `state`, `change_revision`, `old_epoch`, `old_policy`, `candidate`, `proposer`, `validator`, `approver`, `activator`, `superseded_by`, `earlier_run`, `run_started_at`, `validation_result`, `evidence_current`, `invalidation_state`, `decide_in_detail`, `can.revise|validate|reject|cancel`, `why_not.approve|activate`, `act_until`; filters `state`, `q`, `limit`, `after`) and `GET /api/v1/identity/policy/changes/{id}` (`change`, the full change row). See the [M02 query design](../../features/HYB-304/m02-query-design.md).
+| Area | Displayed field, column or state | Source |
+| --- | --- | --- |
+| Propose form | maximum age and step-up, prefilled | typed; prefilled from the revised change's `candidate`, or from `policy` of the policy read for a new proposal; `ProposeForm` (`authentication/TrustActions.tsx:18`) |
+| Propose form | title: new proposal, or "revise" with the change's number | fixed copy; the revised change's `number` |
+| Propose form | values typed before the review, when the dialog closes back to the form | typed (`initial` of `ProposeForm`); they take precedence over the prefill above |
+| Step view | the panel's label: the form's title, or "Change N", or the identifier when the number is unknown | the detail's `number`, else the number passed by the opener, else the open identifier (`panelLabel` in `LivePolicy`, `authentication/Live.tsx:69`) |
+| Propose form | same as current | derived against `policy` of the policy read (`sameAs`, `authentication/TrustActions.tsx:14`) |
+| Confirm | title: the action with the change's number | the action's label (`primaryLabel`, `authentication/TrustConfirmBody.tsx:9`); the change's `number`, 0 for a new proposal (`ConfirmDialog`, `authentication/TrustConfirm.tsx:18`) |
+| Confirm | change, base version, policy revision, change revision, current state | the change's `number`, `id`, `old_epoch`, `old_policy`, `change_revision`, `state`; for a new proposal `trust.epoch_generation`, `trust.epoch_number` and `trust.policy_number` of the policy read; `ConfirmBody` (`authentication/TrustConfirmBody.tsx:24`) |
+| Confirm (propose) | workspace | the session's `workspace` (`service/api.ts`), not the policy read |
+| Confirm (propose) | route: local password | fixed copy |
+| Confirm (propose) | members affected | `impact.members` of the revised change when above zero, else `holders.members` of the policy read; "not recorded" when zero |
+| Confirm (propose) | change revision, from and to | the revised change's `change_revision` |
+| Confirm (propose) | old digest | `trust.digest` of the policy read |
+| Confirm (propose) | expected new digest | derived: SHA-256 of the candidate's encoding in the browser (`configDigest`, `authentication/trust-model.ts:65`; `candidateOf`, `:29`); marked expected, the service is authoritative |
+| Confirm (propose) | proposed settings compare | the derived candidate against `policy` of the policy read |
+| Confirm (validate) | change digest; what is checked and what is not applicable | `change_digest`; fixed lists |
+| Confirm (approve) | proposed by, validated by and at, change and evidence digests, lockout finding, members, sessions now | `proposer`, `validator`, `validation.at`, `change_digest`, `validation.evidence_digest`, the item `recovery_path`, `impact.members`, `impact.sessions`; "not computed" when `impact` is null; the "your authority" row is fixed copy |
+| Confirm (activate) | digests, people, expected version, sessions now, test login and lockout findings, affected IDs | as above with `approver` and the item `test_login`; the expected version is derived from `trust.epoch_generation`, `trust.epoch_number` and `ledger.generation` of the policy read (`expectedNext`, `authentication/trust-model.ts:18`); `impact.affected_ids[]`; "to be activated by: you" is fixed copy |
+| Confirm (reject, cancel) | proposed by, for reject | `proposer` |
+| Confirm | lead, consequences, boundary | fixed copy |
+| Confirm | command | `trust.propose`, `trust.validate`, `trust.approve`, `trust.activate`, `trust.reject`, `trust.cancel` (`commandOf`, `authentication/TrustConfirm.tsx:14`); target `trust` for a new proposal, else the change's `id`; expected revision `revision` of the policy read; values from `valuesFor` (`authentication/trust-model.ts:230`): `trust.epoch` and `trust.policy_number` of the policy read, the change's `change_revision`, `change_digest` and `validation.evidence_digest`, the typed minutes; sent by `command()` (`service/admin.ts:976`) |
+| Confirm | failure; Reload and close | wording from `trustFailure` (`authentication/trust-model.ts:196`); a busy answer while trust changes are unavailable is shown as unavailable (`asTrustFailure`, `:191`); a failure in `fatalFailures` (`:189`), or an `invalid` failure that names any field other than `rationale`, ends the dialog's use (`ConfirmDialog`, `authentication/TrustConfirm.tsx:18`): the reason input and the command button are dropped, the body drops the "your authority" and lockout rows (approve) and the test-login and lockout rows (activate), and only Reload and close is left, which reads the policy again |
+| Confirm | signed out during the command | `unauthenticated`: the dialog closes and the page shows the session-ended failure |
+| After a command other than activate | done announcement; the change opened in the panel | result `fields.change` (`trustOutcome`, `trust.go:143`), else the confirmed change's `id`; the number in the announcement is the confirmed change's `number`, or for a new proposal the last part of the answered identifier read as a number; then the policy read, both lists and the detail are read again |
+| After activation | activated, waiting, or unclear | result `status`, `business_state`, `job_id` through `afterKind` (`authentication/TrustAfter.tsx:9`); `AfterActivation` (`:15`) replaces the whole view; nothing is read again |
+| After activation | new version | result `fields.epoch_generation` and `fields.epoch_number`, else `fields.epoch` (`activateTrust`, `trust.go:276`) |
+| After activation | ledger sequence, sessions ended, sessions remaining | result `fields.ledger_sequence`, `fields.sessions_ended`, `fields.sessions_remaining` |
+| After activation, waiting | job, waiting | result `job_id` |
+| After activation | the sentences of each kind; Sign in again for every kind; no facts when unclear | fixed copy; the kind from `afterKind` |
 
-**Parsed but not displayed on M02:** `signed_in_at`, `authenticated_at`, `you`, `trust.epoch` (used only as a command value), `policy.number`, `policy.epoch`, `policy.proposer`..`policy.at`, `ledger.watermark`, `ledger.generation_stated`, `holders.needed`, `holders.enrolment`, `impact.weakens_mfa`, change `act_until`.
+**Parsed but not displayed on M02:** from the policy read `signed_in_at`, `authenticated_at`, `you`, `trust.epoch` (used only as a command value), `trust.change`, `trust.hold.reason`, `policy.number`, `policy.epoch`, `policy.proposer`, `policy.validator`, `policy.approver`, `policy.activator`, `policy.at`, `ledger.watermark`, `ledger.generation_stated`, `holders.needed`, `holders.enrolment`; `ledger.isolation_reason` only decides whether the problem line is shown. From the detail read `revision`, `observed_at`, and the change's `candidate.methods`, `impact.weakens_mfa`, `job.state`, `act_until`, `activation.epoch.value` and `superseded_epoch.value` (only the version from `versionOf` is shown); the change's `invalidation.state` is used only through the next step. From every list page `search_input`, `query`, `observed_at`, `revision`, `order`, `work_units`, `scan_stopped` and `count.certainty`, besides the row fields named under the changes table.
 
 ## M03 Access grants and delegations
 
@@ -397,13 +493,13 @@ Reads:
 
 | Read | Server | Client and parser | Used for |
 | --- | --- | --- | --- |
-| `GET /api/v1/identity/access` | `listAccess` (`access.go:134`), shape `accessPage` (`access.go:40`): `revision`, `catalog`, `catalog_incomplete`, `now`, `you`, `started_at`, `settings`, `ledger` | `access()` (`service/admin.ts:986`), `catalogOf`, `settingsOf` (`service/access-read.ts:4-5`), `ledgerOf` (`service/admin.ts:756`) | the command revision, the request form's choices, the settings disclosure, the ledger line; it carries no list of grants, delegations, people, requests or revocations |
+| `GET /api/v1/identity/access` | `listAccess` (`access.go:134`), shape `accessPage` (`access.go:40`): `revision`, `catalog`, `catalog_incomplete`, `now`, `you`, `started_at`, `settings`, `ledger` | `access()` (`service/admin.ts:991`), `catalogOf`, `settingsOf` (`service/access-read.ts:4-5`), `ledgerOf` (`service/admin.ts:760`) | the command revision, the request form's choices, the settings disclosure, the ledger line; it carries no list of grants, delegations, people, requests or revocations |
 | `GET /api/v1/identity/access/permissions` | `queryPermissions` (`accessquery.go:278`), row `permissionRow` (`accessquery.go:54`) | `accessPermissions` (`service/access-query.ts:70`), `permissionOf` (`:34`) | the one list of grants and delegations |
 | `GET /api/v1/identity/access/permissions/grant/{id}`, `/delegation/{id}` | `readPermission` (`accessquery.go:401`), shape `permissionDetail` (`accessquery.go:120`) | `accessPermission` (`service/access-query.ts:102`) | the revoke panel's list of delegations that would stop |
-| `GET /api/v1/identity/access/requests` | `queryAccessRequests` (`accesslists.go:198`), row `listedRequest` (`accesslists.go:50`) over `changeRequestRow` (`accessrequests.go:359`) | `accessRequests` (`service/access-lists.ts:118`), `listedRequestOf` (`:35`) | waiting and ended requests, the decision panel |
-| `GET /api/v1/identity/access/revocations` | `queryAccessRevocations` (`accesslists.go:254`), row `revocationRow` (`revocations.go:29`) built by `revocationRow` (`revocations.go:153`) | `accessRevocations` (`service/access-lists.ts:123`), `listedRevocationOf` (`:55`) | revocation records |
+| `GET /api/v1/identity/access/requests` | `queryAccessRequests` (`accesslists.go:203`), row `listedRequest` (`accesslists.go:50`) over `changeRequestRow` (`accessrequests.go:359`) | `accessRequests` (`service/access-lists.ts:118`), `listedRequestOf` (`:35`) | waiting and ended requests, the decision panel |
+| `GET /api/v1/identity/access/revocations` | `queryAccessRevocations` (`accesslists.go:259`), row `revocationRow` (`revocations.go:29`) built by `revocationRow` (`revocations.go:153`) | `accessRevocations` (`service/access-lists.ts:123`), `listedRevocationOf` (`:55`) | revocation records |
 | `GET /api/v1/identity/access/subjects` | `queryAccessSubjects` (`accesssubjects.go:142`), row `listedSubject` (`accesssubjects.go:46`) | `accessSubjects` (`service/access-lists.ts:128`) | the person picker |
-| `GET /api/v1/identity/access/preview` | `previewAccess` (`access.go:166`), row `decisionRow` (`access.go:50`) | `preview()` (`service/admin.ts:993`), `previewsOf` (`service/access-read.ts:6`) | the effect check's result |
+| `GET /api/v1/identity/access/preview` | `previewAccess` (`access.go:166`), row `decisionRow` (`access.go:50`) | `preview()` (`service/admin.ts:998`), `previewsOf` (`service/access-read.ts:6`) | the effect check's result |
 
 Every list read answers `rows`, `next`, `count` (`value` with `certainty` `exact` or `lower_bound`), `reference_at`, `observed_at` and the echoed `query`.
 
@@ -456,7 +552,7 @@ Component `GrantForm` (`access/Live.tsx:46`).
 | Customer | all customers | fixed: the form sends `customer = "all"` |
 | Days | value, hint with the maximum | typed; the maximum from the chosen entry's `until` and `now` |
 | Impact sentence | derived from the chosen person, entry and days | none |
-| Command | `access.request_grant` with `subject`, `action`, `kind`, `fields`, `customer`, `days`, and `revision` | `command()` (`service/admin.ts:971`) |
+| Command | `access.request_grant` with `subject`, `action`, `kind`, `fields`, `customer`, `days`, and `revision` | `command()` (`service/admin.ts:976`) |
 | Failure | days refused; other refusals | `invalid_request` with field `days`; `describeRequest` (`access/Requests.tsx:24`) |
 
 ### Revoke panel
@@ -679,7 +775,7 @@ No network address, raw User-Agent, login name, email or bearer secret is stored
 ## Unknowns and mismatches
 
 - **Unknown.** None of the rows above is marked unknown.
-- **Server fields that no console parser reads:** `trust.stricter_fields` (`policy.go:69`, not in `policyPageOf`, `admin.ts:568-573`); `impact.api_keys` and `impact.pending_jobs` (`bulkread.go:85, 87`, not in `detailOf`; the preview shows fixed "not applicable" copy instead, `users/BulkPrepare.tsx:73, 77`); trust command result `fields.reason` and `fields.your_session_ended` (`trust.go:314, 320`), `fields.change_revision` (`trust.go:143`); set-role-period result `fields.role_until` (`periods.go:130`); bulk result `fields.digest`, `fields.targets` and `fields.count` (`bulk.go:40, 105`, `bulkstage.go:86`).
+- **Server fields that no console parser reads:** `impact.api_keys` and `impact.pending_jobs` (`bulkread.go:85, 87`, not in `detailOf`; the preview shows fixed "not applicable" copy instead, `users/BulkPrepare.tsx:73, 77`); trust command result `fields.reason` and `fields.your_session_ended` (`trust.go:315, 321`), `fields.change_revision` (`trust.go:144`); set-role-period result `fields.role_until` (`periods.go:130`); bulk result `fields.digest`, `fields.targets` and `fields.count` (`bulk.go:40, 105`, `bulkstage.go:86`).
 - **Parser type wider than the read.** Checked again on 2026-11-27 for two of the three reads this entry named: `access` no longer has row arrays, and its remaining arrays are checked field by field (`service/access-read.ts:4-5`); `me` is parsed by `selfPageOf` under `validatedRead` (`service/admin.ts:1006-1008`). The earlier statement that the service-accounts read cast its row arrays without checking each field was not re-checked in this change.
 
 ## HYB-327 reconciliation

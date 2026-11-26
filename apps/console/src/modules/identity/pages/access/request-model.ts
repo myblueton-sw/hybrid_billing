@@ -109,14 +109,3 @@ export function ledgerLines(l: Locale, ledger: LedgerStatus, when: (at: string) 
 export function keepAttempt(e: unknown): boolean {
   return e instanceof AdminError && e.failure === "partial";
 }
-
-export function descendantsOf(page: AccessPage, id: string): string[] {
-  const out: string[] = [];
-  let frontier = [id];
-  while (frontier.length) {
-    const next = page.delegations.filter((d) => frontier.includes(d.parent) && !out.includes(d.id) && d.state !== "revoked" && d.state !== "expired").map((d) => d.id);
-    out.push(...next);
-    frontier = next;
-  }
-  return out;
-}

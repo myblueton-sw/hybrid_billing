@@ -5,6 +5,7 @@ import { counted, type Plural } from "../../../../shared/plural";
 export const units = {
   days: { en: ["1 day", "{n} days"], ko: "{n}일", ar: ["{n} يوم", "يوم واحد", "يومين", "{n} أيام", "{n} يومًا", "{n} يوم"] },
   hours: { en: ["1 hour", "{n} hours"], ko: "{n}시간", ar: ["{n} ساعة", "ساعة واحدة", "ساعتان", "{n} ساعات", "{n} ساعة", "{n} ساعة"] },
+  delegations: { en: ["1 delegation", "{n} delegations"], ko: "{n}건", ar: ["{n} تفويض", "تفويض واحد", "تفويضان", "{n} تفويضات", "{n} تفويضًا", "{n} تفويض"] },
   requests: { en: ["1 request", "{n} requests"], ko: "{n}건", ar: ["{n} طلب", "طلب واحد", "طلبان", "{n} طلبات", "{n} طلبًا", "{n} طلب"] },
   revocations: { en: ["1 revocation", "{n} revocations"], ko: "{n}건", ar: ["{n} عملية إبطال", "عملية إبطال واحدة", "عمليتا إبطال", "{n} عمليات إبطال", "{n} عملية إبطال", "{n} عملية إبطال"] },
   records: { en: ["1 record", "{n} records"], ko: "{n}건", ar: ["{n} قيد", "قيد واحد", "قيدان", "{n} قيود", "{n} قيدًا", "{n} قيد"] },
@@ -142,8 +143,18 @@ export const q = {
   doneWithdrawn: (l: Locale) => t(l, "Request withdrawn.", "요청을 철회했습니다.", "سُحب الطلب."),
   doneRevokedDeleg: (l: Locale) =>
     t(l, "Delegation revocation received; its state is shown in the Revocations section.", "위임 회수를 접수했습니다. 상태는 '회수' 섹션에 표시됩니다.", "استُلم إبطال التفويض وتظهر حالته في قسم «الإبطال»."),
-  descendants: (l: Locale) => t(l, "Delegations that end with it", "함께 끝나는 하위 위임", "تفويضات تنتهي معه"),
-  noDescendants: (l: Locale) => t(l, "No delegation was made from it.", "이 위임에서 이어진 위임이 없습니다.", "لم يصدر عنه أي تفويض."),
+  stopTitle: (l: Locale) => t(l, "Delegations that would stop applying", "함께 적용되지 않게 되는 위임", "تفويضات ستتوقف عن السريان"),
+  stopCount: (l: Locale, n: number) => counted(l, n, units.delegations),
+  stopLeadGrant: (l: Locale) => t(l, "Delegations that apply now and would stop applying if this revocation is approved: those this grant backs, and those its holder received if this is their last grant here.",
+    "이 회수가 승인되면 적용되지 않게 되는, 지금 적용 중인 위임입니다. 이 권한이 뒷받침하는 위임과, 이 권한이 보유자의 마지막 권한일 때 보유자가 받은 위임이 포함됩니다.",
+    "التفويضات السارية الآن التي ستتوقف عن السريان إذا اعتُمد هذا الإبطال: ما يستند إلى هذه الصلاحية، وما تلقّاه صاحبها إن كانت آخر صلاحية له هنا."),
+  stopLeadDeleg: (l: Locale) => t(l, "Delegations that apply now and would stop applying when this delegation is revoked.", "이 위임을 회수하면 적용되지 않게 되는, 지금 적용 중인 위임입니다.", "التفويضات السارية الآن التي ستتوقف عن السريان عند إبطال هذا التفويض."),
+  stopNone: (l: Locale) => t(l, "No delegation that applies now would stop applying.", "지금 적용 중인 위임 중 함께 적용되지 않게 되는 위임은 없습니다.", "لا يوجد تفويض سارٍ الآن سيتوقف عن السريان."),
+  stopMore: (l: Locale, n: number) => t(l, `Show ${n} more`, `${n}건 더 보기`, `عرض ${n} أخرى`),
+  stopLoading: (l: Locale) => t(l, "Checking which delegations would stop applying…", "함께 적용되지 않게 되는 위임을 확인하는 중…", "جارٍ التحقق من التفويضات التي ستتوقف عن السريان…"),
+  stopFailed: (l: Locale) => t(l, "The delegations that would stop applying could not be checked. Revoking still works; the delegations that stop are listed with the revocation in the Revocations section.",
+    "함께 적용되지 않게 되는 위임을 확인하지 못했습니다. 회수는 그대로 진행할 수 있으며, 함께 끝난 위임은 '회수' 섹션의 해당 회수에 표시됩니다.",
+    "تعذّر التحقق من التفويضات التي ستتوقف عن السريان. يمكن الإبطال مع ذلك، وتظهر التفويضات المنتهية مع الإبطال في قسم «الإبطال»."),
   refusedRequest: (l: Locale) =>
     t(
       l,

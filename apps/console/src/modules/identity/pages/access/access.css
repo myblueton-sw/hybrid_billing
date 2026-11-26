@@ -296,3 +296,19 @@
     align-items: flex-start;
   }
 }
+.remaining-security .access-stop-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+  overflow-wrap: anywhere;
+}
+.remaining-security .access-would-stop .live-section-head {
+  margin: 0;
+}
+.remaining-security .access-stop-failed {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+}

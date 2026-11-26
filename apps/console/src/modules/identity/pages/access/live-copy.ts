@@ -47,13 +47,7 @@ export const a = {
       "لم تُمنح أي صلاحية لأي شخص بعد. استخدم «طلب صلاحية» لاقتراح منح صلاحية لشخص.",
     ),
   ceilingTitle: (l: Locale) => t(l, "Console ceiling", "콘솔 권한 상한", "الحد الأقصى لصلاحيات وحدة التحكم"),
-  ceilingLead: (l: Locale) =>
-    t(
-      l,
-      "The console itself can use only these permissions. Access requested through this screen cannot exceed this scope or end date. Console permissions are set by the installation and cannot be changed here.",
-      "콘솔 자체가 쓸 수 있는 권한입니다. 이 화면에서 요청하는 권한은 이 범위와 종료일을 넘을 수 없습니다. 콘솔 권한은 설치 환경에서 정하며 여기에서 바꿀 수 없습니다.",
-      "هذه هي الصلاحيات التي تستطيع وحدة التحكم استخدامها. لا يمكن أن تتجاوز الصلاحيات المطلوبة عبر هذه الشاشة هذا النطاق أو تاريخ الانتهاء. يحدد التثبيت صلاحيات وحدة التحكم ولا يمكن تغييرها هنا.",
-    ),
+  accessHint: (l: Locale) => t(l, "Choices are limited to what the console itself may do: the Console rows in the list above.", "콘솔 자체가 할 수 있는 범위로 제한됩니다. 위 목록의 '콘솔' 행을 참고하세요.", "تقتصر الخيارات على ما يُسمح لوحدة التحكم نفسها بفعله: صفوف «وحدة التحكم» في القائمة أعلاه."),
   colCustomer: (l: Locale) => t(l, "Customer", "고객", "العميل"),
   allCustomers: (l: Locale) => t(l, "All customers", "모든 고객", "جميع العملاء"),
   delegTitle: (l: Locale) => t(l, "Delegations", "위임", "التفويضات"),

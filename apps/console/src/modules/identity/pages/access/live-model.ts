@@ -32,10 +32,6 @@ export function people(page: AccessPage): { current: AccessGrant[]; ended: Acces
   return { current, ended: mine.filter((g) => closed(g.state)) };
 }
 
-export function ceilingGrants(page: AccessPage): AccessGrant[] {
-  return page.grants.filter((g) => g.client !== "" && g.state === "active");
-}
-
 export function delegationsOf(page: AccessPage): { current: AccessDelegation[]; ended: AccessDelegation[] } {
   return {
     current: page.delegations.filter((d) => !closed(d.state)),

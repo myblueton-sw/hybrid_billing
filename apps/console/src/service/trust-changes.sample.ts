@@ -2,10 +2,16 @@ export const trustWire = {
  "list": {
   "rows": [
    {
-    "id": "trust-18fac15f-7",
+    "id": "trust-449f21b4-7",
     "number": 7,
     "state": "independently_approved",
     "change_revision": 1,
+    "old_epoch": {
+     "value": "2",
+     "generation": 0,
+     "number": 2
+    },
+    "old_policy": 2,
     "candidate": {
      "methods": [
       "password"
@@ -38,10 +44,16 @@ export const trustWire = {
     "act_until": "2026-11-16T09:10:00Z"
    },
    {
-    "id": "trust-18fac15f-6",
+    "id": "trust-449f21b4-6",
     "number": 6,
     "state": "validated",
     "change_revision": 1,
+    "old_epoch": {
+     "value": "2",
+     "generation": 0,
+     "number": 2
+    },
+    "old_policy": 2,
     "candidate": {
      "methods": [
       "password"
@@ -74,10 +86,16 @@ export const trustWire = {
     "act_until": "2026-11-16T09:10:00Z"
    },
    {
-    "id": "trust-18fac15f-5",
+    "id": "trust-449f21b4-5",
     "number": 5,
     "state": "draft",
     "change_revision": 1,
+    "old_epoch": {
+     "value": "2",
+     "generation": 0,
+     "number": 2
+    },
+    "old_policy": 2,
     "candidate": {
      "methods": [
       "password"
@@ -131,10 +149,16 @@ export const trustWire = {
  "open": {
   "rows": [
    {
-    "id": "trust-18fac15f-7",
+    "id": "trust-449f21b4-7",
     "number": 7,
     "state": "independently_approved",
     "change_revision": 1,
+    "old_epoch": {
+     "value": "2",
+     "generation": 0,
+     "number": 2
+    },
+    "old_policy": 2,
     "candidate": {
      "methods": [
       "password"
@@ -167,10 +191,16 @@ export const trustWire = {
     "act_until": "2026-11-16T09:10:00Z"
    },
    {
-    "id": "trust-18fac15f-6",
+    "id": "trust-449f21b4-6",
     "number": 6,
     "state": "validated",
     "change_revision": 1,
+    "old_epoch": {
+     "value": "2",
+     "generation": 0,
+     "number": 2
+    },
+    "old_policy": 2,
     "candidate": {
      "methods": [
       "password"
@@ -203,10 +233,16 @@ export const trustWire = {
     "act_until": "2026-11-16T09:10:00Z"
    },
    {
-    "id": "trust-18fac15f-5",
+    "id": "trust-449f21b4-5",
     "number": 5,
     "state": "draft",
     "change_revision": 1,
+    "old_epoch": {
+     "value": "2",
+     "generation": 0,
+     "number": 2
+    },
+    "old_policy": 2,
     "candidate": {
      "methods": [
       "password"
@@ -259,11 +295,11 @@ export const trustWire = {
  },
  "detail": {
   "change": {
-   "id": "trust-18fac15f-7",
+   "id": "trust-449f21b4-7",
    "number": 7,
    "state": "independently_approved",
    "change_revision": 1,
-   "change_digest": "47b6910996269e776d83fe6a0194bb4f418fd790ada3b9b50da7a97f0c8ce012",
+   "change_digest": "f6a4e6ec5adb3fdd1b314b2fc8540a760160ec4e45e5551934bdccb24f2bb559",
    "old_epoch": {
     "value": "2",
     "generation": 0,
@@ -291,7 +327,7 @@ export const trustWire = {
    "validation": {
     "result": "validated",
     "at": "2026-11-16T09:00:00Z",
-    "evidence_digest": "7d5b24a00e3b1b542bc604b5d8b0a8bf8e108d5e5e587a816d413830979df17d",
+    "evidence_digest": "4dff27d9fdee5246e824f407dae2a1f16a5df89ef25ac28c57e99ab4acaeddda",
     "evidence_current": true,
     "items": [
      {
@@ -404,10 +440,16 @@ export const trustWire = {
  "held": {
   "rows": [
    {
-    "id": "trust-1050a94a-1",
+    "id": "trust-95869d7d-1",
     "number": 1,
     "state": "activation_unknown",
     "change_revision": 1,
+    "old_epoch": {
+     "value": "1",
+     "generation": 0,
+     "number": 1
+    },
+    "old_policy": 1,
     "candidate": {
      "methods": [
       "password"
@@ -465,6 +507,12 @@ export const trustWire = {
     "number": 0,
     "state": "activated",
     "change_revision": 0,
+    "old_epoch": {
+     "value": "0",
+     "generation": 0,
+     "number": 0
+    },
+    "old_policy": 0,
     "candidate": {
      "methods": [
       "password"
@@ -497,10 +545,16 @@ export const trustWire = {
     "act_until": "2026-11-16T09:10:00Z"
    },
    {
-    "id": "trust-d31eef46-4",
+    "id": "trust-449f21b4-4",
     "number": 4,
     "state": "activated",
     "change_revision": 1,
+    "old_epoch": {
+     "value": "1",
+     "generation": 0,
+     "number": 1
+    },
+    "old_policy": 1,
     "candidate": {
      "methods": [
       "password"
@@ -539,10 +593,16 @@ export const trustWire = {
     "act_until": "2026-11-16T09:10:00Z"
    },
    {
-    "id": "trust-d31eef46-3",
+    "id": "trust-449f21b4-3",
     "number": 3,
     "state": "superseded",
     "change_revision": 1,
+    "old_epoch": {
+     "value": "1",
+     "generation": 0,
+     "number": 1
+    },
+    "old_policy": 1,
     "candidate": {
      "methods": [
       "password"
@@ -555,7 +615,7 @@ export const trustWire = {
     "validator": "",
     "approver": "",
     "activator": "",
-    "superseded_by": "trust-d31eef46-4",
+    "superseded_by": "trust-449f21b4-4",
     "earlier_run": false,
     "run_started_at": "",
     "validation_result": "",
@@ -575,10 +635,16 @@ export const trustWire = {
     "act_until": "2026-11-16T09:10:00Z"
    },
    {
-    "id": "trust-d31eef46-2",
+    "id": "trust-449f21b4-2",
     "number": 2,
     "state": "rejected",
     "change_revision": 1,
+    "old_epoch": {
+     "value": "1",
+     "generation": 0,
+     "number": 1
+    },
+    "old_policy": 1,
     "candidate": {
      "methods": [
       "password"
@@ -611,10 +677,16 @@ export const trustWire = {
     "act_until": "2026-11-16T09:10:00Z"
    },
    {
-    "id": "trust-d31eef46-1",
+    "id": "trust-449f21b4-1",
     "number": 1,
     "state": "cancelled",
     "change_revision": 1,
+    "old_epoch": {
+     "value": "1",
+     "generation": 0,
+     "number": 1
+    },
+    "old_policy": 1,
     "candidate": {
      "methods": [
       "password"

@@ -37,6 +37,8 @@ type listedChange struct {
 	Number            uint64      `json:"number"`
 	State             string      `json:"state"`
 	ChangeRevision    uint64      `json:"change_revision"`
+	OldEpoch          epochRow    `json:"old_epoch"`
+	OldPolicy         uint64      `json:"old_policy"`
 	Candidate         revisionRow `json:"candidate"`
 	Proposer          string      `json:"proposer"`
 	Validator         string      `json:"validator"`
@@ -63,7 +65,7 @@ type trustChangeDetail struct {
 func (c rowContext) listed(v trustchange.View) listedChange {
 	open := trustchange.Open(v.State)
 	can, why := c.actions(v, true)
-	row := listedChange{ID: v.ID, Number: v.Number, State: v.State, ChangeRevision: v.Revision, Candidate: revisionOf(revisionFor(v.Workspace, v.Candidate)),
+	row := listedChange{ID: v.ID, Number: v.Number, State: v.State, ChangeRevision: v.Revision, OldEpoch: epochOf(v.OldEpoch), OldPolicy: v.OldPolicy, Candidate: revisionOf(revisionFor(v.Workspace, v.Candidate)),
 		Proposer: v.Proposer, Validator: v.Validator, Approver: v.Approver, Activator: v.Activator, SupersededBy: v.SupersededBy, EarlierRun: v.EarlierRun,
 		RunStartedAt: stampOrEmpty(v.RunStartedAt), EvidenceCurrent: evidenceNotApplicable, DecideInDetail: open,
 		Can: listedCan{Revise: can.Revise, Validate: can.Validate, Reject: can.Reject, Cancel: can.Cancel}, WhyNot: why, ActUntil: c.actUntil(v)}

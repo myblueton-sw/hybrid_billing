@@ -369,15 +369,15 @@ func TestARequestForEveryCustomerIsNotTheSameAsAGrantForACustomerNamedAll(t *tes
 	change := func(customer string) accesschange.Change {
 		return accesschange.Change{Kind: accesschange.ChangeAdd, Subject: "someone", Action: string(gate.View), ResourceKind: ReaderKind, Fields: []string{ReaderField}, Customer: customer}
 	}
-	named := accessFacts{grants: []gate.GrantView{view("named", gate.One("all"))}, now: now}
+	named := accessFacts{grants: []gate.GrantView{view("named", gate.One("all"))}, now: now, src: wholeFacts{grants: []gate.GrantView{view("named", gate.One("all"))}}}
 	if got := named.equivalent(change("all")); got != noneFact {
 		t.Errorf("a grant for the customer named all was taken for a grant for every customer: %s", got)
 	}
-	every := accessFacts{grants: []gate.GrantView{view("every", gate.All())}, now: now}
+	every := accessFacts{grants: []gate.GrantView{view("every", gate.All())}, now: now, src: wholeFacts{grants: []gate.GrantView{view("every", gate.All())}}}
 	if got := every.equivalent(change("all")); got != "every" {
 		t.Errorf("a grant for every customer: %s", got)
 	}
-	one := accessFacts{grants: []gate.GrantView{view("one", gate.One("c1")), view("every", gate.All())}, now: now}
+	one := accessFacts{grants: []gate.GrantView{view("one", gate.One("c1")), view("every", gate.All())}, now: now, src: wholeFacts{grants: []gate.GrantView{view("one", gate.One("c1")), view("every", gate.All())}}}
 	if got := one.equivalent(change("c1")); got != "one" {
 		t.Errorf("a grant for one customer: %s", got)
 	}

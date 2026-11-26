@@ -12,6 +12,7 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"github.com/myblueton-sw/hybrid_billing/modules/accesschange"
 	"github.com/myblueton-sw/hybrid_billing/modules/commands"
 	"github.com/myblueton-sw/hybrid_billing/modules/identity"
 )
@@ -42,8 +43,13 @@ func (c subjectCursor) binding() queryBinding {
 	return queryBinding{Area: "subjects", Owner: c.Owner, Caller: c.Caller, Query: c.Query, Basis: c.Basis, Reference: c.Reference, Expires: c.Expires}
 }
 
+type listedSubject struct {
+	subjectRow
+	RevocationUnconfirmed bool `json:"revocation_unconfirmed"`
+}
+
 type subjectsPage struct {
-	Rows        []subjectRow      `json:"rows"`
+	Rows        []listedSubject   `json:"rows"`
 	SearchInput string            `json:"search_input"`
 	Query       subjectQuery      `json:"query"`
 	Next        string            `json:"next"`
@@ -102,11 +108,35 @@ func (s *Server) subjectsBasis(actor identity.Verifier) (string, bool) {
 	if err != nil {
 		return "", false
 	}
+	changes := s.changes.Version()
+	if changes == math.MaxUint64 {
+		return "", false
+	}
 	body, _ := json.Marshal(struct {
-		Subjects  uint64
-		Directory uint64
-	}{people.Subjects, s.dir.version})
+		Subjects   uint64
+		Directory  uint64
+		Changes    uint64
+		Generation uint64
+	}{people.Subjects, s.dir.version, changes, s.admin.Generation()})
 	return hex.EncodeToString(s.queryMAC("access-subjects-source-v1", body)), true
+}
+
+func (s *Server) unconfirmedHolders(at time.Time) (map[string]bool, bool) {
+	views, more := s.changes.UnconfirmedRevocations(s.bootWorkspace, s.cfg.Access.ServiceQueryScan)
+	if more {
+		return nil, false
+	}
+	out := map[string]bool{}
+	for _, v := range views {
+		if v.Target.Kind == accesschange.TargetDelegation {
+			if d, ok := s.admin.DelegationAt(v.Target.ID, at); ok {
+				out[d.DelegateID] = true
+			}
+		} else if g, ok := s.admin.GrantAt(v.Target.ID, at); ok && g.SubjectID != "" {
+			out[g.SubjectID] = true
+		}
+	}
+	return out, true
 }
 
 func (s *Server) queryAccessSubjects(w http.ResponseWriter, r *http.Request) {
@@ -159,7 +189,12 @@ func (s *Server) queryAccessSubjects(w http.ResponseWriter, r *http.Request) {
 		cursor = prior
 	}
 	budget := scanBudget{limit: s.cfg.Access.ServiceQueryScan}
-	rows := []subjectRow{}
+	unconfirmed, within := s.unconfirmedHolders(now)
+	if !within {
+		failCode(w, commands.DependencyUnavailable, request)
+		return
+	}
+	rows := []listedSubject{}
 	exhausted := false
 	if query.ID != "" {
 		people, err := s.identity.Workspace().People(found.verifier, s.bootWorkspace, []string{query.ID})
@@ -171,7 +206,7 @@ func (s *Server) queryAccessSubjects(w http.ResponseWriter, r *http.Request) {
 		for _, person := range people {
 			if person.Member != nil && person.Member.Effective && person.Member.UserState == identity.Active {
 				login, _ := s.dir.loginOf(person.User.ID)
-				rows, cursor.Matched = append(rows, subjectRow{UserID: person.User.ID, Login: login}), 1
+				rows, cursor.Matched = append(rows, listedSubject{subjectRow{UserID: person.User.ID, Login: login}, unconfirmed[person.User.ID]}), 1
 			}
 		}
 		exhausted = true
@@ -202,7 +237,7 @@ func (s *Server) queryAccessSubjects(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			cursor.Matched++
-			rows = append(rows, subjectRow{UserID: person.User.ID, Login: login})
+			rows = append(rows, listedSubject{subjectRow{UserID: person.User.ID, Login: login}, unconfirmed[person.User.ID]})
 		}
 		if taken < len(batch.Rows) {
 			break
@@ -230,11 +265,12 @@ func (s *Server) queryAccessSubjects(w http.ResponseWriter, r *http.Request) {
 
 func subjectsReadPath() map[string]any {
 	str := map[string]any{"type": "string"}
-	row := map[string]any{"type": "object", "properties": map[string]any{"user_id": str, "login": map[string]any{"type": "string", "x-meaning": "the sign-in name as the directory has it; empty when there is none"}}}
+	row := map[string]any{"type": "object", "properties": map[string]any{"revocation_unconfirmed": map[string]any{"type": "boolean"}, "user_id": str, "login": map[string]any{"type": "string", "x-meaning": "the sign-in name as the directory has it; empty when there is none"}}}
 	return map[string]any{"get": map[string]any{"operationId": "identity.access.subjects", "x-row": row, "x-filters": []string{"q", "id", "limit", "after"}, "x-order": subjectsOrder,
 		"responses": serviceReadResponses(map[string]any{"type": "object", "properties": map[string]any{"rows": map[string]any{"type": "array", "items": row}}}, true),
 		"x-listed":  "members of the caller's workspace whose membership is in effect and whose account is active: the people a grant can be requested for",
 		"x-filter":  "q matches the sign-in name or the user id without regard to case; id names exactly one person and takes neither q nor a cursor",
+		"x-flag":    "revocation_unconfirmed is true when a kept revocation that is not confirmed targets a grant this person holds or a delegation this person receives; 503 dependency_unavailable when more such revocations are kept than the scan limit",
 		"x-time":    "membership and account standing are read when each page is read, not at the reference time; changes recorded in the identity service end the cursor, but a membership period that begins or ends during a walk can change later pages without ending it",
 		"x-cursor":  "bound to the filters, the caller's session, the reference time and the membership and directory versions; 409 revision_conflict when it no longer fits"}}
 }

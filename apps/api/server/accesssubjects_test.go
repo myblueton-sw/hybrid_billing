@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"github.com/myblueton-sw/hybrid_billing/modules/gate"
 	"net/url"
 	"strings"
 	"testing"
@@ -41,7 +42,7 @@ func TestAccessSubjectsArePagedAndEqualTheWholeReadsSubjects(t *testing.T) {
 		t.Fatalf("one page: %v want %v", subjectIDs(all), want)
 	}
 	for _, raw := range all.body["rows"].([]any) {
-		if row := raw.(map[string]any); row["login"] != logins[fmt.Sprint(row["user_id"])] || len(row) != 2 {
+		if row := raw.(map[string]any); row["login"] != logins[fmt.Sprint(row["user_id"])] || len(row) != 3 || row["revocation_unconfirmed"] != false {
 			t.Errorf("row %+v", row)
 		}
 	}
@@ -151,4 +152,78 @@ func TestAccessSubjectsRefusalsAdmissionAndCursor(t *testing.T) {
 	if got := f.subjects(f.as(AdminLogin), ""); got.status != 503 {
 		t.Errorf("a fault: %d", got.status)
 	}
+}
+
+func browserUnconfirmed(whole reply) map[string]bool {
+	holder := map[string]string{}
+	for _, raw := range whole.body["grants"].([]any) {
+		holder["grant/"+fmt.Sprint(raw.(map[string]any)["id"])] = fmt.Sprint(raw.(map[string]any)["subject"])
+	}
+	for _, raw := range whole.body["delegations"].([]any) {
+		holder["delegation/"+fmt.Sprint(raw.(map[string]any)["id"])] = fmt.Sprint(raw.(map[string]any)["delegate"])
+	}
+	out := map[string]bool{}
+	for _, raw := range whole.body["revocations"].([]any) {
+		row := raw.(map[string]any)
+		if who := holder[fmt.Sprint(row["target_kind"])+"/"+fmt.Sprint(row["target"])]; who != "" && (row["state"] == "received" || row["state"] == "decision_unconfirmed") {
+			out[who] = true
+		}
+	}
+	return out
+}
+
+func TestAccessSubjectsFlagAnUnconfirmedRevocationAsTheBrowserDid(t *testing.T) {
+	f := setup(t, SeedSample).ready()
+	f.setPassword(MemberLogin, pw)
+	root, second := f.as(AdminLogin), f.as(Admin2Login)
+	confirmed := f.grantVia(root, second, SampleMember, nil)
+	if got := f.revokeVia(root, second, confirmed); got.status != 202 {
+		t.Fatalf("revoke %s", got.raw)
+	}
+	compare := func(stage string, want ...string) {
+		t.Helper()
+		whole := f.accessRead(root, "")
+		rule := browserUnconfirmed(whole)
+		flagged := []string{}
+		for _, raw := range f.subjects(root, "?limit=50").body["rows"].([]any) {
+			row := raw.(map[string]any)
+			user := fmt.Sprint(row["user_id"])
+			if row["revocation_unconfirmed"] != rule[user] {
+				t.Errorf("%s: %s: %v, the browser's rule says %v", stage, user, row["revocation_unconfirmed"], rule[user])
+			}
+			if row["revocation_unconfirmed"] == true {
+				flagged = append(flagged, user)
+			}
+			one := f.subjects(root, "?id="+user).body["rows"].([]any)[0].(map[string]any)
+			if one["revocation_unconfirmed"] != row["revocation_unconfirmed"] {
+				t.Errorf("%s: %s: the lookup by identifier disagrees with the list", stage, user)
+			}
+		}
+		if strings.Join(flagged, " ") != strings.Join(want, " ") {
+			t.Errorf("%s: flagged %v want %v", stage, flagged, want)
+		}
+	}
+	compare("a confirmed revocation only")
+	token := url.QueryEscape(f.subjects(root, "?limit=1").body["next"].(string))
+	f.stoppedLedger()
+	if got := f.revokeVia(root, second, "reader-"+SampleAdmin2); got.status != 202 {
+		t.Fatalf("revoke on a stopped ledger %s", got.raw)
+	}
+	if got := f.subjects(root, "?limit=1&after="+token); got.status != 409 {
+		t.Errorf("a cursor from before the revocation: %d", got.status)
+	}
+	compare("a grant's revocation left unconfirmed", SampleAdmin2)
+	f.must(f.s.admin.AddGrant(gate.Grant{ID: "member-holds", SubjectID: SampleMember, Terms: permissionTerms(gate.One("c1")),
+		Validity: gate.Validity{NotBefore: f.s.clock(), NotAfter: f.s.clock().Add(time.Hour)}}))
+	addDelegation(f, "del-u", SampleAdmin, SampleMember, "")
+	if got := f.run(root, "access.revoke_delegation", "del-u", nil); got.status != 202 {
+		t.Fatalf("revoke a delegation on a stopped ledger %s", got.raw)
+	}
+	compare("a delegation's revocation left unconfirmed", SampleAdmin2, SampleMember)
+	scan := f.s.cfg.Access.ServiceQueryScan
+	f.s.cfg.Access.ServiceQueryScan = 1
+	if got := f.subjects(root, "?id="+SampleAdmin); got.status != 503 {
+		t.Errorf("more unconfirmed revocations than the limit: %d", got.status)
+	}
+	f.s.cfg.Access.ServiceQueryScan = scan
 }

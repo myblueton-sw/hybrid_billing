@@ -15,7 +15,7 @@ const revocation = { id: "revocation-1", origin: "this_process", recorded_at: "2
   deny_at: "2026-11-16T09:00:00Z", receipt: { sequence: 2, watermark: "2:edd4ef79", reason: "" }, verified: true,
   cleanup: [{ item: "C1", state: "done", reason: "deny_generation", refs: [] }, { item: "C5", state: "outside_scope", reason: "cannot_recall", refs: [] }], completed_at: "2026-11-16T09:00:00Z",
   target_subject: "sample-member", target_subject_login: "member@example.invalid", target_action: "view", target_resource_kind: "focus_data", target_fields: ["rows"] };
-const people = [{ user_id: "sample-admin", login: "admin@example.invalid" }, { user_id: "sample-admin-2", login: "admin2@example.invalid" }];
+const people = [{ user_id: "sample-admin", login: "admin@example.invalid", revocation_unconfirmed: false }, { user_id: "sample-admin-2", login: "admin2@example.invalid", revocation_unconfirmed: true }];
 const pageOf = (rows: unknown[], order: string, query: Record<string, unknown>, change: Record<string, unknown> = {}) => ({ rows, search_input: "", query, next: "",
   reference_at: "2026-11-16T09:00:00Z", observed_at: "2026-11-16T09:00:00Z", revision: "r11", order, count: { value: String(rows.length), certainty: "exact" }, work_units: rows.length, scan_stopped: false, ...change });
 const requests = (rows: unknown[], change: Record<string, unknown> = {}, query: Record<string, unknown> = {}) => pageOf(rows, "number_desc", { q: "", state: "", limit: 25, ...query }, change);
@@ -37,6 +37,7 @@ test("M03 lists: pages as the service answers them are accepted, each as one bou
   assert.deepEqual([b.rows[0].target_subject_login, b.rows[0].target_action, b.rows[0].target_fields], ["member@example.invalid", "view", ["rows"]]);
   assert.deepEqual([a.rows.map((r) => r.id), b.rows[0].target_version, c.rows.map((r) => r.login)], [["access-request-5", "access-request-3"], 1, ["admin@example.invalid", "admin2@example.invalid"]]);
   assert.equal(a.rows[0].proposer_login, "admin2@example.invalid");
+  assert.deepEqual(c.rows.map((r) => r.revocation_unconfirmed), [false, true]);
 });
 
 test("M03 lists: filters are sent as given and must be echoed and honoured", async () => {
@@ -56,7 +57,7 @@ test("M03 lists: filters are sent as given and must be echoed and honoured", asy
   await client(subjects([people[1]], {}, { id: "sample-admin-2" }), see).accessSubjects({ id: "sample-admin-2" });
   assert.equal(sent, "/api/v1/identity/access/subjects?id=sample-admin-2");
   await assert.rejects(client(subjects([people[0]], {}, { id: "sample-admin-2" })).accessSubjects({ id: "sample-admin-2" }), invalid);
-  assert.equal((await client(subjects([{ user_id: "user-1", login: "ΟΔΥΣΣΕΥΣ@example.invalid" }], { search_input: "σσευς" }, { q: "σσευς" })).accessSubjects({ q: "σσευς" })).rows.length, 1);
+  assert.equal((await client(subjects([{ user_id: "user-1", login: "ΟΔΥΣΣΕΥΣ@example.invalid", revocation_unconfirmed: false }], { search_input: "σσευς" }, { q: "σσευς" })).accessSubjects({ q: "σσευς" })).rows.length, 1);
 });
 
 test("M03 lists: a request is refused before sending when it could not be a valid query", async () => {
@@ -97,8 +98,10 @@ test("M03 lists: answers that are not what the service can say are refused", asy
     ["a state echo on revocations", revocations([revocation], {}, { state: "pending" }), "v"],
     ["an unknown field on a person", subjects([{ ...people[0], role: "administrator" }]), "s"],
     ["people out of order", subjects([people[1], people[0]]), "s"],
+    ["a person without the revocation flag", subjects([{ user_id: "sample-admin", login: "admin@example.invalid" }]), "s"],
+    ["a revocation flag that is not a boolean", subjects([{ ...people[0], revocation_unconfirmed: "no" }]), "s"],
     ["a person twice", subjects([people[0], people[0]]), "s"],
-    ["a sign-in name beyond its length", subjects([{ user_id: "sample-admin", login: "a".repeat(321) }]), "s"],
+    ["a sign-in name beyond its length", subjects([{ user_id: "sample-admin", login: "a".repeat(321), revocation_unconfirmed: false }]), "s"],
   ];
   for (const [name, body, kind] of bad) {
     const c = client(body);

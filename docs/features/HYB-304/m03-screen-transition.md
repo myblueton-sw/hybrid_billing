@@ -58,6 +58,8 @@ Each is one reviewed change; server increments are additive fields with independ
 
 - **T2b-2, 2026-11-26.** `would_end` on the detail reads `GET /identity/access/permissions/grant/{id}` and `/delegation/{id}` (`accessquery.go`), from the auth prediction with the scan limit and 503 above it; the console's strict client requires an ordered list of distinct identifiers and refuses a delegation that would end itself. Test: for a grant that backs a two-link chain and for the chain's parent delegation, the list equals `ended_delegations` of the revocation actually made afterwards; a leaf delegation and a grant that is not a delegate's last end nothing; a revoked grant ends nothing; more dependents than the limit answers 503. Verified: the whole server package passes (463 s); console TypeScript clean, 1485 tests, 1480 passed, 5 skipped. Independent review: approve; the hidden cases (an installation-action grant, an unknown identifier, the other source's identifier) are answered before any prediction runs. Not tested here: a target that is not effective now; two grants backing one delegation.
 
+- **T3 composition, 2026-11-26.** The ui-designer's composition for the requests section on paged reads is recorded in [the requests composition](m03-requests-composition.md); not yet built.
+
 # Risk
 
 - The warning (item 4) and what would end (item 5) inform a person before they ask for access or revoke; a wrong answer misleads but the commands decide. The warning's rule moves from the browser to the server and is compared with the browser's rule in tests before the browser's is removed; what would end follows the server's rule instead and is compared with `ended_delegations` after an actual revocation.

@@ -29,7 +29,7 @@ import {
   navigation,
   queryKey,
 } from "./query-model";
-import { Facts, PageInfo, Picker, ReadBoundary, bdi } from "./query-ui";
+import { Facts, Moment, PageInfo, Picker, ReadBoundary, bdi } from "./query-ui";
 import { QueryFilters, filterValue } from "./QueryFilters";
 import { DeclarationForm } from "./DeclarationForm";
 import { AccountDetailView } from "./AccountDetail";
@@ -675,9 +675,9 @@ function CredentialWorkspace({
               <Facts
                 items={[
                   [v.colService(l), bdi(detail.row.service)],
-                  [t(l, "state"), <CredentialStatus l={l} row={detail.row} />],
+                  [t(l, "state"), <CredentialStatus l={l} row={detail.row} select={(id) => onParams({ svc_c_selected: id, svc_c_rotate: null }, true)} />],
                   [v.colValid(l), <CredentialPeriod l={l} row={detail.row} />],
-                  [t(l, "observed"), bdi(detail.observed_at)],
+                  [t(l, "observed"), <Moment l={l} iso={detail.observed_at} />],
                 ]}
               />
               <Reauthenticate
@@ -804,7 +804,7 @@ function CredentialTable({
                   <p>
                     {row.secret_pickup === "open" ? (
                       <>
-                        {v.pickupOpen(l)} {bdi(row.secret_pickup_until!)}
+                        {v.pickupOpen(l)} <Moment l={l} iso={row.secret_pickup_until!} />
                       </>
                     ) : row.secret_pickup === "collected" ? (
                       t(l, "collected")
@@ -886,7 +886,7 @@ function PendingCollection({
                   <span>
                     {row.secret_pickup === "open" ? (
                       <>
-                        {v.pickupOpen(l)} {bdi(row.secret_pickup_until!)}
+                        {v.pickupOpen(l)} <Moment l={l} iso={row.secret_pickup_until!} />
                       </>
                     ) : row.secret_pickup === "never_collected" ? (
                       v.pickupNever(l)

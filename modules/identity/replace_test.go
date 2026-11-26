@@ -377,3 +377,50 @@ func TestReplaceCredentialKeepsThePagesCountsAndQueryVersionCurrent(t *testing.T
 		t.Fatal("a fourth live credential was added beyond the limit of three")
 	}
 }
+
+func TestReplaceThenRevokeThenPruneLeavesNoIndexEntryBehind(t *testing.T) {
+	f, admin := replaceFixture(t, 3)
+	at := start
+	for n := 0; n < EndedCredentialsKept+3; n++ {
+		old, next := fmt.Sprintf("old-%02d", n), fmt.Sprintf("new-%02d", n)
+		f.must(f.w.AddCredential(admin(), "w1", "svc", old, v(old), Validity{NotBefore: at, NotAfter: at.Add(10 * time.Hour)}))
+		f.must(f.w.ReplaceCredential(admin(), "w1", old, next, v(next), Validity{NotBefore: at, NotAfter: at.Add(20 * time.Hour)}, at.Add(time.Hour)))
+		f.must(f.w.RevokeCredential(admin(), "w1", next))
+		at = at.Add(2 * time.Hour)
+		*f.now = at
+		controls, err := f.w.ServiceControls(admin(), "w1", "svc")
+		if err != nil || controls.LiveCredentials != 0 {
+			t.Fatalf("round %d: live credentials after the replaced one ended and the new one was revoked: %+v %v", n, controls, err)
+		}
+	}
+	list, err := f.w.Credentials(admin(), "w1", "svc")
+	f.must(err)
+	if len(list) > EndedCredentialsKept+2 {
+		t.Fatalf("ended credentials kept: %d", len(list))
+	}
+	seen := map[string]bool{}
+	after := ""
+	for {
+		page, err := f.w.CredentialPage(admin(), "w1", "svc", after, 2)
+		f.must(err)
+		if len(page) == 0 {
+			break
+		}
+		for _, c := range page {
+			if seen[c.ID] {
+				t.Fatalf("the bounded pages repeat %s", c.ID)
+			}
+			seen[c.ID] = true
+			after = c.ID
+		}
+	}
+	if len(seen) != len(list) {
+		t.Fatalf("the bounded pages hold %d credentials, the whole list %d", len(seen), len(list))
+	}
+	f.must(f.w.AddCredential(admin(), "w1", "svc", "last-a", v("last-a"), Validity{NotBefore: at, NotAfter: at.Add(time.Hour)}))
+	f.must(f.w.AddCredential(admin(), "w1", "svc", "last-b", v("last-b"), Validity{NotBefore: at, NotAfter: at.Add(time.Hour)}))
+	f.must(f.w.AddCredential(admin(), "w1", "svc", "last-c", v("last-c"), Validity{NotBefore: at, NotAfter: at.Add(time.Hour)}))
+	if controls, err := f.w.ServiceControls(admin(), "w1", "svc"); err != nil || controls.LiveCredentials != 3 {
+		t.Fatalf("live credentials after three fresh ones: %+v %v", controls, err)
+	}
+}

@@ -8,12 +8,16 @@ import { c } from "../../../../service/copy";
 import { v } from "./live-copy";
 import { countDays, countMinutes, r } from "./rotate-copy";
 import { CommandFailure } from "./command-failure";
-import { admitsIssueDraft } from "./issue-draft";
+import { admitsRotateDraft } from "./issue-draft";
 import { issueExec } from "./issue-send";
 import { Facts, bdi, usePanelHeading } from "./query-ui";
 import { BoundedReason, Reauthenticate, usePresent } from "./command-ui";
 import type { Recovery } from "./recovery-context";
 import { rotationEnd, utcTime, wholeDays, wholeMinutes } from "./live-model";
+
+function Marked({ text }: { text: string }) {
+  return <>{text.split(/(\u2068[^\u2069]*\u2069)/).map((part, i) => part.startsWith("\u2068") ? <bdi key={i} dir="ltr" className="live-mono live-nowrap">{part.slice(1, -1)}</bdi> : part)}</>;
+}
 
 export function RotateControl({ l, api, recovery, detail, user, refresh, show, cancel }: {
   l: Locale; api: AdminClient; recovery: Recovery; detail: CredentialDetail; user: string; refresh: () => void; show: (service: string) => void; cancel: () => void;
@@ -58,7 +62,7 @@ export function RotateControl({ l, api, recovery, detail, user, refresh, show, c
       if (why) fields.reason = why;
       if (Object.keys(fields).length) { setReviewing(false); validation.fail(fields); return; }
       if (!allowed) { setReviewing(false); validation.fail({}, r.gone(l, detail.row.id)); return; }
-      if (!admitsIssueDraft({ target: detail.row.id, days, reason }, lim)) { setReviewing(false); validation.fail({}, requestBounds(l)); return; }
+      if (!admitsRotateDraft({ target: detail.row.id, days, reason, overlap: String(minutes) }, lim)) { setReviewing(false); validation.fail({}, requestBounds(l)); return; }
       validation.reset();
       if (!reviewing) { setReviewing(true); return; }
     }
@@ -72,7 +76,7 @@ export function RotateControl({ l, api, recovery, detail, user, refresh, show, c
     return (
       <section className="live-step live-rotate-form live-rotate-done" aria-labelledby="svc-rotate-title">
         <h2 id="svc-rotate-title" tabIndex={-1} ref={heading}>{r.title(l)}</h2>
-        <p role="status">{r.rotated(l, entry.issued.credential, detail.row.id, service)}</p>
+        <p role="status"><Marked text={r.rotated(l, entry.issued.credential, detail.row.id, service)} /></p>
         <Facts items={[
           [r.willEnd(l), <span className="live-mono">{bdi(detail.row.id)}</span>],
           [r.endsAt(l), time(detail.row.not_after)],

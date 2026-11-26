@@ -1,3 +1,4 @@
+import { shownTime } from "./live-model";
 import { useCallback, useId, useState, type ReactNode } from "react";
 import type { Locale } from "../../../../shared/types";
 import type {
@@ -37,6 +38,10 @@ function describeRead(l: Locale, error: unknown) {
     body: t(l, changed ? "readQueryChanged" : "readUnavailable"),
   };
 }
+export function Moment({ l, iso }: { l: Locale; iso: string }) {
+  return <bdi dir="ltr"><time dateTime={iso} title={iso}>{shownTime(l, iso)}</time></bdi>;
+}
+
 export function Facts({ items }: { items: [string, ReactNode][] }) {
   return (
     <dl className="live-facts">
@@ -106,8 +111,8 @@ export function PageInfo<T>({
             t(l, page.count.certainty === "exact" ? "exact" : "lower"),
             page.count.value,
           ],
-          [t(l, "reference"), bdi(page.reference_at)],
-          [t(l, "observed"), bdi(page.observed_at)],
+          [t(l, "reference"), <Moment l={l} iso={page.reference_at} />],
+          [t(l, "observed"), <Moment l={l} iso={page.observed_at} />],
         ]}
       />
       {page.rows.length === 0 && (

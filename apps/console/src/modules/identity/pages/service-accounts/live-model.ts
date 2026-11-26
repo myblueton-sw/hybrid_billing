@@ -35,6 +35,10 @@ export function utcTime(l: Locale, iso: string): string {
   return new Intl.DateTimeFormat({ en: "en-US", ko: "ko-KR", ar: "ar" }[l], { year: "numeric", month: l === "en" ? "short" : "numeric", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "UTC", timeZoneName: "short" }).format(d);
 }
 
+export function shownTime(l: Locale, iso: string): string {
+  return utcTime(l, iso).replace(/[\u061c\u200e\u200f]/g, "") || iso;
+}
+
 export function canRotate(service: "active" | "suspended" | "retired", c: { state: string; rotation?: "replacing" | "ending"; not_before: string }, now: string): boolean {
   return service === "active" && c.state === "active" && c.rotation !== "ending" && !(Date.parse(c.not_before) > Date.parse(now));
 }

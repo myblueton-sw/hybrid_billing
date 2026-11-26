@@ -793,8 +793,22 @@
   overflow-wrap: anywhere;
   word-break: normal;
 }
-.live-rotate-form > h2 {
+.remaining-security .live-step.live-rotate-form > h2 {
   margin-block-start: 24px;
+}
+.remaining-security .live-id-link {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font-family: var(--hb-font-mono);
+  font-size: 14px;
+  text-decoration: underline;
+  white-space: nowrap;
+  cursor: pointer;
 }
 .live-rotate-form #svc-days,
 .live-rotate-form #svc-overlap {

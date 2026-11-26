@@ -117,6 +117,9 @@ try {
     await page.waitForTimeout(300);
     const doneText = (await done.count()) ? await done.innerText() : "";
     check(`${at}: after confirming, the form is replaced by the result: the new credential, the old one's end, and the one-time secret`, doneText.includes(next) && doneText.includes(old) && (await done.locator("button.live-primary").count()) === 1 && (await page.locator("#svc-days").count()) === 0 && await detailOf(old).locator("button.live-rotate").isDisabled(), doneText.slice(0, 200));
+    const marked = await done.locator("p[role=status] bdi.live-mono").allInnerTexts();
+    const top = await done.locator("h2").evaluate((el) => getComputedStyle(el).marginBlockStart);
+    check(`${at}: the result sentence shows its three identifiers in mono and its title has room above`, marked.includes(next) && marked.includes(old) && marked.includes(service) && top === "24px", marked.join() + " " + top);
     if (args.shots) { await done.scrollIntoViewIfNeeded(); await page.screenshot({ path: `${args.shots}/rotate-done-${lang}-${width}.png` }); }
     const after = await api(`/identity/service-credentials/${old}`), fresh = await api(`/identity/service-credentials/${next}`);
     check(`${at}: the real reads show the old credential ending and no longer rotatable, and the new one replacing it`, after.body?.row?.rotation === "ending" && after.body?.row?.replaced_by === next && after.body?.eligibility?.can_rotate === false && fresh.body?.row?.replaces === old && fresh.body?.row?.rotation === "replacing" && fresh.body?.row?.secret_pickup === "open", JSON.stringify({ old: after.body?.row?.rotation, can: after.body?.eligibility?.can_rotate, fresh: fresh.body?.row?.rotation, pickup: fresh.body?.row?.secret_pickup }));
@@ -125,6 +128,17 @@ try {
     const text = await ended.innerText();
     check(`${at}: the old credential's detail says it was rotated and by which credential, with Rotate disabled`, text.includes(copy[lang].ending) && text.includes(copy[lang].replacedBy) && text.includes(next) && await ended.locator("button.live-rotate").isDisabled() && !/\d{4}-\d{2}-\d{2}T/.test(await ended.locator(".live-rotation").innerText()), (await ended.locator(".live-rotation").innerText()).slice(0, 120));
     if (args.shots) { await ended.scrollIntoViewIfNeeded(); await page.screenshot({ path: `${args.shots}/rotate-old-${lang}-${width}.png` }); }
+    const period = await ended.innerText();
+    const whole = await page.locator("main").innerText();
+    check(`${at}: neither the detail nor the list shows a raw timestamp`, !/\d{4}-\d{2}-\d{2}T\d{2}:/.test(period + whole), (period + whole).match(/\d{4}-\d{2}-\d{2}T[^\s]*/)?.[0] ?? "");
+    const link = ended.locator("button.live-id-link").first();
+    const look = await link.evaluate((el) => { const c = getComputedStyle(el); return { border: c.borderTopWidth, bg: c.backgroundColor, underline: c.textDecorationLine, height: Math.round(el.getBoundingClientRect().height) }; });
+    check(`${at}: the identifier link looks like a link and is 44px tall`, look.border === "0px" && /rgba\(0, 0, 0, 0\)|transparent/.test(look.bg) && look.underline.includes("underline") && look.height >= 44, JSON.stringify(look));
+    const gap = await page.evaluate(() => { const steps = [...document.querySelectorAll("section.live-step")]; const last = steps[steps.length - 1]?.getBoundingClientRect(); const groups = [...document.querySelectorAll("main fieldset, main [role=group], main form")].map((e) => e.getBoundingClientRect()).filter((r) => last && r.top >= last.bottom - 1); return last && groups.length ? Math.round(Math.min(...groups.map((r) => r.top)) - last.bottom) : -1; });
+    notes.push(`${at}: space between the credential detail and what follows it: ${gap}px`);
+    await link.click();
+    await detailOf(next).waitFor({ timeout: 5000 }).catch(() => {});
+    check(`${at}: the identifier in "replaced by" selects that credential`, (await detailOf(next).count()) === 1 && new URLSearchParams(new URL(page.url()).hash.split("?")[1]).get("svc_c_selected") === next);
     await go(lang, { svc_c_service: service, svc_c_selected: next });
     const newer = detailOf(next); await newer.waitFor();
     check(`${at}: the new credential's detail says what it replaces`, (await newer.innerText()).includes(copy[lang].replaces) && (await newer.innerText()).includes(old));

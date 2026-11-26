@@ -355,6 +355,20 @@ func (a *Administration) DelegationsOfUser(user string, limit int, at time.Time)
 	return a.permissions.DelegationsOfUser(user, limit, at)
 }
 
+func (a *Administration) GrantWouldEnd(id string, limit int, at time.Time) ([]string, bool, bool) {
+	if !a.ready() {
+		return nil, false, false
+	}
+	return a.permissions.GrantWouldEnd(id, limit, at)
+}
+
+func (a *Administration) DelegationWouldEnd(id string, limit int, at time.Time) ([]string, bool, bool) {
+	if !a.ready() {
+		return nil, false, false
+	}
+	return a.permissions.DelegationWouldEnd(id, limit, at)
+}
+
 func (a *Administration) PermissionCounts() (int, int) {
 	if !a.ready() {
 		return 0, 0

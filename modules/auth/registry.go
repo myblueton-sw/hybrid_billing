@@ -331,7 +331,7 @@ func contains(fields []string, field string) bool {
 	return false
 }
 
-func (r *Registry) backedDirectly(delegatorID string, terms Terms, now time.Time) bool {
+func (r *Registry) backedDirectly(delegatorID string, terms Terms, now time.Time, except string) bool {
 	fields := terms.Fields
 	if !fieldAction(terms.Action) {
 		fields = []string{""}
@@ -340,7 +340,7 @@ func (r *Registry) backedDirectly(delegatorID string, terms Terms, now time.Time
 		backed := false
 		for id, grant := range r.grants {
 			g := grant.value
-			if !grant.closed && g.SubjectID == delegatorID && g.Validity.at(now) && g.Terms.Action == terms.Action &&
+			if id != except && !grant.closed && g.SubjectID == delegatorID && g.Validity.at(now) && g.Terms.Action == terms.Action &&
 				g.Terms.Kind == terms.Kind && terms.Scope.within(g.Terms.Scope) && terms.Period.within(g.Terms.Period) &&
 				(field == "" || contains(g.Terms.Fields, field)) && r.memberWith(g.Terms.Scope.WorkspaceID, delegatorID, r.grantJoined[id]) {
 				backed = true
@@ -354,9 +354,9 @@ func (r *Registry) backedDirectly(delegatorID string, terms Terms, now time.Time
 	return true
 }
 
-func (r *Registry) holdsInWorkspace(subjectID, workspaceID string, now time.Time) bool {
+func (r *Registry) holdsInWorkspace(subjectID, workspaceID string, now time.Time, except string) bool {
 	for id, grant := range r.grants {
-		if !grant.closed && grant.value.SubjectID == subjectID && grant.value.Terms.Scope.WorkspaceID == workspaceID && grant.value.Validity.at(now) &&
+		if id != except && !grant.closed && grant.value.SubjectID == subjectID && grant.value.Terms.Scope.WorkspaceID == workspaceID && grant.value.Validity.at(now) &&
 			r.memberWith(workspaceID, subjectID, r.grantJoined[id]) {
 			return true
 		}
@@ -399,7 +399,7 @@ func (r *Registry) AddDelegation(delegation Delegation) error {
 	}
 	now := r.clock()
 	if delegation.ParentID == "" {
-		if !r.backedDirectly(delegation.DelegatorID, terms, now) {
+		if !r.backedDirectly(delegation.DelegatorID, terms, now, "") {
 			return ErrNotBacked
 		}
 	} else {
@@ -419,7 +419,7 @@ func (r *Registry) AddDelegation(delegation Delegation) error {
 	if _, ok := r.chainSubjects(delegation); !ok {
 		return ErrInvalid
 	}
-	if !r.holdsInWorkspace(delegation.DelegateID, terms.Scope.WorkspaceID, now) {
+	if !r.holdsInWorkspace(delegation.DelegateID, terms.Scope.WorkspaceID, now, "") {
 		return ErrInvalid
 	}
 	if r.subjectsGeneration() != generation {

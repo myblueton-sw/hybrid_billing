@@ -146,7 +146,7 @@ func TestPermissionsArePagedInOneStableOrderAndEqualTheWholeRead(t *testing.T) {
 		query string
 		count int
 	}{
-		"customer c1": {"?customer=c1", 8}, "the second administrator's delegations": {"?q=qd&subject=" + SampleAdmin2 + "&source=delegation", 4},
+		"customer c1 and everything that covers it": {"?q=q-&customer=c1", 23}, "only what covers every customer": {"?q=q-&customer=all", 15}, "another customer": {"?q=q-&customer=c2", 15}, "a legal entity": {"?q=q-&legal_entity=le-1", 23}, "the second administrator's delegations": {"?q=qd&subject=" + SampleAdmin2 + "&source=delegation", 4},
 		"ending within five hours and a half": {"?q=q-&expires_before=" + url.QueryEscape(f.s.clock().Add(5*time.Hour+30*time.Minute).UTC().Format(time.RFC3339)), 5},
 		"no such subject":                     {"?subject=nobody", 0}, "no such action": {"?action=nothing", 0}, "state expired": {"?q=q-&state=expired", 0}, "state active": {"?q=q-&state=active&source=grant", 23},
 	} {

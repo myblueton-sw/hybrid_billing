@@ -173,9 +173,13 @@ func (q permissionQuery) digest() string {
 	return hex.EncodeToString(sum[:])
 }
 
+func selectorApplies(stored, wanted string) bool {
+	return wanted == "" || stored == wanted || stored == "all"
+}
+
 func (q permissionQuery) matches(row permissionRow, notAfter time.Time) bool {
 	if q.Source != "" && row.Source != q.Source || q.Subject != "" && row.Subject != q.Subject || q.Action != "" && row.Action != q.Action ||
-		q.Customer != "" && row.Scope.Customer != q.Customer || q.LegalEntity != "" && row.Scope.LegalEntity != q.LegalEntity || q.State != "" && row.State != q.State {
+		!selectorApplies(row.Scope.Customer, q.Customer) || !selectorApplies(row.Scope.LegalEntity, q.LegalEntity) || q.State != "" && row.State != q.State {
 		return false
 	}
 	if q.ExpiresBefore != "" && !notAfter.Before(q.expires) {
@@ -395,7 +399,7 @@ func permissionReadPaths() map[string]any {
 			"x-cursor":    "bound to the list, the filters, the caller's session, the reference time and the source basis; 409 revision_conflict when it no longer fits",
 			"x-count":     "exact on the last page, a lower bound before it",
 			"x-never":     "grants for installation actions are not listed",
-			"x-filter-id": "customer and legal_entity match the stored selector exactly; the value all matches a selector that covers every one"}},
+			"x-filter-id": "customer and legal_entity list every permission that applies to the named one: those scoped to it and those that cover every one; the value all lists only those that cover every one"}},
 		"/identity/access/permissions/grant/{id}":      map[string]any{"get": map[string]any{"operationId": "identity.access.grant", "x-row": row, "responses": serviceReadResponses(map[string]any{"type": "object", "properties": map[string]any{"row": row}}, false), "x-unknown": "an unknown identifier, a grant for an installation action and a delegation's identifier answer alike"}},
 		"/identity/access/permissions/delegation/{id}": map[string]any{"get": map[string]any{"operationId": "identity.access.delegation", "x-row": row, "responses": serviceReadResponses(map[string]any{"type": "object", "properties": map[string]any{"row": row}}, false), "x-unknown": "an unknown identifier and a grant's identifier answer alike"}},
 	}

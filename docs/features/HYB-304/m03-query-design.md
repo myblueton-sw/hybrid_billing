@@ -93,11 +93,16 @@ Each increment has its own independent review; C2, C4 and C5 change a public rea
 
 - **C2, 2026-11-26.** `apps/api/server/accessquery.go`: the permissions read and the two detail reads, as designed. Rows carry what the whole read's grant and delegation rows carry, with `source`, and a delegation's delegate as `subject`. States are the whole read's (`active`, `pending`, `expired`, `revoked`, `revocation_unconfirmed`, and `ended` for a delegation that is active by date but not effective). Unknown, hidden and wrong-source identifiers answer `422 invalid_request` alike, the convention of the other reads of this service. The cursor continues only its own query, caller and basis within its lifetime. `work_units` counts every stored row examined, so on a complete unfiltered walk it exceeds the rows listed by the number of installation-action grants; readers are installation administrators and the API description says so. No eligibility is returned by the detail reads yet: M03's commands act through change requests, whose eligibility belongs to the requests read of C4.
 
+# Decided by the owner
+
+Asked in the working session on 2026-11-26:
+
+- **One list.** Grants and delegations are shown as one list with a source column and filter, as the specification's columns read.
+- **The `customer` and `legal_entity` filters list everything that applies.** `customer=c1` lists the permissions scoped to that customer and those that cover every customer; `customer=all` lists only those that cover every customer. The read first matched the stored selector exactly; it was changed before any screen used it.
+
 # Open for the owner
 
 - **C5 removes fields from an existing public read.** The plan's common contract requires it ("a new paged endpoint alone is insufficient if the old screen entry still downloads all rows"), and M04 did the same to the services read. It is listed here because a removal is a contract change; it will be asked before C5 is built.
-- **One list for grants and delegations.** The specification's columns include source and original delegation, which reads as one list. The screen today shows them as two tables. This design follows the specification; it is a screen decision and will be put to the ui-designer and the owner before C3. The server read serves either: the `source` filter gives each table.
-- **What the `customer` and `legal_entity` filters match.** They match the stored selector exactly: `customer=c1` lists permissions scoped to that customer, and `customer=all` those that cover every customer. A permission that covers every customer therefore does not appear under `customer=c1`, although it applies to that customer. The alternative, listing everything that applies to the customer, is as easy to build; the exact match was chosen because it says what is stored. To be confirmed before C3 puts the filter on the screen.
 - **Selection across a whole filter.** The specification's fixed server target manifest for "select all matching" applies to bulk actions. M03 has no bulk action today, so none is designed here.
 
 # Review

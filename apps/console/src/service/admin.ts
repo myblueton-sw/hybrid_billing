@@ -521,7 +521,6 @@ export type PolicyPage = {
   ledger: TrustLedger;
   rights: TrustRights;
   holders: TrustHolders;
-  changes: TrustChange[];
   waiting_activation: string;
   earlier_run_kept: boolean;
 };
@@ -613,7 +612,6 @@ export function policyPageOf(body: Record<string, unknown>): PolicyPage {
     rights: { propose: rights.propose === true, validate: rights.validate === true, approve: rights.approve === true, activate: rights.activate === true },
     holders: { qualifying_people: num(holders.qualifying_people), members: num(holders.members), needed: num(holders.needed) || 3, enrolment: str(holders.enrolment), ready: holders.ready === true,
       missing: Array.isArray(holders.missing) ? holders.missing.map((x) => String(x)) : [] },
-    changes: list(body.changes).map(trustChangeOf),
     waiting_activation: str(body.waiting_activation),
     earlier_run_kept: body.earlier_run_kept === true,
   };

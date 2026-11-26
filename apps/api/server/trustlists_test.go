@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/url"
 	"reflect"
+	"sort"
 	"strings"
 	"testing"
 
@@ -270,5 +271,31 @@ func TestThePolicyReadNamesAWaitingActivationAndEarlierRuns(t *testing.T) {
 		if detail := g.readAs(a, trustChangesPath+"/"+fmt.Sprint(row["id"])); !reflect.DeepEqual(detail.body["change"], any(row)) {
 			t.Errorf("detail %d on hold: %s", i, detail.raw)
 		}
+	}
+}
+
+func TestThePolicyReadCarriesNoChanges(t *testing.T) {
+	f := setup(t, SeedSample).ready()
+	p := f.trustMixture(t)
+	got := f.policyWire(p.a)
+	if got.status != 200 {
+		t.Fatalf("read %s", got.raw)
+	}
+	names := []string{}
+	for name := range got.body {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+	if joined := strings.Join(names, " "); joined != "act_until authenticated_at earlier_run_kept holders ledger now policy revision rights signed_in_at started_at step_up_seconds trust waiting_activation you" {
+		t.Errorf("fields %s", joined)
+	}
+	if strings.Contains(got.raw, `"changes"`) || strings.Contains(got.raw, `"change_digest"`) || strings.Contains(got.raw, `"history"`) {
+		t.Errorf("the policy read still carries a change: %s", got.raw)
+	}
+	if kept := f.s.trust.List(SampleWorkspace); len(kept) != 7 || len(f.policyRead(p.a).body["changes"].([]any)) != 7 {
+		t.Errorf("the fixture keeps %d changes", len(kept))
+	}
+	if listed := f.readAs(p.a, trustChangesPath+"?limit=50"); len(listIDs(listed)) != 7 {
+		t.Errorf("the list read carries %v", listIDs(listed))
 	}
 }

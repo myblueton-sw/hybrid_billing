@@ -83,6 +83,10 @@ Each increment has its own independent review; C2, C4 and C5 change a public rea
 - **`expires_before`** is an instant in RFC 3339 form, compared with the stored end of validity; a date would need a time zone the screen does not have.
 - **States** are those `stateOf` returns today, evaluated at the reference time.
 
+# Progress
+
+- **C1a, 2026-11-26.** `apps/api/server/querycursor.go` holds the signed token, the binding check, the expiry and the scan budget; `servicequery_cursor.go` uses them. Token format, domain strings, key and checks are unchanged. The scan limit is now read once when a walk begins instead of on each use; access settings are fixed at startup (`server.go:302`), so the two are the same. Verified: the whole server package passes; the M04 rotation runner passes (55 checks); new unit tests for the generic pieces. Independent review: approve, behaviour preserved.
+
 # Open for the owner
 
 - **C5 removes fields from an existing public read.** The plan's common contract requires it ("a new paged endpoint alone is insufficient if the old screen entry still downloads all rows"), and M04 did the same to the services read. It is listed here because a removal is a contract change; it will be asked before C5 is built.

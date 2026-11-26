@@ -34,6 +34,7 @@ func (in Revocation) valid() bool {
 func (r *Registry) Revoke(in Revocation, e Effects) (RevocationView, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
+	r.changed()
 	return r.revoke(in, e)
 }
 
@@ -101,6 +102,7 @@ func (r *Registry) pruneRevocations() {
 func (r *Registry) Restore(records []Restored, last Receipt, requests, revocations uint64) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
+	r.changed()
 	for _, x := range records {
 		v := RevocationView{ID: x.ID, Origin: OriginReplay, RecordedAt: x.RecordedAt.UTC(), Workspace: x.Revocation.Workspace, Target: x.Revocation.Target,
 			TargetPresent: x.Present, Replay: x.Replay, RequestedBy: x.Revocation.RequestedBy, ApprovedBy: x.Revocation.ApprovedBy, Request: x.Revocation.Request,

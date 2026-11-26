@@ -2,8 +2,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { AdminError, ledgerOf, type AccessPage, type AccessRequest, type CleanupItem, type Revocation } from "../../../../service/admin";
 import {
-  additionsPaused, cleanupGroups, failureWords, itemWords, jobWords, keepAttempt, ledgerLines, pendingRevokeFor, requestState, requestsOf, settingName,
-  settingSource, settingValue, settled, shortDigest, stateWords, unconfirmedFor,
+  additionsPaused, cleanupGroups, failureWords, itemWords, jobWords, keepAttempt, ledgerLines, requestState, settingName,
+  settingSource, settingValue, settled, shortDigest, stateWords,
 } from "./request-model";
 
 const req = (change: Partial<AccessRequest>): AccessRequest => ({
@@ -26,11 +26,6 @@ const deleg = (id: string, parent: string, state: "active" | "revoked" | "ended"
 
 test("requests order and pending revocations", () => {
   const p = page({ requests: [req({ id: "a" }), req({ id: "b", state: "applied" }), req({ id: "c", change: "revoke", grant: "g1", state: "pending" }), req({ id: "d", change: "revoke", grant: "g2", state: "rejected" })] });
-  const split = requestsOf(p);
-  assert.deepEqual(split.pending.map((r) => r.id), ["a", "c"]);
-  assert.deepEqual(split.ended.map((r) => r.id), ["b", "d"]);
-  assert.equal(pendingRevokeFor(p, "g1")?.id, "c");
-  assert.equal(pendingRevokeFor(p, "g2"), undefined);
   assert.equal(shortDigest("abcdef0123456789"), "abcdef012345");
   for (const st of ["pending", "applied", "rejected", "withdrawn", "expired", "superseded"] as const) assert.ok(requestState("en", req({ state: st })).length > 0);
   assert.equal(requestState("ko", req({ state: "superseded" })), "최신 아님");
@@ -71,17 +66,6 @@ test("cleanup items group apart and outside scope is never settled", () => {
   assert.equal(settled(items), 3);
   assert.deepEqual(itemWords("en", items[0]), { name: "Decision stamps", why: "Earlier decisions no longer pass a recheck" });
   assert.deepEqual(itemWords("en", items[4]), { name: "CX", why: "x" });
-});
-
-test("unconfirmed revocations mark their target and subject", () => {
-  const p = page({
-    grants: [grant], delegations: [deleg("d1", "")],
-    revocations: [rev({ state: "decision_unconfirmed", job_state: "waiting" }), rev({ id: "revocation-2", target_kind: "delegation", target: "d1", state: "received" }), rev({ id: "revocation-3", target: "gx" })],
-  });
-  assert.ok(unconfirmedFor(p, "u"));
-  assert.ok(unconfirmedFor(p, "d-d1"));
-  assert.ok(!unconfirmedFor(p, "other"));
-  assert.ok(!unconfirmedFor(page({ revocations: [rev({ target: "missing", state: "decision_unconfirmed" })] }), ""));
 });
 
 test("ledger lines name every state, the recovery and the replacement", () => {

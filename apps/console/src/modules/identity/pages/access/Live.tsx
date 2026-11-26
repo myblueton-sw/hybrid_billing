@@ -13,14 +13,15 @@ import { when } from "../authentication/live-model";
 import { a, accessPhrase, actionLabel, fieldLabel, kindLabel } from "./live-copy";
 import { accessText, capabilityKey, grantCapabilities, selectedCapability, maxDays, reasonText, wholeDays } from "./live-model";
 import { q, v } from "./request-copy";
-import { additionsPaused, keepAttempt, unconfirmedFor } from "./request-model";
+import { additionsPaused, keepAttempt } from "./request-model";
 import { DecidePanel, describeRequest, RequestSection, type Decision } from "./Requests";
-import { loginOf } from "./who";
 import { RevocationSection } from "./Revocations";
 import { PermissionList, effectiveLines } from "./Permissions";
 import { p } from "./permission-copy";
 import type { Permission } from "../../../../service/access-query";
-import type { ListedRequest } from "../../../../service/access-lists";
+import type { AccessSubject, ListedRequest } from "../../../../service/access-lists";
+import { PersonPicker } from "./PersonPicker";
+import { pc } from "./person-copy";
 import "../users/live.css";
 import "./access.css";
 
@@ -48,9 +49,9 @@ function GrantForm({ l, api, page, self, onDone, onCancel, onReload, stepping }:
   const capabilities = grantCapabilities(page);
   const [capability, setCapability] = useState(() => capabilities.length === 1 ? capabilityKey(capabilities[0]) : "");
   const pair = selectedCapability(page, capability);
-  const choices = page.subjects.filter((s) => s.user_id !== self);
   const most = pair ? maxDays(pair.until, page.now) : 0;
-  const [subject, setSubject] = useState("");
+  const [person, setPerson] = useState<AccessSubject | null>(null);
+  const subject = person?.user_id ?? "";
   const [days, setDays] = useState(most > 0 ? String(Math.min(30, most)) : "");
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
@@ -87,7 +88,7 @@ function GrantForm({ l, api, page, self, onDone, onCancel, onReload, stepping }:
     kept.current = false;
   };
   const n = wholeDays(days, most);
-  const login = choices.find((s) => s.user_id === subject)?.login ?? "";
+  const login = person?.login ?? "";
   const phrase = pair ? accessPhrase(l, pair.action, pair.kind, pair.fields) ?? accessText(l, pair.action, pair.fields) : "";
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -124,17 +125,8 @@ function GrantForm({ l, api, page, self, onDone, onCancel, onReload, stepping }:
       {paused && <p className="live-strong" id="access-paused">{q.additionsPaused(l)}</p>}
       {problems.length > 0 && <Summary locale={l} title={c.check(l)} problems={problems} focusKey={focusKey} />}
       {error !== null && <FailureBox l={l} error={error} focusKey={focusKey} describe={describeFor("grant")} />}
-      {choices.length === 0 ? <p className="live-note">{a.noneEligible(l)}</p> : (
-        <div className="service-field">
-          <label htmlFor="access-person">{a.person(l)}</label>
-          {field("access-person") && <p className="service-field-error" id="access-person-error"><span className="visually-hidden">{c.errorPrefix(l)} </span>{field("access-person")}</p>}
-          <select id="access-person" className="live-select" value={subject} disabled={busy} aria-invalid={field("access-person") ? true : undefined}
-            aria-describedby={field("access-person") ? "access-person-error" : undefined} onChange={(e) => edit(setSubject)(e.target.value)}>
-            <option value="">{a.choosePerson(l)}</option>
-            {choices.map((s) => <option key={s.user_id} value={s.user_id}>{s.login || s.user_id}</option>)}
-          </select>
-        </div>
-      )}
+      <PersonPicker l={l} api={api} id="access-person" self={self} chosen={person} error={field("access-person") ?? ""} disabled={busy}
+        flagLine={pc.requestUnconfirmed(l)} onChoose={(next) => { tried.current = attempt(); setPerson(next); }} />
       <div className="service-field">
         <label htmlFor="access-capability">{a.access(l)}</label>
         <p className="service-hint" id="access-capability-hint">{a.accessHint(l)}</p>
@@ -164,7 +156,7 @@ function GrantForm({ l, api, page, self, onDone, onCancel, onReload, stepping }:
       <Reason l={l} value={reason} onChange={edit(setReason)} error={field("live-reason") ?? ""} />
       <div className="live-buttons">
         <button type="submit" className={paused ? "live-primary access-paused" : "live-primary"} aria-busy={busy || undefined} aria-describedby={paused ? "access-paused" : undefined}
-          disabled={busy || choices.length === 0 || paused}>{busy ? w.saving(l) : q.requestTitle(l)}</button>
+          disabled={busy || paused}>{busy ? w.saving(l) : q.requestTitle(l)}</button>
         {stepping && <button type="button" className="live-secondary" onClick={onCancel}>{w.cancel(l)}</button>}
       </div>
     </form>
@@ -270,7 +262,8 @@ function Revoke({ l, api, page, target, onDone, onCancel, onReload }: {
 
 function Effects({ l, api, page }: { l: Locale; api: AdminClient; page: AccessPage }) {
   const kinds = Array.from(new Set(page.catalog.map((x) => x.kind)));
-  const [subject, setSubject] = useState("");
+  const [person, setPerson] = useState<AccessSubject | null>(null);
+  const subject = person?.user_id ?? "";
   const [picked, setKind] = useState(kinds[0] ?? "");
   const kind = kinds.includes(picked) ? picked : kinds[0] ?? "";
   const [customer, setCustomer] = useState("");
@@ -287,7 +280,7 @@ function Effects({ l, api, page }: { l: Locale; api: AdminClient; page: AccessPa
     try {
       const rows = await api.preview(subject, kind, customer.trim());
       if (!order.current.latest(n)) return;
-      setResult({ rows, at: new Date().toISOString(), login: loginOf(page, subject), customer: customer.trim(), kind });
+      setResult({ rows, at: new Date().toISOString(), login: person?.login || subject, customer: customer.trim(), kind });
       setState("shown");
     } catch (err) {
       if (!order.current.latest(n)) return;
@@ -299,13 +292,8 @@ function Effects({ l, api, page }: { l: Locale; api: AdminClient; page: AccessPa
   return (
     <div className="live-users live-effects" data-live="effects">
       <form className="live-effects-form" onSubmit={run} noValidate>
-        <div className="service-field">
-          <label htmlFor="effect-person">{a.person(l)}</label>
-          <select id="effect-person" className="live-select" value={subject} onChange={(e) => change(setSubject)(e.target.value)}>
-            <option value="">{a.choosePerson(l)}</option>
-            {page.subjects.map((s) => <option key={s.user_id} value={s.user_id}>{s.login || s.user_id}</option>)}
-          </select>
-        </div>
+        <PersonPicker l={l} api={api} id="effect-person" self="" chosen={person} error="" flagLine={v.previewUnconfirmed(l)}
+          onChoose={(next) => { order.current.next(); setPerson(next); setResult(null); setState((x) => (x === "start" ? "start" : "cleared")); }} />
         <div className="service-field">
           {kinds.length > 1 ? (
             <>
@@ -330,7 +318,6 @@ function Effects({ l, api, page }: { l: Locale; api: AdminClient; page: AccessPa
         {!kind && <p className="live-error" role="alert" id="effect-no-kind">{a.noKind(l)}</p>}
       </form>
       <p className="live-preview-note"><strong>{a.previewLead(l)}</strong> {a.previewNote(l)}</p>
-      {subject && unconfirmedFor(page, subject) && <p className="live-strong" data-unconfirmed="true">{v.previewUnconfirmed(l)}</p>}
       {state === "start" && kind && <p className="live-empty">{a.startHint(l)}</p>}
       {state === "cleared" && <p className="live-empty">{a.cleared(l)}</p>}
       <p className="visually-hidden" role="status" aria-live="polite">{state === "loading" ? a.loading(l) : state === "shown" && result ? a.allowedCount(l, result.rows.filter((r) => r.allowed).length, result.rows.length) : ""}</p>

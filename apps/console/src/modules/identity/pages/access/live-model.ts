@@ -26,19 +26,6 @@ export function stateLine(l: Locale, g: { state: string; not_before: string; not
   return [a.stUnconfirmed(l), a.stUnconfirmedWhy(l)];
 }
 
-export function people(page: AccessPage): { current: AccessGrant[]; ended: AccessGrant[] } {
-  const mine = page.grants.filter((g) => g.subject !== "");
-  const current = mine.filter((g) => !closed(g.state)).sort((x, y) => rank(x) - rank(y) || x.id.localeCompare(y.id));
-  return { current, ended: mine.filter((g) => closed(g.state)) };
-}
-
-export function delegationsOf(page: AccessPage): { current: AccessDelegation[]; ended: AccessDelegation[] } {
-  return {
-    current: page.delegations.filter((d) => !closed(d.state)),
-    ended: page.delegations.filter((d) => closed(d.state)),
-  };
-}
-
 export function maxDays(until: string, now: string): number {
   const span = Date.parse(until) - Date.parse(now);
   return Number.isFinite(span) && span > 0 ? Math.floor(span / 86400000) : 0;

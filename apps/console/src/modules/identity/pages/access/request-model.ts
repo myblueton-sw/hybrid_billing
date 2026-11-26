@@ -2,27 +2,8 @@ import type { Locale } from "../../../../shared/types";
 import { AdminError, type AccessPage, type AccessRequest, type AccessSetting, type CleanupItem, type LedgerStatus, type Revocation } from "../../../../service/admin";
 import { q, s, v } from "./request-copy";
 
-export function requestsOf(page: AccessPage): { pending: AccessRequest[]; ended: AccessRequest[] } {
-  return { pending: page.requests.filter((r) => r.state === "pending"), ended: page.requests.filter((r) => r.state !== "pending") };
-}
-
-export function pendingRevokeFor(page: AccessPage, grant: string): AccessRequest | undefined {
-  return page.requests.find((r) => r.state === "pending" && r.change === "revoke" && r.grant === grant);
-}
-
 export function additionsPaused(ledger: LedgerStatus): boolean {
   return ledger.state !== "ok" && ledger.state !== "recovered";
-}
-
-export const notConfirmed = (r: Revocation) => r.state === "received" || r.state === "decision_unconfirmed";
-
-export function subjectOfRevocation(page: AccessPage, r: Revocation): string {
-  if (r.target_kind === "grant") return page.grants.find((g) => g.id === r.target)?.subject ?? "";
-  return page.delegations.find((d) => d.id === r.target)?.delegate ?? "";
-}
-
-export function unconfirmedFor(page: AccessPage, subject: string): boolean {
-  return subject !== "" && page.revocations.some((r) => notConfirmed(r) && subjectOfRevocation(page, r) === subject);
 }
 
 export type Groups = Record<CleanupItem["state"], CleanupItem[]>;

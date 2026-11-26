@@ -1,9 +1,4 @@
 import type { ReactNode } from "react";
-import type { AccessPage } from "../../../../service/admin";
-
-export function loginOf(page: AccessPage, user: string): string {
-  return page.subjects.find((s) => s.user_id === user)?.login || user;
-}
 
 export function breakable(login: string): ReactNode {
   const at = login.indexOf("@");

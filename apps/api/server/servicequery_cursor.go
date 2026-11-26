@@ -1,19 +1,13 @@
 package server
 
 import (
-	"bytes"
-	"crypto/hmac"
-	"crypto/sha256"
-	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
-	"io"
 	"math"
 	"net/http"
 	"net/url"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/myblueton-sw/hybrid_billing/modules/commands"
@@ -61,45 +55,19 @@ type serviceBasis struct {
 	Delivery      uint64
 }
 
-func (s *Server) serviceMAC(domain string, body []byte) []byte {
-	mac := hmac.New(sha256.New, s.serviceQueryKey)
-	mac.Write([]byte(domain))
-	mac.Write([]byte{0})
-	mac.Write(body)
-	return mac.Sum(nil)
+func (s *Server) serviceMAC(domain string, body []byte) []byte { return s.queryMAC(domain, body) }
+
+func (c serviceCursor) binding() queryBinding {
+	return queryBinding{Area: c.Area, Target: c.Target, Owner: c.Owner, Caller: c.Caller, Query: c.Query, Basis: c.Basis, Reference: c.Reference, Expires: c.Expires}
 }
 
 func (s *Server) sealServiceCursor(cursor serviceCursor) (string, bool) {
-	body, err := json.Marshal(cursor)
-	if err != nil {
-		return "", false
-	}
-	return base64.RawURLEncoding.EncodeToString(body) + "." + base64.RawURLEncoding.EncodeToString(s.serviceMAC("service-query-v1", body)), true
+	return s.sealQueryToken("service-query-v1", cursor)
 }
 
 func (s *Server) openServiceCursor(raw string) (serviceCursor, bool) {
 	var out serviceCursor
-	if len(raw) > 4096 {
-		return out, false
-	}
-	parts := strings.Split(raw, ".")
-	if len(parts) != 2 {
-		return out, false
-	}
-	body, err := base64.RawURLEncoding.DecodeString(parts[0])
-	if err != nil {
-		return out, false
-	}
-	signature, err := base64.RawURLEncoding.DecodeString(parts[1])
-	if err != nil || !hmac.Equal(signature, s.serviceMAC("service-query-v1", body)) {
-		return out, false
-	}
-	decoder := json.NewDecoder(bytes.NewReader(body))
-	decoder.DisallowUnknownFields()
-	if decoder.Decode(&out) != nil {
-		return out, false
-	}
-	if _, err = decoder.Token(); err != io.EOF {
+	if !s.openQueryToken("service-query-v1", raw, &out) {
 		return out, false
 	}
 	for _, id := range []string{out.After, out.AfterService, out.PendingService, out.AfterCredential} {
@@ -145,13 +113,12 @@ func (s *Server) serviceBasis(actor identity.Verifier, area string) (string, err
 }
 
 type serviceWalk struct {
-	s            *Server
-	actor        identity.Verifier
-	query        serviceQuery
-	searchInput  string
-	cursor       serviceCursor
-	scanned      int
-	stopped      bool
+	s           *Server
+	actor       identity.Verifier
+	query       serviceQuery
+	searchInput string
+	cursor      serviceCursor
+	scanBudget
 	availability string
 	total        uint64
 }
@@ -186,32 +153,18 @@ func (s *Server) beginServiceQuery(w http.ResponseWriter, r *http.Request, area,
 		return nil, false
 	}
 	now := s.clock()
-	expiry := earlier(answer.NotAfter(), now.Add(time.Duration(s.cfg.Access.ServiceQuerySeconds)*time.Second))
-	if !found.idleUntil.IsZero() {
-		expiry = earlier(expiry, found.idleUntil)
-	}
+	expiry := queryExpiry(answer.NotAfter(), found.idleUntil, now, s.cfg.Access.ServiceQuerySeconds)
 	cursor := serviceCursor{Area: area, Target: target, Owner: found.owner, Caller: found.handle, Query: query.digest(area, target), Basis: basis, Reference: now, Expires: expiry}
 	if after != "" {
 		prior, valid := s.openServiceCursor(after)
-		if !valid || prior.Area != cursor.Area || prior.Target != target || prior.Owner != cursor.Owner || prior.Caller != cursor.Caller || prior.Query != cursor.Query || prior.Basis != basis || !now.Before(prior.Expires) || prior.Reference.After(now) {
+		if !valid || !cursor.binding().continues(prior.binding(), now) {
 			failRead(w, commands.RevisionConflict, request, "after")
 			return nil, false
 		}
 		cursor = prior
 	}
-	return &serviceWalk{s: s, actor: found.verifier, query: query, searchInput: values.Get("q"), cursor: cursor}, true
+	return &serviceWalk{s: s, actor: found.verifier, query: query, searchInput: values.Get("q"), cursor: cursor, scanBudget: scanBudget{limit: s.cfg.Access.ServiceQueryScan}}, true
 }
-
-func (walk *serviceWalk) reserve(units int) bool {
-	if units > walk.remaining() {
-		walk.stopped = true
-		return false
-	}
-	walk.scanned += units
-	return true
-}
-
-func (walk *serviceWalk) remaining() int { return walk.s.cfg.Access.ServiceQueryScan - walk.scanned }
 
 func (walk *serviceWalk) matched() error {
 	if walk.cursor.Matched == math.MaxUint64 {

@@ -6,7 +6,7 @@ export type PermissionScope = { customer: PermissionSelector; legal_entity: Perm
 export type PermissionState = "active" | "pending" | "expired" | "revoked" | "revocation_unconfirmed" | "ended";
 export type PermissionSource = "grant" | "delegation";
 export type Permission = {
-  source: PermissionSource; id: string; subject: string; client: string; delegator: string; parent: string; redelegate: boolean;
+  source: PermissionSource; id: string; subject: string; subject_login: string; client: string; delegator: string; delegator_login: string; revocation_requested: boolean; parent: string; redelegate: boolean;
   action: string; kind: string; fields: string[]; scope: PermissionScope; not_before: string; not_after: string; state: PermissionState; effective: boolean; version: number;
 };
 export type PermissionQuery = { q?: string; subject?: string; action?: string; customer?: string; legal_entity?: string; source?: PermissionSource; state?: PermissionState; expires_before?: string; limit?: number; after?: string };
@@ -24,17 +24,18 @@ const selector: Parser<PermissionSelector> = (v) => {
   if (r.any) { requireRead(r.id === ""); return { any: true }; }
   return { any: false, id: identifier(r.id) };
 };
+const login: Parser<string> = (v) => { const s = text(v); requireRead(new TextEncoder().encode(s).length <= 320 && !/\p{Cc}/u.test(s)); return s; };
 const period: Parser<string> = (v) => { const s = text(v); requireRead(s === "any" || /^[0-9]{1,7}-[0-9]{1,7}$/.test(s)); return s; };
 const permission = closed<Permission>({
-  source: choice("grant", "delegation"), id: identifier, subject: emptyOr(identifier), client: emptyOr(identifier), delegator: emptyOr(identifier), parent: emptyOr(identifier), redelegate: boolean,
+  source: choice("grant", "delegation"), id: identifier, subject: emptyOr(identifier), subject_login: login, client: emptyOr(identifier), delegator: emptyOr(identifier), delegator_login: login, revocation_requested: boolean, parent: emptyOr(identifier), redelegate: boolean,
   action: identifier, kind: identifier, fields: (v) => { requireRead(Array.isArray(v) && v.length <= 100); return array(identifier)(v); },
   scope: closed<PermissionScope>({ customer: selector, legal_entity: selector, contract: selector, period }), not_before: timestamp, not_after: timestamp, state: choice(...states), effective: boolean, version: integer,
 });
 export const permissionOf: Parser<Permission> = (v) => {
   const r = permission(v);
   requireRead(Date.parse(r.not_before) <= Date.parse(r.not_after) && r.version >= 1);
-  if (r.source === "grant") requireRead(r.delegator === "" && r.parent === "" && !r.redelegate && (r.subject === "") !== (r.client === "") && r.state !== "ended");
-  else requireRead(r.client === "" && r.subject !== "" && r.delegator !== "" && r.delegator !== r.subject);
+  if (r.source === "grant") requireRead(r.delegator === "" && r.delegator_login === "" && (r.subject !== "" || r.subject_login === "") && r.parent === "" && !r.redelegate && (r.subject === "") !== (r.client === "") && r.state !== "ended");
+  else requireRead(r.client === "" && r.subject !== "" && r.delegator !== "" && r.delegator !== r.subject && !r.revocation_requested);
   requireRead(!r.effective || r.state === "active");
   return r;
 };

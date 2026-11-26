@@ -3,10 +3,10 @@ import assert from "node:assert/strict";
 import { adminClient, AdminError } from "./admin";
 
 const every = { any: true, id: "" };
-const grant = { source: "grant", id: "approval-sample-admin", subject: "sample-admin", client: "", delegator: "", parent: "", redelegate: false, action: "view", kind: "approval_review", fields: ["approval_evidence"],
+const grant = { source: "grant", id: "approval-sample-admin", subject: "sample-admin", subject_login: "admin@example.invalid", client: "", delegator: "", delegator_login: "", revocation_requested: false, parent: "", redelegate: false, action: "view", kind: "approval_review", fields: ["approval_evidence"],
   scope: { customer: every, legal_entity: every, contract: every, period: "any" }, not_before: "2026-11-26T08:45:14Z", not_after: "2026-12-26T08:45:14Z", state: "active", effective: true, version: 1 };
-const clientGrant = { ...grant, id: "approval-console", subject: "", client: "console" };
-const delegation = { ...grant, source: "delegation", id: "del-1", subject: "sample-member", delegator: "sample-admin", parent: "", scope: { ...grant.scope, customer: { any: false, id: "c1" } } };
+const clientGrant = { ...grant, id: "approval-console", subject: "", subject_login: "", client: "console" };
+const delegation = { ...grant, source: "delegation", id: "del-1", subject: "sample-member", subject_login: "member@example.invalid", delegator: "sample-admin", delegator_login: "admin@example.invalid", parent: "", scope: { ...grant.scope, customer: { any: false, id: "c1" } } };
 const echo = { q: "", subject: "", action: "", customer: "", legal_entity: "", source: "", state: "", expires_before: "", limit: 25 };
 const pageOf = (rows: unknown[], change: Record<string, unknown> = {}) => ({ rows, search_input: "", query: echo, next: "", reference_at: "2026-11-26T08:45:18.206196209Z", observed_at: "2026-11-26T08:45:18.211902709Z",
   revision: "r27", order: "source_then_id", count: { value: String(rows.length), certainty: "exact" }, work_units: rows.length, scan_stopped: false, ...change });
@@ -27,6 +27,8 @@ test("M03 permissions: a page as the service answers it is accepted and sent as 
   assert.equal(calls, 1);
   assert.deepEqual(got.rows.map((r) => [r.source, r.id]), [["grant", "approval-console"], ["grant", "approval-sample-admin"], ["delegation", "del-1"]]);
   assert.deepEqual(got.rows[0].scope.customer, { any: true });
+  assert.equal((await client(pageOf([{ ...grant, revocation_requested: true }])).accessPermissions({})).rows[0].revocation_requested, true);
+  assert.equal((await client(pageOf([{ ...grant, subject_login: "" }])).accessPermissions({})).rows[0].subject_login, "", "a holder the directory does not know");
   assert.deepEqual(got.rows[2].scope.customer, { any: false, id: "c1" });
   let asked = "";
   await client(pageOf([delegation], { search_input: "Del", query: { ...echo, q: "del", source: "delegation", customer: "c1", limit: 5 } }), (path) => { asked = path; })
@@ -47,6 +49,11 @@ test("M03 permissions: a page that contradicts itself or the request is refused"
     "identifiers out of order": pageOf([grant, clientGrant]),
     "a repeated row": pageOf([grant, grant]),
     "a grant with a delegator": pageOf([{ ...grant, delegator: "someone" }]),
+    "a grant with a delegator's sign-in name": pageOf([{ ...grant, delegator_login: "x@example.invalid" }]),
+    "a client grant with a holder's sign-in name": pageOf([{ ...clientGrant, subject_login: "x@example.invalid" }]),
+    "a delegation with a pending revocation request": pageOf([{ ...delegation, revocation_requested: true }]),
+    "a sign-in name with a control character": pageOf([{ ...grant, subject_login: "a\u0000b" }]),
+    "a row without the request flag": pageOf([(({ revocation_requested: _omit, ...rest }) => rest)(grant)]),
     "a grant with both a subject and a client": pageOf([{ ...grant, client: "console" }]),
     "a grant with neither": pageOf([{ ...grant, subject: "" }]),
     "a grant marked ended": pageOf([{ ...grant, state: "ended", effective: false }]),

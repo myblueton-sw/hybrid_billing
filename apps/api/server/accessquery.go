@@ -52,22 +52,25 @@ func permissionScopeOf(t gate.Terms) permissionScope {
 }
 
 type permissionRow struct {
-	Source     string          `json:"source"`
-	ID         string          `json:"id"`
-	Subject    string          `json:"subject"`
-	Client     string          `json:"client"`
-	Delegator  string          `json:"delegator"`
-	Parent     string          `json:"parent"`
-	Redelegate bool            `json:"redelegate"`
-	Action     string          `json:"action"`
-	Kind       string          `json:"kind"`
-	Fields     []string        `json:"fields"`
-	Scope      permissionScope `json:"scope"`
-	NotBefore  string          `json:"not_before"`
-	NotAfter   string          `json:"not_after"`
-	State      string          `json:"state"`
-	Effective  bool            `json:"effective"`
-	Version    uint64          `json:"version"`
+	Source              string          `json:"source"`
+	ID                  string          `json:"id"`
+	Subject             string          `json:"subject"`
+	SubjectLogin        string          `json:"subject_login"`
+	Client              string          `json:"client"`
+	Delegator           string          `json:"delegator"`
+	DelegatorLogin      string          `json:"delegator_login"`
+	RevocationRequested bool            `json:"revocation_requested"`
+	Parent              string          `json:"parent"`
+	Redelegate          bool            `json:"redelegate"`
+	Action              string          `json:"action"`
+	Kind                string          `json:"kind"`
+	Fields              []string        `json:"fields"`
+	Scope               permissionScope `json:"scope"`
+	NotBefore           string          `json:"not_before"`
+	NotAfter            string          `json:"not_after"`
+	State               string          `json:"state"`
+	Effective           bool            `json:"effective"`
+	Version             uint64          `json:"version"`
 }
 
 type permissionQuery struct {
@@ -219,8 +222,9 @@ func (s *Server) accessBasis() (string, bool) {
 	body, _ := json.Marshal(struct {
 		Generation uint64
 		Changes    uint64
+		Directory  uint64
 		Held       bool
-	}{s.admin.Generation(), version, s.held()})
+	}{s.admin.Generation(), version, s.dir.version, s.held()})
 	return hex.EncodeToString(s.queryMAC(accessBasisDomain, body)), true
 }
 
@@ -238,6 +242,36 @@ func delegationPermission(d gate.DelegationView, at time.Time, unconfirmed map[s
 	return permissionRow{Source: sourceDelegation, ID: d.ID, Subject: d.DelegateID, Delegator: d.DelegatorID, Parent: d.ParentID, Redelegate: d.AllowRedelegation,
 		Action: string(d.Terms.Action), Kind: d.Terms.Kind, Fields: append([]string{}, d.Terms.Fields...), Scope: permissionScopeOf(d.Terms),
 		NotBefore: stamp(d.Validity.NotBefore), NotAfter: stamp(d.Validity.NotAfter), State: state, Effective: d.Effective, Version: d.Version}
+}
+
+type permissionFacts struct {
+	s           *Server
+	unconfirmed map[string]bool
+	requested   map[string]bool
+}
+
+func (s *Server) permissionFacts(at time.Time) permissionFacts {
+	facts := permissionFacts{s: s, unconfirmed: s.unconfirmedTargets(), requested: map[string]bool{}}
+	for _, v := range s.changes.Requests(s.bootWorkspace) {
+		if v.Change.Kind == accesschange.ChangeRevoke && v.State == accesschange.StatePending && at.Before(v.ExpiresAt) {
+			facts.requested[v.Change.Grant] = true
+		}
+	}
+	return facts
+}
+
+func (f permissionFacts) grant(g gate.GrantView, at time.Time) permissionRow {
+	row := grantPermission(g, at, f.unconfirmed)
+	row.SubjectLogin, _ = f.s.dir.loginOf(g.SubjectID)
+	row.RevocationRequested = f.requested[g.ID]
+	return row
+}
+
+func (f permissionFacts) delegation(d gate.DelegationView, at time.Time) permissionRow {
+	row := delegationPermission(d, at, f.unconfirmed)
+	row.SubjectLogin, _ = f.s.dir.loginOf(d.DelegateID)
+	row.DelegatorLogin, _ = f.s.dir.loginOf(d.DelegatorID)
+	return row
 }
 
 func (s *Server) queryPermissions(w http.ResponseWriter, r *http.Request) {
@@ -291,7 +325,7 @@ func (s *Server) queryPermissions(w http.ResponseWriter, r *http.Request) {
 		cursor = prior
 	}
 	budget := scanBudget{limit: s.cfg.Access.ServiceQueryScan}
-	unconfirmed := s.unconfirmedTargets()
+	facts := s.permissionFacts(cursor.Reference)
 	rows := []permissionRow{}
 	exhausted := false
 	for len(rows) < query.Limit && !exhausted && budget.remaining() > 0 {
@@ -307,13 +341,13 @@ func (s *Server) queryPermissions(w http.ResponseWriter, r *http.Request) {
 					candidates, ends = append(candidates, permissionRow{ID: g.ID}), append(ends, time.Time{})
 					continue
 				}
-				candidates, ends = append(candidates, grantPermission(g, cursor.Reference, unconfirmed)), append(ends, g.Validity.NotAfter)
+				candidates, ends = append(candidates, facts.grant(g, cursor.Reference)), append(ends, g.Validity.NotAfter)
 			}
 		} else {
 			var page []gate.DelegationView
 			page, more = s.admin.DelegationPage(cursor.After, batch, cursor.Reference)
 			for _, d := range page {
-				candidates, ends = append(candidates, delegationPermission(d, cursor.Reference, unconfirmed)), append(ends, d.Validity.NotAfter)
+				candidates, ends = append(candidates, facts.delegation(d, cursor.Reference)), append(ends, d.Validity.NotAfter)
 			}
 		}
 		taken := 0
@@ -382,20 +416,20 @@ func (s *Server) readPermission(source string) http.HandlerFunc {
 			return
 		}
 		now := s.clock()
-		unconfirmed := s.unconfirmedTargets()
+		facts := s.permissionFacts(now)
 		var row permissionRow
 		known := false
 		if source == sourceGrant {
 			var g gate.GrantView
 			if g, known = s.admin.GrantAt(id, now); known && !gate.InstallationAction(g.Terms.Action) {
-				row = grantPermission(g, now, unconfirmed)
+				row = facts.grant(g, now)
 			} else {
 				known = false
 			}
 		} else {
 			var d gate.DelegationView
 			if d, known = s.admin.DelegationAt(id, now); known {
-				row = delegationPermission(d, now, unconfirmed)
+				row = facts.delegation(d, now)
 			}
 		}
 		if !known {
@@ -412,7 +446,9 @@ func permissionReadPaths() map[string]any {
 	selector := map[string]any{"type": "object", "properties": map[string]any{"any": boolean, "id": str}}
 	row := map[string]any{"type": "object", "properties": map[string]any{
 		"source": map[string]any{"type": "string", "enum": []string{sourceGrant, sourceDelegation}}, "id": str, "subject": map[string]any{"type": "string", "x-meaning": "the holder: a grant's subject or a delegation's delegate; empty for a client grant"},
-		"client": str, "delegator": str, "parent": map[string]any{"type": "string", "x-meaning": "the delegation this one was redelegated from, if any"}, "redelegate": boolean, "action": str, "kind": str,
+		"subject_login": map[string]any{"type": "string", "x-meaning": "the holder's sign-in name as the directory has it when the row is read; the sign-in name of a person who has left is empty; others are shown whatever their standing"},
+		"client":        str, "delegator": str, "delegator_login": str,
+		"revocation_requested": map[string]any{"type": "boolean", "x-meaning": "a request to revoke this grant is pending at the time the row is evaluated; always false for a delegation, which is revoked directly"}, "parent": map[string]any{"type": "string", "x-meaning": "the delegation this one was redelegated from, if any"}, "redelegate": boolean, "action": str, "kind": str,
 		"fields": map[string]any{"type": "array", "items": str}, "scope": map[string]any{"type": "object", "properties": map[string]any{"customer": selector, "legal_entity": selector, "contract": selector, "period": str}}, "not_before": str, "not_after": str,
 		"state": map[string]any{"type": "string", "enum": permissionStates, "x-meaning": "evaluated at reference_at in the list and at observed_at in a detail read"}, "effective": boolean, "version": map[string]any{"type": "integer"}}}
 	filters := []string{"q", "subject", "action", "customer", "legal_entity", "source", "state", "expires_before", "limit", "after"}

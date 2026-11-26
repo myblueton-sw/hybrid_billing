@@ -23,6 +23,7 @@ type accessFacts struct {
 	users   map[string]identity.UserInfo
 	grants  []gate.GrantView
 	now     time.Time
+	src     factSource
 }
 
 func (s *Server) accessFacts(actor identity.Verifier) (accessFacts, error) {
@@ -44,17 +45,19 @@ func (s *Server) accessFacts(actor identity.Verifier) (accessFacts, error) {
 		}
 		after = page[len(page)-1].ID
 	}
-	return accessFacts{s: s, members: members, users: users, grants: s.admin.Grants(), now: s.clock()}, nil
+	grants := s.admin.Grants()
+	return accessFacts{s: s, members: members, users: users, grants: grants, now: s.clock(), src: wholeFacts{s: s, members: members, users: users, grants: grants}}, nil
 }
 
 func (f accessFacts) person(user string) string {
-	m, u := f.members[user], f.users[user]
+	m, _ := f.src.member(user)
+	u := f.src.user(user)
 	return strings.Join([]string{user, strconv.FormatUint(m.Version, 10), string(m.Role), memberState(m), string(m.UserState), strconv.FormatUint(u.Epoch, 10),
 		string(u.State), string(u.Kind)}, "/")
 }
 
 func (f accessFacts) holdsAdmin(user string) bool {
-	for _, g := range f.grants {
+	for _, g := range f.src.grantsOf(user) {
 		if g.SubjectID == user && g.Terms.Action == gate.AdministerInstallation && g.Effective && g.Terms.Scope.WorkspaceID == f.s.bootWorkspace {
 			return true
 		}
@@ -63,9 +66,9 @@ func (f accessFacts) holdsAdmin(user string) bool {
 }
 
 func (f accessFacts) eligible(user string) bool {
-	m, ok := f.members[user]
+	m, ok := f.src.member(user)
 	return ok && m.Role == identity.Administrator && m.Effective && m.UserState == identity.Active &&
-		f.users[user].Kind == identity.Human && f.holdsAdmin(user)
+		f.src.user(user).Kind == identity.Human && f.holdsAdmin(user)
 }
 
 func (s *Server) pairRequest(c accesschange.Change) gate.Request {
@@ -86,7 +89,7 @@ func (f accessFacts) ceilingFor(c accesschange.Change) (gate.GrantView, bool) {
 		return gate.GrantView{}, false
 	}
 	var found gate.GrantView
-	for _, g := range f.grants {
+	for _, g := range f.src.clientGrants() {
 		if g.ClientID == ConsoleClient && g.Active && !gate.InstallationAction(g.Terms.Action) && g.Terms.Scope.WorkspaceID == f.s.bootWorkspace && fullScope(g.Terms) &&
 			string(g.Terms.Action) == c.Action && g.Terms.Kind == c.ResourceKind && len(c.Fields) > 0 == (len(g.Terms.Fields) > 0) && covers(g.Terms.Fields, c.Fields) &&
 			g.Validity.NotAfter.After(found.Validity.NotAfter) {
@@ -104,7 +107,7 @@ func sameCustomer(stored gate.Selector, requested string) bool {
 }
 
 func (f accessFacts) equivalent(c accesschange.Change) string {
-	for _, g := range f.grants {
+	for _, g := range f.src.grantsOf(c.Subject) {
 		if g.SubjectID == c.Subject && !g.Closed && f.now.Before(g.Validity.NotAfter) && string(g.Terms.Action) == c.Action && g.Terms.Kind == c.ResourceKind &&
 			strings.Join(g.Terms.Fields, ",") == strings.Join(c.Fields, ",") && sameCustomer(g.Terms.Scope.Customer, c.Customer) {
 			return g.ID
@@ -127,7 +130,7 @@ func (f accessFacts) basis(c accesschange.Change, proposer string) string {
 		parts = append(parts, "ceiling:"+grantFact(ceiling, ok)+"/"+stamp(ceiling.Validity.NotAfter), "subject:"+f.person(c.Subject), "equivalent:"+f.equivalent(c),
 			"covered:"+strconv.FormatBool(f.covered(proposer, c)))
 	} else {
-		g, ok := f.s.grantView(c.Grant)
+		g, ok := f.src.grant(c.Grant)
 		parts = append(parts, "grant:"+grantFact(g, ok))
 	}
 	return strings.Join(parts, ";")
@@ -224,7 +227,7 @@ func (h requestCommand) Apply(ctx commands.Context) (commands.Outcome, error) {
 
 func (h requestCommand) addChange(ctx commands.Context, f accessFacts) (accesschange.Change, gate.GrantView, error) {
 	subject := ctx.Fields["subject"]
-	if m, ok := f.members[subject]; !ok || !m.Effective || m.UserState != identity.Active {
+	if m, ok := f.src.member(subject); !ok || !m.Effective || m.UserState != identity.Active {
 		return accesschange.Change{}, gate.GrantView{}, commands.Fail(commands.InvalidRequest, "subject")
 	}
 	fields, ok := splitFields(ctx.Fields["fields"])
@@ -297,7 +300,7 @@ func (f accessFacts) standing(v accesschange.View, approver string) accesschange
 	allowed := f.eligible(approver)
 	if v.Change.Kind == accesschange.ChangeAdd {
 		allowed = allowed && !governedGrantTerms(gate.Action(v.Change.Action), v.Change.ResourceKind, v.Change.Fields) && f.covered(approver, v.Change) && f.covered(v.Proposer, v.Change)
-	} else if g, ok := f.s.grantView(v.Change.Grant); ok && protectedGrant(g) {
+	} else if g, ok := f.src.grant(v.Change.Grant); ok && protectedGrant(g) {
 		allowed = false
 	}
 	return accesschange.Standing{Basis: f.basis(v.Change, v.Proposer), Allowed: allowed}
@@ -384,7 +387,7 @@ type changeRequestRow struct {
 
 func (f accessFacts) mayEnd(holder string) []string {
 	out := []string{}
-	for _, d := range f.s.admin.Delegations() {
+	for _, d := range f.src.delegationsOf(holder) {
 		if d.Effective && !d.Closed && (d.DelegatorID == holder || d.DelegateID == holder) {
 			out = append(out, d.ID)
 		}
@@ -399,7 +402,7 @@ func (f accessFacts) changeRequestRow(v accesschange.View, you string) changeReq
 		Reason: v.Rationale, DecidedBy: v.DecidedBy, DecidedAt: stampOrEmpty(v.DecidedAt), DecisionReason: v.DecisionReason, Result: v.Result, MayEnd: []string{}}
 	if c.Kind == accesschange.ChangeRevoke {
 		row.Subject = v.Holder
-		if g, ok := f.s.grantView(c.Grant); ok {
+		if g, ok := f.src.grant(c.Grant); ok {
 			row.Action, row.Kind, row.Fields, row.Customer = string(g.Terms.Action), g.Terms.Kind, append([]string{}, g.Terms.Fields...), selectorText(g.Terms.Scope.Customer)
 		}
 	}
@@ -407,7 +410,7 @@ func (f accessFacts) changeRequestRow(v accesschange.View, you string) changeReq
 		return row
 	}
 	row.Current = f.basis(c, v.Proposer) == v.Basis
-	for user := range f.members {
+	for _, user := range f.src.approvers() {
 		if f.eligible(user) && user != v.Proposer && (c.Kind == accesschange.ChangeRevoke || user != c.Subject) {
 			row.EligibleApprovers++
 		}

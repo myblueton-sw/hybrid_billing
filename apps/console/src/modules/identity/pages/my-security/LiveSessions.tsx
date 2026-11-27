@@ -37,7 +37,7 @@ export function ExclusionTag({ l, reference, onOperation }: { l: Locale; referen
 }
 
 export default function LiveSessions({ l,api,self,params,onParams,onRefresh,onSignOut,onSignedOut }: {
-  l: Locale; api: AdminClient; self: SelfPage; params: URLSearchParams; onParams: (extra: Record<string,string | null>) => void; onRefresh: () => void; onSignOut: () => void; onSignedOut: () => void;
+  l: Locale; api: AdminClient; self: SelfPage; params: URLSearchParams; onParams: (extra: Record<string,string | null>,push?: boolean) => void; onRefresh: () => void; onSignOut: () => void; onSignedOut: () => void;
 }) {
   const scope = JSON.stringify([self.user_id,self.workspace,self.current_session.handle]);
   const store = useMemo(() => intentStore(api,scope),[api,scope]);
@@ -49,7 +49,7 @@ function ScopedSessions({ l,api,self,params,onParams,onRefresh,onSignOut,onSigne
   const wide = useWide();
   const snapshot = useSyncExternalStore(store.subscribe,store.get,store.get);
   const locked = intentLocked(snapshot);
-  const serialized = params.toString();
+  const serialized = new URLSearchParams([...params].filter(([key]) => sessionKeys.includes(key))).toString();
   const navigation = useMemo(() => parseSessionLink(new URLSearchParams(serialized)),[serialized]);
   const filterKey = JSON.stringify(navigation.filters);
   const [draft,setDraft] = useState<SessionFilters>(navigation.filters);
@@ -162,7 +162,7 @@ function ScopedSessions({ l,api,self,params,onParams,onRefresh,onSignOut,onSigne
             onNext={() => { focusAfter.current = "summary";parents.current.set(page.next,navigation.after);if (parents.current.size > 32) parents.current.delete(parents.current.keys().next().value!);navigate(navigation.filters,page.next); }} /></>}
       </section>
       {operation && <ReferencedOperation l={l} api={api} reference={operation} onEnd={open} locked={locked} onSignedOut={onSignedOut} />}
-      <SessionOperations l={l} api={api} refreshKey={refresh} onEnd={open} locked={locked} onSignedOut={onSignedOut} />
+      <SessionOperations l={l} api={api} params={params} onParams={onParams} refreshKey={refresh} onEnd={open} locked={locked} onSignedOut={onSignedOut} />
       <AccessHistory key={scopeKey(self)} l={l} api={api} self={self} reloadKey={refresh} say={setNotice} onSignedOut={onSignedOut} />
     </div>
     <aside className="live-panel mysec-session-limits" aria-labelledby="mysec-limits-title"><h2 id="mysec-limits-title">{m.limitsTitle(l)}</h2><dl className="live-facts">
@@ -176,5 +176,7 @@ const filterFocus = () => {
   const toggle = document.querySelector<HTMLElement>(".mysec-query-form .list-filters-toggle");
   return toggle && toggle.offsetParent ? toggle : document.getElementById("mysec-filters-title");
 };
+
+const sessionKeys = ["session", "sq", "ssince", "suntil", "slimit", "safter"];
 
 const scopeKey = (self: SelfPage) => JSON.stringify([self.user_id,self.workspace,self.current_session.handle]);

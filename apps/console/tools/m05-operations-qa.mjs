@@ -22,6 +22,7 @@ const op = (i) => ({ operation: `qa-op-${String(i).padStart(2, "0")}`, selection
   blocked_at: null, list_generation: "g1", current_generation: null, generation_changed: null, digest: "d", cleanup: null, replay: false });
 const all = Array.from({ length: 23 }, (_, i) => op(i + 1));
 let asked = [];
+let sessionReads = 0;
 const eventually = async (f) => { for (let i = 0; i < 80; i++) { if (await f()) return true; await page.waitForTimeout(50); } return false; };
 
 try {
@@ -35,6 +36,7 @@ try {
   await page.locator("#signin-workspace").fill("sample-workspace"); await page.locator("#signin-email").fill("admin@example.invalid");
   await page.locator("#signin-password").fill(password); await page.locator("form button[type=submit]").click();
   await page.locator(".service-session").waitFor();
+  page.on("request", (r) => { if (new URL(r.url()).pathname.endsWith("/me/sessions")) sessionReads++; });
   await page.route((url) => new URL(url.toString()).pathname.endsWith("/me/sessions/operations"), async (route) => {
     const qs = new URL(route.request().url()).searchParams;
     asked.push(qs.toString());
@@ -57,11 +59,25 @@ try {
     const shown = await inspectView(page);
     check(`${at}: nothing overflows, is cut off or loses contrast`, shown.overflow <= 1 && shown.clipped.length === 0 && shown.cut.length === 0 && shown.low.length === 0, JSON.stringify({ o: shown.overflow, c: shown.clipped.slice(0, 3), cut: shown.cut.slice(0, 3), low: shown.low.slice(0, 3) }));
     if (args.shots) { await page.mouse.move(0, 0); await section.screenshot({ path: `${args.shots}/m05-operations-${lang}-${width}.png` }); }
+    sessionReads = 0;
     await nav.nth(2).click();
     await eventually(async () => asked.some((q) => q.includes("after=p10")));
+    check(`${at}: paging the operations list does not reread the sessions list`, sessionReads === 0, String(sessionReads));
     await section.locator('.mysec-ops > li section[aria-labelledby="mysec-op-qa-op-11"]').waitFor();
     check(`${at}: Next reads the following page and moves focus to the section heading`, await eventually(() => page.evaluate(() => document.activeElement?.id === "mysec-ends-title")));
     check(`${at}: on the second page Previous is enabled`, await nav.nth(1).isEnabled());
+    const opA = () => page.evaluate(() => new URLSearchParams(location.hash.split("?")[1]).get("op_a"));
+    check(`${at}: the operations page position is in the address`, (await opA()) === "p10");
+    await page.goBack();
+    await section.locator('.mysec-ops > li section[aria-labelledby="mysec-op-qa-op-01"]').waitFor();
+    check(`${at}: Back returns to the first page`, (await opA()) === null);
+    await page.goForward();
+    await section.locator('.mysec-ops > li section[aria-labelledby="mysec-op-qa-op-11"]').waitFor();
+    check(`${at}: Forward returns to the second page`, (await opA()) === "p10");
+    await page.reload();
+    await page.locator("section.mysec-ends .mysec-ops > li").first().waitFor();
+    await section.locator('.mysec-ops > li section[aria-labelledby="mysec-op-qa-op-11"]').waitFor();
+    check(`${at}: reload keeps the second page`, (await opA()) === "p10");
     await nav.nth(1).click();
     await section.locator('.mysec-ops > li section[aria-labelledby="mysec-op-qa-op-01"]').waitFor();
     check(`${at}: Previous returns to the first page`, await nav.nth(1).isDisabled());

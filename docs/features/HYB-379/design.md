@@ -40,5 +40,6 @@ Each: unit tests for parse and normalisation, rendered checks including Back and
 
 # Progress
 
+- U3 (2026-11-27): M05 operations list (`op_a`); the sessions list reads only its own six address keys, so operations paging does not reread it. A change of user, workspace or current session remounts the screen but does not clear `op_a` or `safter` (as before for `safter`); a cursor the service then refuses shows First. Follow-up if the plan's reset-on-scope-change rule is to be enforced in the address. Check again and a refresh return it to the first page (refresh with a replace); M05 address writes may now replace. m05-operations 41 with Back/Forward/reload.
 - U2 (2026-11-27): M03 requests and revocations done; independent review pass with one documentation condition, taken. m03-revocations 81 with Back/Forward/reload.
 - U1 (2026-11-27): M02 done. Independent review approve with two conditions (trail after Back/Forward; cursor after a reread), both taken and re-reviewed. m02-lists 206 with Back/Forward/reload/invalid-address checks.

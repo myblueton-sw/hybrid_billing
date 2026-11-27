@@ -42,6 +42,10 @@ status: draft
 2. **P2.** Console: parse the field on both reads; bound every exposed list's size by the limit; no `limit` while it is unknown; the refused-size wording and recovery. Tests with a lowered limit. A rendered check against the real service started with a lowered page size on both screens. The existing rendered checks assert exact request strings (`m02-lists-qa`, `m02-detail-qa`, `m03-permissions-qa`, `m03-person-picker-qa`, `m03-requests-qa`, `m03-revocations-qa`, `access-approval-qa`); they are rerun and adjusted where the requests change. Independent change review.
 3. **P3.** ui-designer composition; then the page size choice on M02 and M03, the shared settings disclosure on both, names and units in three languages; rendered checks; independent change review and ui-designer rendered review; terminology review of the new copy.
 
+# Progress
+
+- **P1** (2026-11-27): `GET /identity/access` and `GET /identity/policy` carry `query_settings`, three rows built from an explicit list of names (`querySettingRows`, `apps/api/server/servicequerysettings.go`). The access read's `settings` is unchanged. Neither read has an entry in the API description that names its fields; the binding document states the new field on both. The console does not read it yet. Verified by tests: both reads' exact fields; the three rows with their unit, default, range and source, and the value and source under a start flag; a member is refused both reads; with the limit set to ten the trust-change list refuses eleven naming `limit`, accepts ten and uses ten when no size is sent; four mutants of the new code killed. The whole server package passes (468 s). Independent change review (by reading; the reviewer ran nothing): approve, no blocking finding.
+
 # Risk
 
 - A lowered limit changes how many rows a page shows; M02's open group is sorted by state only when it fits one page, so a small limit makes the order note appear earlier. That is the composition's stated behaviour.
@@ -54,4 +58,3 @@ Independent design review (role-based AI reviewer separate from the writer, by r
 # Unknown
 
 - Whether a session of another workspace can pass the entry reads' admission (not verified in HYB-304 either).
-- Whether an API description of the access read constrains its fields (checked in P1).

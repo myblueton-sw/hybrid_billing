@@ -286,7 +286,7 @@ func TestThePolicyReadCarriesNoChanges(t *testing.T) {
 		names = append(names, name)
 	}
 	sort.Strings(names)
-	if joined := strings.Join(names, " "); joined != "act_until authenticated_at earlier_run_kept holders ledger now policy revision rights signed_in_at started_at step_up_seconds trust waiting_activation you" {
+	if joined := strings.Join(names, " "); joined != "act_until authenticated_at earlier_run_kept holders ledger now policy query_settings revision rights signed_in_at started_at step_up_seconds trust waiting_activation you" {
 		t.Errorf("fields %s", joined)
 	}
 	if strings.Contains(got.raw, `"changes"`) || strings.Contains(got.raw, `"change_digest"`) || strings.Contains(got.raw, `"history"`) {

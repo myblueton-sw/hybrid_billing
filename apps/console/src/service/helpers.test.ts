@@ -52,3 +52,25 @@ test("retry phrases use seconds under a minute and rounded-up minutes", () => {
   assert.equal(retryPhrase("en", 61), "in 2 minutes");
   assert.ok(retryPhrase("ko", 30).includes("30"));
 });
+
+test("signing in keeps the screen and its filters but drops every list position", async () => {
+  const { afterSignIn } = await import("./helpers");
+  const next = afterSignIn("#/my-security?view=sessions&sq=abc&safter=c1&op_a=o2&tc_oa=x&acc_after=y&svc_a_limit=10", "ko");
+  const q = new URLSearchParams(next.split("?")[1]);
+  assert.equal(next.split("?")[0], "#/my-security");
+  assert.equal(q.get("view"), "sessions");
+  assert.equal(q.get("sq"), "abc");
+  assert.equal(q.get("svc_a_limit"), "10");
+  assert.equal(q.get("lang"), "ko");
+  for (const name of ["safter", "op_a", "tc_oa", "acc_after"]) assert.equal(q.get(name), null);
+});
+
+test("signing in drops all ten list positions and the M04 selections and open forms, and keeps sizes", async () => {
+  const { afterSignIn, listCursors, signInDropped } = await import("./helpers");
+  assert.equal(listCursors.length, 10);
+  const kept = { acc_limit: "10", req_el: "50", svc_c_limit: "25", tc_ol: "10" };
+  const all = new URLSearchParams({ ...Object.fromEntries([...listCursors, ...signInDropped].map((n) => [n, "x"])), ...kept });
+  const q = new URLSearchParams(afterSignIn("#/service-accounts?" + all.toString(), "en").split("?")[1]);
+  for (const name of [...listCursors, ...signInDropped]) assert.equal(q.get(name), null, name);
+  for (const [name, value] of Object.entries(kept)) assert.equal(q.get(name), value, name);
+});

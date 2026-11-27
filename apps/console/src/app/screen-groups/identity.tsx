@@ -12,7 +12,9 @@ import LivePolicy from "../../modules/identity/pages/authentication/Live";
 import AccessArea from "../../modules/identity/pages/access/Area";
 import LiveServices from "../../modules/identity/pages/service-accounts/Live";
 import LiveMySecurity from "../../modules/identity/pages/my-security/Live";
+import { useEffect, useRef } from "react";
 import { useService } from "../../service/context";
+import { listCursors } from "../../service/helpers";
 import "../../modules/identity/screen-ui/security.css";
 export type { Props } from "../../modules/identity/screen-ui/types";
 function toParams(extra: Record<string, string | null>, push = false) {
@@ -29,6 +31,16 @@ function toParams(extra: Record<string, string | null>, push = false) {
   dispatchEvent(new HashChangeEvent("hashchange"));
 }
 
+function useCursorReset(scope: string) {
+  const seen = useRef(scope);
+  useEffect(() => {
+    if (scope === "" || seen.current === scope) return;
+    const changed = seen.current !== "";
+    seen.current = scope;
+    if (changed) toParams(Object.fromEntries(listCursors.map((name) => [name, null])));
+  }, [scope]);
+}
+
 export default function RemainingSecurity(props: Props) {
   const Screen = props.screenId.startsWith("L")
     ? Entry
@@ -42,6 +54,7 @@ export default function RemainingSecurity(props: Props) {
             ? ServiceAccounts
             : MySecurity;
   const service = useService();
+  useCursorReset(service?.session ? JSON.stringify([service.session.user, service.session.workspace]) : "");
   if (!allowedView(props.screenId, props.view))
     return (
       <p role="alert">

@@ -103,7 +103,7 @@ try {
     check(`${at}: the opened form lists the first page and says more can be searched for`, (await page.locator(`${picker} .person-result`).count()) === 25 && (await status(picker)) === copy[lang].first);
     await page.locator("#access-person").fill("per"); await page.locator("#access-person").press("Enter");
     await page.waitForFunction((t) => document.querySelector(".live-panel .person-status")?.textContent.trim().startsWith(t), copy[lang].refine);
-    check(`${at}: a search with more than a page asks for more of the name and offers no Next`, (await page.locator(`${picker} .person-result`).count()) === 25 && (await page.locator(`${picker} nav, ${picker} .access-paging`).count()) === 0);
+    check(`${at}: a search with more than a page asks for more of the name and offers no Next`, (await page.locator(`${picker} .person-result`).count()) === 25 && (await page.locator(`${picker} nav, ${picker} .list-pager-nav`).count()) === 0);
     await page.locator("#access-person").fill("e"); await page.locator("#access-person").press("Enter");
     await page.waitForFunction(() => document.querySelectorAll(".live-panel .person-result").length === 3);
     const flags = await page.locator(`${picker} .person-result`).evaluateAll((bs) => bs.map((b) => [b.dataset.user, b.querySelector(".person-flag")?.textContent.trim() ?? "", b.querySelector(".person-name").textContent.trim()]));

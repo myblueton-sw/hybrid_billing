@@ -19,6 +19,7 @@ import { ConfirmDialog, type Confirming } from "./TrustConfirm";
 import { ty } from "./trust-copy";
 import type { ActionKey } from "./trust-model";
 import "../users/live.css";
+import "../../../../shared/list/list-pattern.css";
 import "./trust.css";
 
 type Form = { revise: TrustChange | null; initial: Proposed | null };

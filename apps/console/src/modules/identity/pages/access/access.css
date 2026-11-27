@@ -154,12 +154,6 @@
 .remaining-security .access-permissions td.live-strong > .acc-state {
   font-weight: 600;
 }
-.remaining-security .access-paging button:disabled {
-  cursor: not-allowed;
-  color: var(--hb-text-faint);
-  border-color: var(--hb-line-row);
-  background: var(--c-subtle);
-}
 .acc-col-holder { inline-size: 13%; }
 .acc-col-access { inline-size: 16%; }
 .acc-col-scope { inline-size: 13%; }
@@ -286,9 +280,6 @@
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
-}
-.remaining-security .access-reference {
-  margin: 0;
 }
 @container (max-width: 960px) {
   .req-col-a { inline-size: 28%; }
@@ -462,4 +453,10 @@
     clip-path: inset(50%);
     white-space: nowrap;
   }
+}
+.access-request-section > .live-note {
+  margin-block-start: 8px;
+}
+.access-revocation-section {
+  container-type: inline-size;
 }

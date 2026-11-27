@@ -92,13 +92,13 @@ try {
     asked = [];
     await page.locator('.list-chip[data-chip="state"] .list-chip-remove').click();
     await page.waitForFunction(() => document.querySelectorAll(".list-applied").length === 0);
-    check(`${at}: removing the last chip clears the filters and focus rests on the summary line`, (await eventually(() => focused(".list-summary"))) && asked.some((q) => !q.includes("state=")), asked.join(" "));
+    check(`${at}: removing the last chip clears the filters and focus rests on the summary line`, (await eventually(() => focused(".access-list-body .list-summary"))) && asked.some((q) => !q.includes("state=")), asked.join(" "));
 
     await open(lang, "&acc_subject=nobody-at-all");
     check(`${at}: a filter with no match says so and offers to clear the filters`, (await page.locator(".list-no-match p").innerText()).trim() === copy[lang].noMatch && (await page.locator(".list-no-match button").innerText()).trim() === copy[lang].clear);
     await page.locator(".list-no-match button").click();
     await page.waitForFunction(() => !location.hash.includes("acc_subject"));
-    check(`${at}: clearing from the no-match state lists every permission again and focus rests on the summary line`, (await eventually(async () => (await page.locator(".access-permissions tbody tr").count()) > 0)) && (await eventually(() => focused(".list-summary"))));
+    check(`${at}: clearing from the no-match state lists every permission again and focus rests on the summary line`, (await eventually(async () => (await page.locator(".access-permissions tbody tr").count()) > 0)) && (await eventually(() => focused(".access-list-body .list-summary"))));
     await page.goto("about:blank");
     await page.goto(`${base}/?service=api&lang=${lang}&qa=${++navigation}#/access?${new URLSearchParams({ lang, view: "grants" })}&acc_limit=0`);
     await page.locator(".access-list-body [role=alert]").waitFor();

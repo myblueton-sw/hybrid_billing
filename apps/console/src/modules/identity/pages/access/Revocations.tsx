@@ -115,8 +115,8 @@ export function RevocationSection({ l, api, generation, pageLimit, ledger, onSig
       <LedgerLine l={l} ledger={ledger} />
       {list.read.state === "loading" && <p role="status" className="live-meta">{a.loading(l)}</p>}
       <ListFailure l={l} title={v.revocationsFailed(l)} list={list} onSignOut={onSignOut} onRefresh={onRefresh} />
-      {page && (page.rows.length === 0 ? <p className="live-empty">{page.next ? qcopy(l, "incomplete") : v.none(l)}</p> : <RevocationRecords l={l} rows={page.rows} />)}
       {page && <Reference l={l} page={page} list={list} />}
+      {page && (page.rows.length === 0 ? <p className="live-empty">{page.next ? qcopy(l, "incomplete") : v.none(l)}</p> : <RevocationRecords l={l} rows={page.rows} />)}
       <Paging l={l} label={v.title(l)} list={list} />
     </section>
   );

@@ -56,7 +56,7 @@ try {
     await page.goto("about:blank");
     await page.goto(`${base}/?service=api&lang=${lang}&qa=${++navigation}#/access?${new URLSearchParams({ lang, view: "grants" })}`);
     await page.locator("#access-list").waitFor();
-    await page.locator(".list-summary, .access-list-failure").first().waitFor();
+    await page.locator(".access-list-body .list-summary, .access-list-failure").first().waitFor();
   };
   const block = ".access-would-stop";
 

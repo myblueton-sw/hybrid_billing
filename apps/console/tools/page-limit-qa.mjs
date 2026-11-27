@@ -89,6 +89,7 @@ try {
     await openAccess(lang);
     const failed = await page.locator(".access-list-failure").evaluateAll((all) => all.map((f) => ({ body: f.querySelector("p").textContent.trim(), buttons: f.querySelectorAll("button").length })));
     check(`${lang} M03: with a stale larger limit the permissions and waiting-requests lists say the size was refused, with one button each`, failed.length >= 2 && failed.every((b) => b.body === copy[lang] && b.buttons === 1) && refused.includes("access/permissions") && refused.includes("access/requests"), JSON.stringify({ refused, failed }));
+    await page.locator(".access-grant-open").click();
     await page.locator(".person-failed").first().waitFor({ timeout: 15000 });
     const picker = await page.locator(".person-failed").evaluateAll((all) => all.map((f) => ({ body: f.querySelector("p").textContent.trim(), buttons: [...f.querySelectorAll("button")].map((b) => b.textContent.trim()) })));
     check(`${lang} M03: a person picker refused for its size says why and offers Reload alone`, asked.includes("access/subjects?limit=25") && refused.includes("access/subjects") && picker.length > 0 && picker.every((x) => x.body.startsWith(copy[lang]) && x.buttons.length === 1), JSON.stringify({ refused, picker }));

@@ -63,7 +63,7 @@ try {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await open("en");
   check("the real service's section reads revocations as one bounded read of ten", asked.length >= 1 && asked.every((s) => s === "?limit=10"), asked.join(" "));
-  check("with no revocations the real section counts none, says so, keeps the ledger line and a reference time, and shows no paging", (await page.locator(`${section} [data-revocations]`).innerText()).trim() === "0 revocations" && (await page.locator(`${section} .live-empty`).innerText()).trim() === copy.en.none && (await page.locator(`${section} .access-ledger`).count()) === 1 && (await page.locator(`${section} .access-reference`).count()) === 1 && (await page.locator(`${section} .access-paging`).count()) === 0);
+  check("with no revocations the real section counts none, says so, keeps the ledger line and a reference time, and shows no paging", (await page.locator(`${section} [data-revocations]`).innerText()).trim() === "0 revocations" && (await page.locator(`${section} .live-empty`).innerText()).trim() === copy.en.none && (await page.locator(`${section} .access-ledger`).count()) === 1 && (await page.locator(`${section} .list-summary`).count()) === 1 && (await page.locator(`${section} .list-pager-nav`).count()) === 0);
 
   for (const [lang, width] of [["en", 1440], ["ko", 1440], ["ar", 1440], ["en", 390], ["ko", 390], ["ar", 390]]) {
     const at = `${lang} ${width}`;
@@ -78,7 +78,7 @@ try {
     await open(lang);
     await page.mouse.move(2, 2);
     const heads = await page.locator(`${section} .access-record`).evaluateAll((items) => Object.fromEntries(items.map((li) => [li.dataset.revocation, [li.querySelector("h3").innerText.trim().replace(/\s+/g, " "), li.querySelector(".access-target")?.innerText.trim() ?? ""]])));
-    check(`${at}: ten records, a lower-bound count in the heading and paging`, Object.keys(heads).length === 10 && (await page.locator(`${section} [data-revocations]`).innerText()).trim() === copy[lang].atLeast(10) && (await page.locator(`${section} .access-paging button`).count()) === 3);
+    check(`${at}: ten records, a lower-bound count in the heading and paging`, Object.keys(heads).length === 10 && (await page.locator(`${section} [data-revocations]`).innerText()).trim() === copy[lang].atLeast(10) && (await page.locator(`${section} .list-pager-nav button`).count()) === 3);
     check(`${at}: a grant's heading names its holder and access, with the kind and identifier below`, heads["revocation-12"][0].includes(copy[lang].grant) && heads["revocation-12"][1].includes("grant-8f02cad10c1d560b"), JSON.stringify(heads["revocation-12"]));
     check(`${at}: a delegation's heading names the delegate`, heads["revocation-11"][0].includes(copy[lang].delegation) && heads["revocation-11"][1].includes("del-with-a-long-identifier-0001"), JSON.stringify(heads["revocation-11"]));
     check(`${at}: a target that is gone shows its identifier alone`, heads["revocation-10"][0] === copy[lang].gone && heads["revocation-10"][1] === "", JSON.stringify(heads["revocation-10"]));
@@ -86,11 +86,11 @@ try {
     const shown = await inspectView(page);
     check(`${at}: nothing overflows, is cut off or loses contrast`, shown.overflow <= 1 && shown.clipped.length === 0 && shown.cut.length === 0 && shown.low.length === 0, JSON.stringify({ o: shown.overflow, c: shown.clipped.slice(0, 2), cut: shown.cut.slice(0, 2), low: shown.low.slice(0, 2) }));
     if (args.shots) await page.locator(section).screenshot({ path: `${args.shots}/m03-revocations-${lang}-${width}.png` });
-    await page.locator(`${section} .access-paging button`).nth(2).click();
+    await page.locator(`${section} .list-pager-nav button`).nth(2).click();
     await page.waitForFunction((s) => document.querySelectorAll(`${s} .access-record`).length === 2, section);
-    check(`${at}: the second page has the last two, the exact total, Next disabled, and focus on the reference time`, (lang === "ar" || (await page.locator(`${section} [data-revocations]`).innerText()).trim() === copy[lang].shown(12)) && await page.locator(`${section} .access-paging button`).nth(2).isDisabled() && await page.locator(`${section} .access-paging button`).nth(1).isEnabled() && await page.evaluate(() => document.activeElement?.classList.contains("access-reference") && !!document.activeElement.closest(".access-revocation-section")) && asked[asked.length - 1] === "?limit=10&after=r.2", asked[asked.length - 1]);
+    check(`${at}: the second page has the last two, the exact total, Next disabled, and focus on the reference time`, (lang === "ar" || (await page.locator(`${section} [data-revocations]`).innerText()).trim() === copy[lang].shown(12)) && await page.locator(`${section} .list-pager-nav button`).nth(2).isDisabled() && await page.locator(`${section} .list-pager-nav button`).nth(1).isEnabled() && await page.evaluate(() => document.activeElement?.classList.contains("list-summary") && !!document.activeElement.closest(".access-revocation-section")) && asked[asked.length - 1] === "?limit=10&after=r.2", asked[asked.length - 1]);
     if (args.shots && lang === "en") await page.locator(section).screenshot({ path: `${args.shots}/m03-revocations-page2-${lang}-${width}.png` });
-    await page.locator(`${section} .access-paging button`).nth(0).click();
+    await page.locator(`${section} .list-pager-nav button`).nth(0).click();
     await page.waitForFunction((s) => document.querySelectorAll(`${s} .access-record`).length === 10, section);
     check(`${at}: First returns to the first page`, asked[asked.length - 1] === "?limit=10");
     mode = "fail";

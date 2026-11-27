@@ -36,7 +36,7 @@ try {
     await page.goto("about:blank");
     await page.goto(`${base}/?service=api&lang=${lang}&qa=${++navigation}#/access?${new URLSearchParams({ lang, view })}`);
     await page.locator(view === "grants" ? "#access-list" : '[data-live="effects"]').waitFor();
-    if (view === "grants") await page.locator(".access-count, .access-list-failure").first().waitFor();
+    if (view === "grants") await page.locator(".list-summary, .access-list-failure").first().waitFor();
   };
   await page.setViewportSize({ width: 1440, height: 1000 });
   let real = null;

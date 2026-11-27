@@ -1,3 +1,4 @@
+import { ListSettings } from "../../../../shared/list/ListParts";
 import { pageLimitOf } from "../../../../service/query-settings";
 import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { diagnosticCopy } from "../../../../service/diagnostic-copy";
@@ -24,6 +25,7 @@ import type { AccessSubject, ListedRequest } from "../../../../service/access-li
 import { PersonPicker } from "./PersonPicker";
 import { pc } from "./person-copy";
 import "../users/live.css";
+import "../../../../shared/list/list-pattern.css";
 import "./access.css";
 
 type Target = { kind: "grant"; id: string; who: string; access: string; customer: string; status: string } | { kind: "delegation"; id: string; who: string; access: string; until: string };
@@ -497,6 +499,7 @@ export default function LiveAccess({ locale: l, view, session, onSignOut, onView
           {page && <RequestSection l={l} api={api} generation={listed} pageLimit={pageLimitOf(page.query_settings)} onRefresh={refresh} startedAt={page.started_at} settings={page.settings} selected={selected}
             notice={noticeAt === "requests" ? notice : ""} onAct={decide} onSignOut={onSignOut} />}
           {page && <RevocationSection l={l} api={api} generation={listed} pageLimit={pageLimitOf(page.query_settings)} onRefresh={refresh} ledger={page.ledger} onSignOut={onSignOut} />}
+          {page && <ListSettings l={l} rows={page.query_settings} />}
         </div>
       )}
       {(wide || stepping) && panel && (

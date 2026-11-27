@@ -29,8 +29,8 @@ Spacing uses the existing scale (2, 4, 8, 12, 16, 24, 40 px); separate lists or 
 # Chips
 
 - "Label: value" with the filter field's label; the value in weight 600; identifiers and dates mono in `<bdi dir="ltr">`. Long values wrap and are never truncated. The page size is not a chip.
-- `.list-chip`: an inline-flex `<li>`, 1 px `var(--border-control)`, square, `var(--surface-page)`, at least 40 px tall (44 px below 768 px), 14 px text, `padding-inline: 12px 0`.
-- `.list-chip-remove`: a 40 × 40 px button (44 × 44 below 768 px) with an `aria-hidden` "×" at the inline end and a 1 px neutral `border-inline-start`; accessible name "{Remove filter} {Label}: {value}".
+- `.list-chip`: an inline-flex `<li>`, 1 px `var(--border-control)`, square, `var(--surface-page)`, at least 44 px tall at every width (matching the console's 44 px buttons; revised at the first rendered review), 14 px text, `padding-inline: 12px 0`.
+- `.list-chip-remove`: a 44 × 44 px button with an `aria-hidden` "×" at the inline end and a 1 px neutral `border-inline-start`; accessible name "{Remove filter} {Label}: {value}".
 - The row is `<section class="list-applied">` with a visible 14 px lead, a wrapping `<ul>` (gap 8 px) and "Clear filters" as the last item, `live-secondary`.
 - Removing a chip applies at once: a new query, first page, cursor and trail cleared, that draft field cleared. Focus goes to the next chip's remove button, otherwise the previous one; after the last chip or "Clear filters", to the summary line once loaded, else the list heading.
 - At 390 px chips wrap full width. Logical properties only; the remove control is at the inline end.
@@ -45,7 +45,7 @@ Spacing uses the existing scale (2, 4, 8, 12, 16, 24, 40 px); separate lists or 
 # Pager
 
 - `.list-pager`: flex, wrap, `justify-content: space-between`, gap 8 px 16 px, at least 56 px tall, 1 px `var(--border-row)` at the block end.
-- Start group `.list-pager-size`: "Rows per page" (existing copy) with a native select 44 px tall, then "Rows on this page: 25" / "이 페이지의 항목: 25" / "الصفوف في هذه الصفحة: 25" (label and value, so no Arabic plural agreement).
+- Start group `.list-pager-size`: "Rows per page" (existing copy, 14 px regular) with a native select 44 px tall, then "Rows on this page: 25" / "이 페이지의 항목: 25" / "الصفوف في هذه الصفحة: 25" (label and value, so no Arabic plural agreement).
 - End group: `<nav class="list-pager-nav" aria-label="{list title}, pages">` with First, Previous, Next (`live-secondary`, gap 8 px), disabled states as today, no arrow glyphs.
 - **No range text** such as "1–25 of 240": a cursor arriving from the address has no known offset, and a page that stops scanning can hold fewer rows than its size, so the range would often be false. The count stays in the summary line (adapted from PatternFly's indeterminate pagination).
 - The nav is hidden on a first page without a next cursor (GOV.UK); the bar is hidden when nav and select are both hidden.
@@ -53,7 +53,7 @@ Spacing uses the existing scale (2, 4, 8, 12, 16, 24, 40 px); separate lists or 
 - Lists with the select: M02 open and closed, M03 permissions and ended requests. Not M03 waiting requests (a short to-do list sized to show everything), revocations (10) or the person picker (25).
 - Changing the size applies at once, restarts at the first page, clears the trail, keeps the filters and writes the size to the address (HYB-379). Focus stays on the select (WCAG 3.2.2); the count is announced; the newest request wins.
 - After paging, focus goes to the summary line (no reference covers this; the changed content starts there and it says what changed — WCAG 2.4.3). This replaces M02's focus on the reference line.
-- At 390 px the start group takes the first line and the nav the second, its three buttons sharing the width.
+- At 390 px the start group takes the first line and the nav the second, its three buttons sharing the width. This needs an inline-size container around the pager; a screen that adopts the pager provides one (`container-type: inline-size`).
 - When the size was lowered to the limit, a line under the select: "The installation limits rows per page to {n}." / "설치 설정에 따라 페이지당 항목 수가 {n}개로 제한됩니다." / "يحدّ إعداد التثبيت عدد الصفوف في الصفحة بـ {n}."
 
 # List settings
@@ -98,6 +98,10 @@ Increments: shared components and CSS (`ListSummary`, `ListPager`, `AppliedFilte
 | Atlassian | selection never by highlight alone; row-specific action labels | — | coloured lozenges |
 | Ant Design | separate no-data and no-results states | sizes 10, 25, 50, 100 (keeping 25) | "1–20 of 85" |
 | Shopify | previous and next only; "Remove … filter"; reset the cursor when the query changes; the address owns the query | — | "Clear all" |
+
+# Progress
+
+- **L1** (2026-11-27, HYB-376 and HYB-378): the shared parts are built in `apps/console/src/shared/list/` (`ListSummary`, `ListPager`, `AppliedFilters`, `ListSettings`, `list-copy.ts`, `list-model.ts`, `list-pattern.css`) and applied to the M03 permissions list, with rows per page in the address (`acc_limit`) and "List settings" after the revocations section. Revised at the rendered review: chips are 44 px at every width; the pager label is 14 px regular. Verified: 1506 console tests, 1501 passed, 5 skipped; `tools/list-pattern-qa.mjs` 95 checks passed against the real service in three languages at 1440, 1024 and 390, measuring the summary spacing, the gap to the table and the chip height; the existing M03 permissions, catalog and revoke-panel checks pass. ui-designer rendered review: pass with four conditions (paragraph margins, the gap to the table, chip height, a shaded row that was pointer hover), resolved. Independent change review: approve with two blocking findings (Reset could not clear an invalid size in the address; focus was lost after the no-match clear) and two conditions (the shared parts imported page copy; an inert linter directive), resolved. Known: the hidden count announcement sits inside the focusable summary line, so a screen reader may read the count twice there; a focus flag can stay set when a size choice sends the same query. Next: the filter panel (fields at uneven heights, the lead on the chip row) and the narrow list column at 1440 against the full-viewport rule; then the M03 requests, revocations and picker, M02, M05 and M04.
 
 # Not decided by reading
 

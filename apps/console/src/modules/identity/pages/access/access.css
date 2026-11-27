@@ -141,8 +141,8 @@
 .access-filters-toggle {
   display: none;
 }
-.access-count p {
-  margin: 0;
+.access-list-body > .list-summary {
+  margin-block-end: -8px;
 }
 .remaining-security .access-permissions table {
   inline-size: 100%;

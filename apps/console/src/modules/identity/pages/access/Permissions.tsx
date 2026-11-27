@@ -1,3 +1,5 @@
+import { AppliedFilters, ListPager, ListSummary, type Chip } from "../../../../shared/list/ListParts";
+import { lc } from "../../../../shared/list/list-copy";
 import { sizeFor, sizeRefused } from "../../../../service/query-settings";
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import type { Locale } from "../../../../shared/types";
@@ -31,6 +33,13 @@ export function withoutStaleCursor(filters: PermissionFilters, issued: IssuedCur
   return { filters: { ...filters, query }, stale: true };
 }
 
+export function requestedSize(params: URLSearchParams): number | null {
+  const raw = params.get(prefix + "limit");
+  if (raw === null) return pageSize;
+  const n = Number(raw);
+  return /^[1-9][0-9]{0,2}$/.test(raw) && n <= 100 ? n : null;
+}
+
 export function permissionFilters(params: URLSearchParams, size: number | undefined): PermissionFilters {
   const draft = Object.fromEntries(fields.map((f) => [f, ""])) as Record<Field, string>;
   const query: PermissionQuery = size === undefined ? {} : { limit: size };
@@ -42,6 +51,10 @@ export function permissionFilters(params: URLSearchParams, size: number | undefi
     if (key === "after") {
       if (value.length > 4096) return { valid: false };
       query.after = value;
+      continue;
+    }
+    if (key === "limit") {
+      if (requestedSize(params) === null) return { valid: false };
       continue;
     }
     if (!(fields as readonly string[]).includes(key)) return { valid: false };
@@ -84,6 +97,20 @@ export function usePermissions(api: AdminClient, filters: PermissionFilters, gen
     return () => { active = false; };
   }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
   return { read: result?.token === token ? result.read : { state: "loading" }, reload: () => setLocal((n) => n + 1) };
+}
+
+export function chipsOf(l: Locale, draft: Record<Field, string>, actions: string[]): Chip[] {
+  const out: Chip[] = [];
+  const add = (key: Field, label: string, value: string, mono = false) => { if (draft[key] !== "") out.push({ key, label, value, mono }); };
+  add("q", qcopy(l, "search"), draft.q);
+  add("subject", p.holderId(l), draft.subject, true);
+  add("action", qcopy(l, "action"), actions.includes(draft.action) ? actionLabel(l, draft.action) ?? draft.action : draft.action, !actions.includes(draft.action));
+  add("customer", p.customerId(l), draft.customer, true);
+  add("legal_entity", p.legalEntityId(l), draft.legal_entity, true);
+  add("source", p.colSource(l), draft.source === "grant" ? p.grant(l) : draft.source === "delegation" ? a.colDelegation(l) : draft.source);
+  add("state", qcopy(l, "state"), (states as string[]).includes(draft.state) ? stateWord(l, draft.state as PermissionState) : draft.state);
+  add("before", p.endsBefore(l), draft.before, true);
+  return out;
 }
 
 export function readFailure(l: Locale, error: unknown): string {
@@ -194,8 +221,10 @@ function Rows({ l, rows, self, selected, onRevokeGrant, onRevokeDelegation }: {
             const [state, why] = effectiveLines(l, row);
             const from = p.from(l, when(l, row.not_before));
             return (
-              <tr key={row.source + "/" + row.id} role="row" data-permission={row.source + "/" + row.id} className={selected === row.id ? "live-selected" : undefined}>
+              <tr key={row.source + "/" + row.id} role="row" data-permission={row.source + "/" + row.id} className={selected === row.id ? "live-selected" : undefined}
+                aria-current={selected === row.id ? "true" : undefined}>
                 <td role="cell" className="live-user" data-label={p.colHolder(l)}>
+                  {selected === row.id && <span className="list-tag" aria-hidden="true">{lc.selected(l)}</span>}
                   {client ? <>{p.console(l)}<span className="live-sub">{a.ceilingTitle(l)}</span></>
                     : <><bdi dir="ltr" className="acc-login">{breakable(who)}</bdi>{grant ? (row.subject_login && <span className="live-sub live-mono" dir="ltr">{row.subject}</span>)
                       : <span className="live-sub">{p.delegatedBy(l, "⁨" + (row.delegator_login || row.delegator) + "⁩")}</span>}</>}
@@ -240,7 +269,8 @@ export function PermissionList({ l, api, self, params, onParams, generation, pag
   actions: string[]; selected: string; onSignOut: () => void;
   onRevokeGrant: (row: Permission) => void; onRevokeDelegation: (row: Permission) => void;
 }) {
-  const sent = sizeFor(pageSize, pageLimit);
+  const requested = requestedSize(params) ?? pageSize;
+  const sent = sizeFor(requested, pageLimit);
   const issued = useRef<IssuedCursor>(null);
   const base = useMemo(() => permissionFilters(params, sent), [params, sent]);
   const { filters, stale } = withoutStaleCursor(base, issued.current, sent);
@@ -254,18 +284,23 @@ export function PermissionList({ l, api, self, params, onParams, generation, pag
   }, [stale, trail, onParams]);
   const count = useRef<HTMLDivElement>(null);
   const wantFocus = useRef(false);
+  const sizeFocus = useRef(false);
   const key = filters.valid ? JSON.stringify({ ...filters.query, after: undefined, limit: undefined }) : "";
   useEffect(() => {
+    if (read.state !== "loading" && sizeFocus.current) { sizeFocus.current = false; document.getElementById("acc-page-size")?.focus(); }
     if (read.state !== "loading" && wantFocus.current) { wantFocus.current = false; (count.current ?? document.querySelector<HTMLElement>(".access-list-failure"))?.focus(); }
   }, [read]);
   const clear = () => onParams(Object.fromEntries([...fields, "after"].map((f) => [prefix + f, null])), true);
   if (!filters.valid)
-    return <section className="access-list-body"><p role="alert">{p.invalidFilters(l)}</p><button type="button" className="live-secondary" onClick={clear}>{qcopy(l, "reset")}</button></section>;
+    return <section className="access-list-body"><p role="alert">{p.invalidFilters(l)}</p><button type="button" className="live-secondary" onClick={() => onParams({ ...Object.fromEntries([...fields, "after"].map((f) => [prefix + f, null])), [prefix + "limit"]: null }, true)}>{qcopy(l, "reset")}</button></section>;
   const go = (after: string | null) => { wantFocus.current = true; issued.current = after ? { after, size: sent } : null; onParams({ [prefix + "after"]: after }, true); };
   const first = !filters.query.after;
   return (
     <div className="access-list-body">
       <Filters key={key} l={l} filters={filters} actions={actions} onParams={onParams} onSent={() => { trail.clear(); wantFocus.current = true; }} />
+      <AppliedFilters l={l} id="acc-applied" chips={chipsOf(l, filters.draft, actions)}
+        onRemove={(field) => { trail.clear(); if (chipsOf(l, filters.draft, actions).length === 1) wantFocus.current = true; onParams({ [prefix + field]: null, [prefix + "after"]: null }, true); }}
+        onClear={() => { trail.clear(); wantFocus.current = true; clear(); }} fallback={() => null} />
       {read.state === "loading" && <p role="status" className="live-meta">{a.loading(l)}</p>}
       {read.state === "error" && (
         <section className="live-error access-list-failure" role="alert" tabIndex={-1}>
@@ -281,19 +316,16 @@ export function PermissionList({ l, api, self, params, onParams, generation, pag
       )}
       {read.state === "ready" && (
         <>
-          <div className="access-count" tabIndex={-1} ref={count}>
-            <p className="live-meta">{qcopy(l, read.page.count.certainty === "exact" ? "exact" : "lower")}: {read.page.count.value}</p>
-            <p className="live-meta">{qcopy(l, "reference")}: <Time l={l} iso={read.page.reference_at} /></p>
-          </div>
-          <p className="visually-hidden" role="status" aria-live="polite">{qcopy(l, read.page.count.certainty === "exact" ? "exact" : "lower")}: {read.page.count.value}</p>
+          <ListSummary l={l} count={read.page.count.value} exact={read.page.count.certainty === "exact"} reference={<Time l={l} iso={read.page.reference_at} />} summaryRef={count} />
           {read.page.rows.length === 0
-            ? <p className="live-empty">{qcopy(l, read.page.next ? "incomplete" : "empty")}</p>
+            ? (filters.applied > 0 && first && !read.page.next
+              ? <div className="live-empty list-no-match"><p>{lc.noMatch(l)}</p><button type="button" className="live-secondary" onClick={() => { trail.clear(); wantFocus.current = true; clear(); }}>{lc.clear(l)}</button></div>
+              : <p className="live-empty">{qcopy(l, read.page.next ? "incomplete" : "empty")}</p>)
             : <Rows l={l} rows={read.page.rows} self={self} selected={selected} onRevokeGrant={onRevokeGrant} onRevokeDelegation={onRevokeDelegation} />}
-          <nav className="live-buttons access-paging" aria-label={p.title(l)}>
-            <button type="button" className="live-secondary" disabled={first} onClick={() => { trail.clear(); go(null); }}>{qcopy(l, "first")}</button>
-            <button type="button" className="live-secondary" disabled={first} onClick={() => go(trail.previous(key) || null)}>{qcopy(l, "previous")}</button>
-            <button type="button" className="live-secondary" disabled={!read.page.next} onClick={() => { if (trail.next(key, filters.query.after ?? "", read.page.next)) go(read.page.next); }}>{qcopy(l, "next")}</button>
-          </nav>
+          <ListPager l={l} title={p.title(l)} first={first} hasNext={!!read.page.next} rows={read.page.rows.length}
+            size={{ id: "acc-page-size", requested, current: read.page.query.limit, limit: pageLimit, onChange: (n) => { trail.clear(); issued.current = null; sizeFocus.current = true; onParams({ [prefix + "limit"]: n === pageSize ? null : String(n), [prefix + "after"]: null }, true); } }}
+            onFirst={() => { trail.clear(); go(null); }} onPrevious={() => go(trail.previous(key) || null)}
+            onNext={() => { if (read.page.next && trail.next(key, filters.query.after ?? "", read.page.next)) go(read.page.next); }} />
         </>
       )}
     </div>

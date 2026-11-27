@@ -22,8 +22,8 @@ export function ListSummary({ l, count, exact, reference, summaryRef, countInHea
   );
 }
 
-export function ListPager({ l, title, first, hasNext, rows, size, onFirst, onPrevious, onNext }: {
-  l: Locale; title: string; first: boolean; hasNext: boolean; rows: number;
+export function ListPager({ l, title, first, hasNext, rows, size, onFirst, onPrevious, onNext, previousUnavailable = false }: {
+  l: Locale; title: string; first: boolean; hasNext: boolean; rows: number; previousUnavailable?: boolean;
   size?: { requested: number; current: number; limit: number | null; onChange: (n: number) => void; id: string };
   onFirst: () => void; onPrevious: () => void; onNext: () => void;
 }) {
@@ -49,7 +49,7 @@ export function ListPager({ l, title, first, hasNext, rows, size, onFirst, onPre
       {nav && (
         <nav className="list-pager-nav" aria-label={lc.pages(l, title)}>
           <button type="button" className="live-secondary" disabled={first} onClick={onFirst}>{lc.first(l)}</button>
-          <button type="button" className="live-secondary" disabled={first} onClick={onPrevious}>{lc.previous(l)}</button>
+          <button type="button" className="live-secondary" disabled={first || previousUnavailable} onClick={onPrevious}>{lc.previous(l)}</button>
           <button type="button" className="live-secondary" disabled={!hasNext} onClick={onNext}>{lc.next(l)}</button>
         </nav>
       )}

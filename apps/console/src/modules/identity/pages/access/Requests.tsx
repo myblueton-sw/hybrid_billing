@@ -1,3 +1,4 @@
+import { sized } from "../../../../service/query-settings";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import type { Locale } from "../../../../shared/types";
 import { AdminError, attempt, type AccessSetting, type AdminClient, type Attempt } from "../../../../service/admin";
@@ -160,12 +161,12 @@ function Rows({ l, rows, selected, onAct }: { l: Locale; rows: ListedRequest[]; 
   );
 }
 
-export function RequestSection({ l, api, generation, startedAt, settings, selected, notice, onAct, onSignOut }: {
-  l: Locale; api: AdminClient; generation: number; startedAt: string; settings: AccessSetting[]; selected: string; notice: string;
-  onAct: (action: Decision, r: ListedRequest) => void; onSignOut: () => void;
+export function RequestSection({ l, api, generation, pageLimit, startedAt, settings, selected, notice, onAct, onSignOut, onRefresh }: {
+  l: Locale; api: AdminClient; generation: number; pageLimit: number | null; startedAt: string; settings: AccessSetting[]; selected: string; notice: string;
+  onAct: (action: Decision, r: ListedRequest) => void; onSignOut: () => void; onRefresh: () => void;
 }) {
-  const pending = usePagedList((after) => api.accessRequests({ state: "pending", limit: 50, ...(after ? { after } : {}) }), "pending", generation);
-  const ended = usePagedList((after) => api.accessRequests({ state: "ended", limit: 25, ...(after ? { after } : {}) }), "ended", generation);
+  const pending = usePagedList((after) => api.accessRequests({ state: "pending", ...sized(50, pageLimit), ...(after ? { after } : {}) }), "pending/" + String(pageLimit), generation);
+  const ended = usePagedList((after) => api.accessRequests({ state: "ended", ...sized(25, pageLimit), ...(after ? { after } : {}) }), "ended/" + String(pageLimit), generation);
   const waiting = pending.read.state === "ready" ? pending.read.page : null;
   const past = ended.read.state === "ready" ? ended.read.page : null;
   const summary = ended.read.state === "error" ? q.endedFailed(l) : !past ? q.endedLoading(l)
@@ -180,7 +181,7 @@ export function RequestSection({ l, api, generation, startedAt, settings, select
       {notice && <p className="service-status" data-request-notice="true">{notice}</p>}
       <p className="live-impact">{q.requestsLead(l)}</p>
       {pending.read.state === "loading" && <p role="status" className="live-meta">{a.loading(l)}</p>}
-      <ListFailure l={l} title={q.requestsFailed(l)} list={pending} onSignOut={onSignOut} />
+      <ListFailure l={l} title={q.requestsFailed(l)} list={pending} onSignOut={onSignOut} onRefresh={onRefresh} />
       {waiting && (waiting.rows.length === 0
         ? <p className="live-empty">{waiting.next ? qcopy(l, "incomplete") : q.noRequests(l)}</p>
         : <Rows l={l} rows={waiting.rows} selected={selected} onAct={onAct} />)}
@@ -191,7 +192,7 @@ export function RequestSection({ l, api, generation, startedAt, settings, select
         <details className="live-ended access-ended-requests">
           <summary>{summary}</summary>
           {ended.read.state === "loading" && <p role="status" className="live-meta">{a.loading(l)}</p>}
-          <ListFailure l={l} title={q.endedFailedTitle(l)} list={ended} onSignOut={onSignOut} />
+          <ListFailure l={l} title={q.endedFailedTitle(l)} list={ended} onSignOut={onSignOut} onRefresh={onRefresh} />
           {past && <Reference l={l} page={past} list={ended} />}
           {past && (past.rows.length === 0 ? <p className="live-empty">{qcopy(l, past.next ? "incomplete" : "empty")}</p> : <Rows l={l} rows={past.rows} selected="" />)}
           <Paging l={l} label={summary} list={ended} />

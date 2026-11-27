@@ -6,6 +6,7 @@ import { when } from "../authentication/live-model";
 import { qcopy } from "../service-accounts/query-copy";
 import { cursorTrail } from "../service-accounts/query-model";
 import { readFailure } from "./Permissions";
+import { sizeRefused } from "../../../../service/query-settings";
 
 type Listed = { next: string; reference_at: string };
 type Read<P> = { state: "loading" } | { state: "error"; error: unknown } | { state: "ready"; page: P };
@@ -15,13 +16,13 @@ export type PagedList<P> = {
 };
 
 export function usePagedList<P extends Listed>(fetch: (after: string) => Promise<P>, key: string, generation: number): PagedList<P> {
-  const [at, setAt] = useState({ generation, after: "" });
+  const [at, setAt] = useState({ generation, key, after: "" });
   const [local, setLocal] = useState(0);
-  const after = at.generation === generation ? at.after : "";
+  const after = at.generation === generation && at.key === key ? at.after : "";
   const token = useMemo(() => ({}), [key, generation, after, local]);
   const [result, setResult] = useState<{ token: object; read: Read<P> } | null>(null);
   const [trail] = useState(cursorTrail);
-  useEffect(() => { if (at.generation !== generation) trail.clear(); }, [generation]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (at.generation !== generation || at.key !== key) trail.clear(); }, [generation, key]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     let active = true;
     fetch(after).then(
@@ -36,7 +37,7 @@ export function usePagedList<P extends Listed>(fetch: (after: string) => Promise
   useEffect(() => {
     if (read.state === "ready" && moved.current) { moved.current = false; reference.current?.focus(); }
   }, [read]);
-  const go = (next: string) => { moved.current = true; setAt({ generation, after: next }); };
+  const go = (next: string) => { moved.current = true; setAt({ generation, key, after: next }); };
   return {
     read, reference, first: after === "",
     reload: () => setLocal((n) => n + 1),
@@ -46,7 +47,7 @@ export function usePagedList<P extends Listed>(fetch: (after: string) => Promise
   };
 }
 
-export function ListFailure<P>({ l, title, list, onSignOut }: { l: Locale; title: string; list: PagedList<P>; onSignOut: () => void }) {
+export function ListFailure<P>({ l, title, list, onSignOut, onRefresh }: { l: Locale; title: string; list: PagedList<P>; onSignOut: () => void; onRefresh: () => void }) {
   if (list.read.state !== "error") return null;
   const error = list.read.error;
   return (
@@ -56,8 +57,8 @@ export function ListFailure<P>({ l, title, list, onSignOut }: { l: Locale; title
       <div className="live-buttons">
         {error instanceof AdminError && error.failure === "unauthenticated"
           ? <button type="button" className="live-secondary" onClick={onSignOut}>{w.signInAgain(l)}</button>
-          : <button type="button" className="live-secondary" onClick={list.reload}>{w.reload(l)}</button>}
-        {!list.first && <button type="button" className="live-secondary" onClick={list.toFirst}>{qcopy(l, "first")}</button>}
+          : <button type="button" className="live-secondary" onClick={sizeRefused(error) ? onRefresh : list.reload}>{w.reload(l)}</button>}
+        {!list.first && !sizeRefused(error) && <button type="button" className="live-secondary" onClick={list.toFirst}>{qcopy(l, "first")}</button>}
       </div>
     </section>
   );

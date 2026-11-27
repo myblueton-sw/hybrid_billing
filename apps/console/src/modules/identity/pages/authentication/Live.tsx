@@ -11,6 +11,7 @@ import { p } from "./live-copy";
 import { policyFailure } from "./live-model";
 import { ChangesHead, Conditions, CurrentRules, Detail, Revoked, ShortConditions } from "./TrustChanges";
 import { TrustLists } from "./TrustLists";
+import { pageLimitOf } from "../../../../service/query-settings";
 import { DetailPending, useChangeDetail } from "./TrustDetail";
 import { ProposeForm, type Proposed } from "./TrustActions";
 import { AfterActivation } from "./TrustAfter";
@@ -213,7 +214,7 @@ export default function LivePolicy({ locale: l, view, session, onSignOut, onView
             <section className="m02-changes" aria-labelledby="m02-changes">
               <ChangesHead l={l} page={page} onPropose={() => { setSelected(""); setForm({ revise: null, initial: null }); setFocusTo(".m02-form h2"); }} />
               <div className="m02-split" data-mode={wide ? "split" : "step"} data-open={panelOpen ? "true" : "false"}>
-                <TrustLists l={l} api={api} generation={generation} selected={selected} reduced={wide && panelOpen} onOpen={open} onSignOut={onSignOut} />
+                <TrustLists l={l} api={api} generation={generation} pageLimit={pageLimitOf(page.query_settings)} onRefresh={() => void load()} selected={selected} reduced={wide && panelOpen} onOpen={open} onSignOut={onSignOut} />
                 {wide && panel && <aside className="m02-detail" tabIndex={0} aria-busy={detail.stale || undefined} aria-label={form ? ty.formTitle(l) : panelLabel}>{panel}</aside>}
               </div>
             </section>

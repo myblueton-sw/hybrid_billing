@@ -145,7 +145,7 @@ test("the policy read keeps the server times and the trust model and defaults mi
     trust: { stricter_fields: null, epoch: "1", epoch_generation: 0, epoch_number: 1, policy_number: 1, digest: "d", origin: "seed", carried_from: "", carried_line: 0, durable_unconfirmed: false, activated_at: "",
       reset_at: "", older_record_ignored: false, proposer: "", validator: "", approver: "", activator: "", change: "", hold: { reason: "commit_unknown", since: "t" } },
     ledger: { state: "ok", isolation_reason: "", problem_line: 0, records: 2, watermark: "2:x", generation: 0, generation_stated: false, not_durable: false },
-    rights: { propose: true, validate: true, approve: true, activate: true }, holders: { qualifying_people: 3, members: 3, needed: 3, enrolment: "not_decided", ready: true, missing: [] }, waiting_activation: "", earlier_run_kept: false,
+    rights: { propose: true, validate: true, approve: true, activate: true }, holders: { qualifying_people: 3, members: 3, needed: 3, enrolment: "not_decided", ready: true, missing: [] }, waiting_activation: "", earlier_run_kept: false, query_settings: [],
   };
   const { f, calls } = fake(200, page);
   const got = await adminClient("tok", f).policy();
@@ -179,7 +179,7 @@ test("the access read and preview", async () => {
   const { f, calls } = fake(200, page);
   const got = await adminClient("t", f).access();
   const { grants: _g, delegations: _d, subjects: _s, requests: _q, revocations: _r, ...kept } = page;
-  assert.deepEqual(got, { ...kept, ledger: ledgerOf(page.ledger) });
+  assert.deepEqual(got, { ...kept, query_settings: [], ledger: ledgerOf(page.ledger) });
   for (const gone of ["grants", "delegations", "subjects", "requests", "revocations"]) assert.equal(gone in got, false, gone);
   assert.equal(calls[0].url, "/api/v1/identity/access");
   await assert.rejects(adminClient("t", fake(200, {}).f).access(), (e: AdminError) => e.failure === "invalid");

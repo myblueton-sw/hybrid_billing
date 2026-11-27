@@ -226,6 +226,7 @@ export type AccessPage = {
   you: string;
   started_at: string;
   settings: AccessSetting[];
+  query_settings: AccessSetting[];
   ledger: LedgerStatus;
 };
 export type Preview = { action: string; field: string; allowed: boolean; reason: string; delegations: string[] };
@@ -523,6 +524,7 @@ export type PolicyPage = {
   holders: TrustHolders;
   waiting_activation: string;
   earlier_run_kept: boolean;
+  query_settings: AccessSetting[];
 };
 
 const str = (v: unknown) => (typeof v === "string" ? v : "");
@@ -614,6 +616,7 @@ export function policyPageOf(body: Record<string, unknown>): PolicyPage {
       missing: Array.isArray(holders.missing) ? holders.missing.map((x) => String(x)) : [] },
     waiting_activation: str(body.waiting_activation),
     earlier_run_kept: body.earlier_run_kept === true,
+    query_settings: list(body.query_settings).map((x) => { const r = obj(x); return { name: str(r.name), value: num(r.value), unit: str(r.unit), default: num(r.default), min: num(r.min), max: num(r.max), source: str(r.source) }; }),
   };
 }
 
@@ -992,7 +995,8 @@ export function adminClient(csrf: string, f: Fetch = fetch.bind(globalThis), ste
       const body = await send("/identity/access", { method: "GET" }, attempt().request);
       return validatedRead(() => ({
         revision: readText(body.revision), catalog: catalogOf(body.catalog), catalog_incomplete: readFlag(body.catalog_incomplete), now: readText(body.now), you: readText(body.you),
-        started_at: readText(body.started_at), settings: accessSettingsOf(body.settings), ledger: ledgerOf(body.ledger),
+        started_at: readText(body.started_at), settings: accessSettingsOf(body.settings),
+        query_settings: body.query_settings === undefined ? [] : accessSettingsOf(body.query_settings), ledger: ledgerOf(body.ledger),
       }));
     },
     async preview(subject: string, kind: string, customer = ""): Promise<Preview[]> {

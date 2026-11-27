@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import type { Locale } from "../../../../shared/types";
 import { counted } from "../../../../shared/plural";
 import type { AdminClient } from "../../../../service/admin";
+import { sized } from "../../../../service/query-settings";
 import { trustGroups, type ListedTrustChange, type TrustChangePage, type TrustFilter } from "../../../../service/trust-changes";
 import { ListFailure, Paging, Reference, usePagedList, type PagedList } from "../access/paged";
 import { qcopy } from "../service-accounts/query-copy";
@@ -62,8 +63,9 @@ export function ChangeRows({ l, rows, title, selected, reduced, onOpen }: {
   );
 }
 
-function Section({ l, group, list, filter, selected, reduced, onOpen, onSignOut }: {
+function Section({ l, group, list, filter, selected, reduced, onOpen, onSignOut, onRefresh }: {
   l: Locale; group: "open" | "closed"; list: PagedList<TrustChangePage>; filter: ListFilter; selected: string; reduced: boolean; onOpen: (id: string, number: number) => void; onSignOut: () => void;
+  onRefresh: () => void;
 }) {
   const open = group === "open";
   const page = list.read.state === "ready" ? list.read.page : null;
@@ -74,7 +76,7 @@ function Section({ l, group, list, filter, selected, reduced, onOpen, onSignOut 
     <section className="m02-list-section" data-group={group} aria-labelledby={"m02-" + group + "-list"}>
       <h3 id={"m02-" + group + "-list"} data-count={page ? page.count.value : undefined}>{page ? counted(l, Number(page.count.value), open ? ty.openCount() : ty.closedCount()) : title}</h3>
       {list.read.state === "loading" && <p role="status" className="live-meta">{p.loading(l)}</p>}
-      <ListFailure l={l} title={open ? tl.openFailed(l) : tl.closedFailed(l)} list={list} onSignOut={onSignOut} />
+      <ListFailure l={l} title={open ? tl.openFailed(l) : tl.closedFailed(l)} list={list} onSignOut={onSignOut} onRefresh={onRefresh} />
       {page && open && !whole && <p className="live-meta m02-order-note">{tl.spansPages(l)}</p>}
       {page && (rows.length === 0
         ? <p className="live-empty">{filtered(filter) ? (open ? tl.noOpenMatch(l) : tl.noClosedMatch(l)) : (open ? ty.noOpen(l) : ty.noClosed(l))}</p>
@@ -86,13 +88,14 @@ function Section({ l, group, list, filter, selected, reduced, onOpen, onSignOut 
   );
 }
 
-function PagedSection({ l, api, group, state, filter, generation, selected, reduced, onOpen, onSignOut }: {
-  l: Locale; api: AdminClient; group: "open" | "closed"; state: TrustFilter; filter: ListFilter; generation: number; selected: string; reduced: boolean;
-  onOpen: (id: string, number: number) => void; onSignOut: () => void;
+function PagedSection({ l, api, group, state, filter, generation, pageLimit, selected, reduced, onOpen, onSignOut, onRefresh }: {
+  l: Locale; api: AdminClient; group: "open" | "closed"; state: TrustFilter; filter: ListFilter; generation: number; pageLimit: number | null; selected: string; reduced: boolean;
+  onOpen: (id: string, number: number) => void; onSignOut: () => void; onRefresh: () => void;
 }) {
-  const limit = group === "open" ? openPageSize : closedPageSize;
-  const list = usePagedList((after) => api.trustChanges({ state, limit, ...(filter.q ? { q: filter.q } : {}), ...(after ? { after } : {}) }), group + "/" + state + "/" + filter.q, generation);
-  return <Section l={l} group={group} list={list} filter={filter} selected={selected} reduced={reduced} onOpen={onOpen} onSignOut={onSignOut} />;
+  const wanted = group === "open" ? openPageSize : closedPageSize;
+  const list = usePagedList((after) => api.trustChanges({ state, ...sized(wanted, pageLimit), ...(filter.q ? { q: filter.q } : {}), ...(after ? { after } : {}) }),
+    group + "/" + state + "/" + filter.q + "/" + String(pageLimit), generation);
+  return <Section l={l} group={group} list={list} filter={filter} selected={selected} reduced={reduced} onOpen={onOpen} onSignOut={onSignOut} onRefresh={onRefresh} />;
 }
 
 function Filters({ l, applied, onApply }: { l: Locale; applied: ListFilter; onApply: (next: ListFilter) => void }) {
@@ -122,14 +125,15 @@ function Filters({ l, applied, onApply }: { l: Locale; applied: ListFilter; onAp
   );
 }
 
-export function TrustLists({ l, api, generation, selected, reduced, onOpen, onSignOut }: {
-  l: Locale; api: AdminClient; generation: number; selected: string; reduced: boolean; onOpen: (id: string, number: number) => void; onSignOut: () => void;
+export function TrustLists({ l, api, generation, pageLimit, selected, reduced, onOpen, onSignOut, onRefresh }: {
+  l: Locale; api: AdminClient; generation: number; pageLimit: number | null; selected: string; reduced: boolean; onOpen: (id: string, number: number) => void; onSignOut: () => void;
+  onRefresh: () => void;
 }) {
   const [filter, setFilter] = useState<ListFilter>(noFilter);
   const [applied, setApplied] = useState(0);
   const open = sectionState(filter, "open");
   const closed = sectionState(filter, "closed");
-  const shared = { l, api, filter, generation: generation * 1000 + applied, selected, reduced, onOpen, onSignOut };
+  const shared = { l, api, filter, generation: generation * 1000 + applied, pageLimit, selected, reduced, onOpen, onSignOut, onRefresh };
   return (
     <div className="m02-lists">
       <Filters l={l} applied={filter} onApply={(next) => { setFilter(next); setApplied((n) => n + 1); }} />

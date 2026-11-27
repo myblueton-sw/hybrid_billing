@@ -82,6 +82,7 @@ async function command(id, target, body) {
       body,
     },
   });
+  if (response.status() !== 200) console.log("SETUP-DEBUG " + id + " " + response.status() + " " + (await response.text()).slice(0, 600));
   assert.equal(
     response.status(),
     200,
@@ -287,8 +288,9 @@ try {
   };
   if (group === "actions") await actionCompletion(helpers);
   else {
+    const holders = [service, await create("secondary"), await create("tertiary")];
     for (let i = 1; i < 27; i++) {
-      const result = await command("service.issue_credential", service, {
+      const result = await command("service.issue_credential", holders[Math.floor((i + 0) / 10)], {
         days: "1",
       });
       assert.equal(result.business_state, "credential_issued");
@@ -308,14 +310,19 @@ try {
     const populated = await read(
       "/identity/service-credentials?service=" + service + "&limit=100",
     );
-    assert.equal(populated.count.value, "27");
-    assert.equal(populated.rows.length, 27);
+    assert.equal(populated.count.value, "10");
+    assert.equal(populated.rows.length, 10);
+    const pendingAll = await read(
+      "/identity/service-credentials?collection=uncollected&limit=100",
+    );
+    assert.equal(pendingAll.rows.length, 27);
     if (group !== "declaration") await navigationCompletion(helpers);
     if (group !== "navigation") await declarationCompletion(helpers);
   }
   assert.deepEqual(errors, []);
 } catch (error) {
   console.log("FAIL " + safe(error.message));
+  console.log("STACK " + safe(error.stack ?? ""));
   process.exitCode = 1;
   if (
     !(await page

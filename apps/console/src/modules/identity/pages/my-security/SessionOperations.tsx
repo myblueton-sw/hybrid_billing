@@ -66,7 +66,7 @@ function OperationRows({ l,api,op,generation,view,onEnd,locked,onSignedOut }: {
     {busy && <p role="status">{e.reading(l)}</p>}
     {failure !== null && <div role="alert"><p>{failure instanceof AdminError && failure.code === "revision_conflict" ? sq.expired(l) : m.loadFailed(l)}</p><button type="button" className="live-secondary" onClick={() => load()}>{sq.first(l)}</button></div>}
     {page && <><p className="live-meta">{sq.shown(l,page.rows.length)} · {sq.viewCount(l,page.count)}</p>
-      <ul className="mysec-result-rows">{page.rows.map(row => view === "results" ? <ResultRow key={row.handle} l={l} row={row as SelfEndRow} /> : <li key={row.handle}><bdi dir="ltr" className="live-mono">{row.handle}</bdi> · <bdi dir="ltr">{whenSeconds(l,row.signed_in)}</bdi>{" "}<button type="button" className="live-secondary" disabled={locked} onClick={() => onEnd(row.handle)}>{m.end(l)}</button></li>)}</ul>
+      <ul className="mysec-result-rows">{page.rows.map(row => view === "results" ? <ResultRow key={row.handle} l={l} row={row as SelfEndRow} /> : <li key={row.handle}><bdi dir="ltr" className="live-mono">{row.handle}</bdi> · <time dateTime={row.signed_in}>{whenSeconds(l,row.signed_in)}</time>{" "}<button type="button" className="live-secondary" disabled={locked} onClick={() => onEnd(row.handle)}>{m.end(l)}</button></li>)}</ul>
       <div className="live-buttons"><button type="button" className="live-secondary" disabled={busy || trail.length === 0} onClick={() => load(trail[trail.length-1],trail.slice(0,-1))}>{sq.previous(l)}</button>
         <button type="button" className="live-secondary" disabled={busy || !page.next} onClick={() => load(page.next,[...trail,after].slice(-32))}>{sq.next(l)}</button></div></>}
   </div>;

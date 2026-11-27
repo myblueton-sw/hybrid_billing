@@ -16,6 +16,8 @@ for (const l of ["en","ko","ar"] as const) {
     const html=renderToStaticMarkup(<SelectionRows l={l} rows={[{handle:"abcdef0123456789",current:false,signed_in:"2026-11-20T00:00:00Z",ends:"2026-11-20T12:00:00Z",state:"unavailable",can_end: false, not_included_operation: ""}]} />);
     assert.ok(html.includes('dir="ltr"'));assert.ok(html.includes(sq.unavailable(l)));assert.ok(html.includes("abcdef0123456789"));
     assert.equal((html.match(/<tr>/g)??[]).length,2);
+    assert.ok(html.includes('<time dateTime="2026-11-20T00:00:00Z">') && html.includes('<time dateTime="2026-11-20T12:00:00Z">'));
+    assert.ok(!/<bdi[^>]*>[^<]*2026[^<]*<\/bdi>/.test(html));
   });
   test(`${l} unconfirmed summary never asserts zero effects or completed cleanup`, () => { assert.equal(summarySentence(l,unknown),({en:"Result not confirmed",ko:"결과 미확인",ar:"لم تُؤكَّد النتيجة"})[l]); });
 }

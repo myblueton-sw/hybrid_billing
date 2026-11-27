@@ -68,6 +68,7 @@ try {
     await settled("open"); await settled("closed");
   };
   const eventually = async (f) => { for (let i = 0; i < 60; i++) { if (await f()) return true; await page.waitForTimeout(50); } return false; };
+  const showFilters = async () => { const t = page.locator(".m02-filters .list-filters-toggle"); if (await t.isVisible() && (await t.getAttribute("aria-expanded")) === "false") await t.click(); };
   const heading = async (g) => (await page.locator(`${sec(g)} h3`).first().innerText()).trim();
   const ids = (g) => page.locator(`${sec(g)} .m02-open`).evaluateAll((b) => b.map((x) => x.dataset.change));
 
@@ -124,7 +125,11 @@ try {
     check(`${at}: nothing overflows, is cut off or loses contrast`, shown.overflow <= 1 && shown.clipped.length === 0 && shown.cut.length === 0 && shown.low.length === 0, JSON.stringify({ o: shown.overflow, c: shown.clipped.slice(0, 3), cut: shown.cut.slice(0, 3), low: shown.low.slice(0, 3) }));
     const cells = await page.locator(".m02-lists td").evaluateAll((tds) => tds.flatMap((td) => { const c = td.getBoundingClientRect(); return [...td.querySelectorAll("bdi, span, button")].filter((x) => { const r = x.getBoundingClientRect(); return r.width > 0 && (r.right > c.right + 1 || r.left < c.left - 1); }).map((x) => x.textContent.slice(0, 30)); }));
     check(`${at}: no cell's content reaches into the next column`, cells.length === 0, cells.slice(0, 4).join(" | "));
-    const form = await page.locator(".m02-filters").evaluate((f) => { const r = f.getBoundingClientRect(); return { fits: r.right <= document.documentElement.clientWidth + 1 && r.left >= -1, labels: [...f.querySelectorAll("label")].map((x) => x.innerText.trim()), buttons: [...f.querySelectorAll("button")].map((b) => { const q = b.getBoundingClientRect(); return q.height >= 24 && b.scrollWidth <= b.clientWidth + 1; }) }; });
+    const toggle = page.locator(".m02-filters .list-filters-toggle");
+    if (width < 600) check(`${at}: at a narrow width the filters start collapsed behind one control`, (await toggle.isVisible()) && (await toggle.getAttribute("aria-expanded")) === "false" && !(await page.locator("#m02-filter-form").isVisible()));
+    else check(`${at}: at a wide width the filters show without a toggle`, !(await toggle.isVisible()) && (await page.locator("#m02-filter-form").isVisible()));
+    if (await toggle.isVisible() && (await toggle.getAttribute("aria-expanded")) === "false") await toggle.click();
+    const form = await page.locator(".m02-filters form").evaluate((f) => { const r = f.getBoundingClientRect(); return { fits: r.right <= document.documentElement.clientWidth + 1 && r.left >= -1, labels: [...f.querySelectorAll("label")].map((x) => x.innerText.trim()), buttons: [...f.querySelectorAll("button")].map((b) => { const q = b.getBoundingClientRect(); return q.height >= 24 && b.scrollWidth <= b.clientWidth + 1; }) }; });
     check(`${at}: the filter row fits, names its fields and its buttons are whole`, form.fits && form.labels[0] === copy[lang].search && form.labels.length === 2 && form.buttons.length === 2 && form.buttons.every(Boolean), JSON.stringify(form));
     if (args.shots) await page.locator(".m02-changes").screenshot({ path: `${args.shots}/m02-lists-${lang}-${width}.png` });
     if (args.shots) { await page.locator(".m02-filters").screenshot({ path: `${args.shots}/m02-lists-top-filters-${lang}-${width}.png` }); await page.locator(sec("open")).screenshot({ path: `${args.shots}/m02-lists-top-open-${lang}-${width}.png` }); }
@@ -149,28 +154,45 @@ try {
     await page.waitForFunction((s) => document.querySelectorAll(`${s} .m02-open`).length === 25, sec("closed"));
 
     asked = [];
+    await showFilters();
     await page.locator("#m02-filter-state").selectOption("validated");
+    await showFilters();
     await page.locator(".m02-filter-buttons button[type=submit]").click();
     await page.waitForFunction(() => document.querySelector('.m02-list-section[data-group="open"] h3')?.dataset.count === "1");
     check(`${at}: one state shows only its section and asks for that state`, (await page.locator(sec("closed")).count()) === 0 && (await ids("open")).join(" ") === "trust-0a1b2c3d-30" && (await heading("open")) === copy[lang].open(1) && asked.join(" ") === "?state=validated&limit=50", asked.join(" "));
     asked = [];
+    await showFilters();
     await page.locator("#m02-filter-state").selectOption("");
+    await showFilters();
     await page.locator("#m02-filter-q").fill(" D-2 ");
+    await showFilters();
     await page.locator("#m02-filter-q").press("Enter");
     await page.waitForFunction(() => document.querySelector('.m02-list-section[data-group="closed"] h3')?.dataset.count === "9");
     await page.waitForFunction(() => document.querySelector('.m02-list-section[data-group="open"] h3')?.dataset.count === "2");
     check(`${at}: Enter applies the search to both sections, trimmed`, [...new Set(asked)].sort().join(" ") === "?q=D-2&state=closed&limit=25 ?q=D-2&state=open&limit=50" && (await ids("open")).join(" ") === "trust-0a1b2c3d-29 trust-0a1b2c3d-28", asked.join(" "));
+    const chips = await page.locator(".m02-lists .list-chip").allInnerTexts();
+    if (args.shots) { await page.mouse.move(0, 0); await page.locator(".m02-lists").screenshot({ path: `${args.shots}/m02-lists-chips-${lang}-${width}.png` }); }
+    check(`${at}: the applied search shows as one chip with its field name`, chips.length === 1 && chips[0].includes(copy[lang].search) && chips[0].includes("D-2") && (await page.locator(".m02-lists .list-applied-clear button").count()) === 1, chips.join(" | "));
+    asked = [];
+    await page.locator(".m02-lists .list-chip-remove").click();
+    await page.waitForFunction(() => document.querySelector('.m02-list-section[data-group="open"] h3')?.dataset.count === "4");
+    check(`${at}: removing the chip clears the search, reads both groups again and keeps focus in the filters`, (await page.locator("#m02-filter-q").inputValue()) === "" && (await page.locator(".m02-lists .list-chip").count()) === 0 && [...new Set(asked)].sort().join(" ") === "?state=closed&limit=25 ?state=open&limit=50" && (await page.evaluate(() => { const a = document.activeElement; const r = a?.getBoundingClientRect(); return !!r && r.width > 8 && r.height > 8 && (a.id === "m02-filters-title" || a.classList.contains("list-filters-toggle")); })), asked.join(" "));
+    await showFilters();
     await page.locator("#m02-filter-q").fill("zzz");
+    await showFilters();
     await page.locator(".m02-filter-buttons button[type=submit]").click();
     await page.waitForFunction(() => document.querySelector('.m02-list-section[data-group="open"] h3')?.dataset.count === "0");
     check(`${at}: a search with no match says so for the filters`, (await page.locator(`${sec("open")} .live-empty`).innerText()).trim() === copy[lang].noOpenMatch && (await page.locator(`${sec("open")} .m02-evidence-note`).count()) === 0);
     asked = [];
+    await showFilters();
     await page.locator(".m02-filter-buttons button[type=button]").click();
     await page.waitForFunction(() => document.querySelector('.m02-list-section[data-group="open"] h3')?.dataset.count === "4");
     check(`${at}: Reset clears the fields and reads both groups again`, (await page.locator("#m02-filter-q").inputValue()) === "" && (await page.locator("#m02-filter-state").inputValue()) === "" && [...new Set(asked)].sort().join(" ") === "?state=closed&limit=25 ?state=open&limit=50", asked.join(" "));
 
     if (await page.locator(".m02-propose").count()) {
+      await showFilters();
       await page.locator("#m02-filter-state").selectOption("validated");
+      await showFilters();
       await page.locator(".m02-filter-buttons button[type=submit]").click();
       await page.waitForFunction(() => document.querySelector('.m02-list-section[data-group="open"] h3')?.dataset.count === "1");
       asked = [];
@@ -180,6 +202,7 @@ try {
       await (stepped ? page.locator(".m02-back") : page.locator(".m02-form .live-secondary").last()).click();
       await page.locator(".m02-form").waitFor({ state: "detached" });
       check(`${at}: opening and leaving a panel keeps the filter and the rows and asks for nothing${stepped ? " (step view)" : ""}`, (width >= 1280) !== stepped && (await page.locator("#m02-filter-state").inputValue()) === "validated" && (await ids("open")).join(" ") === "trust-0a1b2c3d-30" && (await page.locator(sec("closed")).count()) === 0 && asked.length === 0, `${stepped} ${asked.join(" ")}`);
+      await showFilters();
       await page.locator(".m02-filter-buttons button[type=button]").click();
       await page.waitForFunction(() => document.querySelector('.m02-list-section[data-group="open"] h3')?.dataset.count === "4");
       await page.waitForFunction((s) => document.querySelectorAll(`${s} .m02-open`).length === 25, sec("closed"));

@@ -151,41 +151,9 @@ dialog.m02-confirm .m02-wide dd .live-mono {
   align-items: flex-start;
   padding-block: 0;
 }
-.remaining-security .m02-filters .service-hint {
-  margin-block: 4px 0;
-}
-.remaining-security .m02-filters {
-  display: grid;
-  grid-template-columns: minmax(0, 320px) minmax(0, 240px) auto;
-  gap: 16px;
-  align-items: start;
-  margin-block-end: 24px;
-}
-.remaining-security .m02-filters .service-field {
-  min-inline-size: 0;
-  margin: 0;
-}
-.remaining-security .m02-filters :is(input, select) {
-  inline-size: 100%;
-  box-sizing: border-box;
-}
-.remaining-security .m02-filter-buttons {
-  margin: 0;
-  align-self: start;
-  padding-block-start: var(--m02-filter-label, 28px);
-  flex-wrap: nowrap;
-}
 .remaining-security .m02-order-note,
 .remaining-security .m02-evidence-note {
   margin-block: 0 8px;
-}
-@container (max-width: 720px) {
-  .remaining-security .m02-filters {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .remaining-security .m02-filter-buttons {
-    flex-wrap: wrap;
-  }
 }
 .remaining-security aside.m02-detail {
   min-inline-size: 0;
@@ -207,8 +175,8 @@ dialog.m02-confirm .m02-wide dd .live-mono {
   table-layout: fixed;
 }
 .remaining-security .m02-table .m02-c1 { inline-size: 18%; }
-.remaining-security .m02-table .m02-c2 { inline-size: 22%; }
-.remaining-security .m02-table .m02-c3 { inline-size: 16%; }
+.remaining-security .m02-table .m02-c2 { inline-size: 14%; }
+.remaining-security .m02-table .m02-c3 { inline-size: 24%; }
 .remaining-security .m02-table .m02-c4 { inline-size: 14%; }
 .remaining-security .m02-table .m02-c5 { inline-size: 30%; }
 .remaining-security .m02-live table,
@@ -500,5 +468,30 @@ dialog.m02-confirm .m02-confirm-actions {
   .remaining-security .m02-live .m02-actions button,
   .remaining-security .m02-live .m02-propose {
     inline-size: 100%;
+  }
+}
+.remaining-security .m02-filters {
+  margin-block-end: 16px;
+}
+@container (min-width: 720px) {
+  #content [data-remaining-screen] .remaining-security .m02-live .m02-table th,
+  .remaining-security .m02-live .m02-table th {
+    background: var(--c-subtle);
+    padding: 12px 16px;
+  }
+  .remaining-security .m02-live .m02-table td {
+    padding: 12px 16px;
+  }
+  .remaining-security .m02-live .m02-table tbody tr:hover td {
+    background: var(--c-subtle);
+  }
+}
+.remaining-security .m02-live .m02-filters .list-filters-title {
+  margin: 0 0 12px;
+  font-size: 14px;
+}
+@container (min-width: 720px) {
+  .remaining-security .m02-live .m02-table tbody tr[aria-current="true"]:hover td {
+    background: var(--surface-hover);
   }
 }

@@ -444,19 +444,15 @@
   padding-inline-end: 112px;
   min-block-size: 44px;
 }
-@container (max-width: 600px) {
-  .remaining-security .list-filters-title {
-    position: absolute;
-    inline-size: 1px;
-    block-size: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
-  }
-}
 .access-request-section > .live-note {
   margin-block-start: 8px;
 }
 .access-revocation-section {
   container-type: inline-size;
+}
+@container (max-width: 600px) {
+  .remaining-security .access-permissions tbody tr:hover,
+  .remaining-security .access-permissions tbody tr:hover td {
+    background: none;
+  }
 }

@@ -15,7 +15,7 @@ export const sessionStateLabel = (l: Locale,state: SessionRow["state"]) => ({ ac
 
 export function SelectionRows({ l, rows }: { l: Locale; rows: SessionRow[] }) {
   return <div className="security-table-scroll live-table"><table><thead><tr><th scope="col">{m.colSession(l)}</th><th scope="col">{m.colSignedIn(l)}</th><th scope="col">{m.colEnds(l)}</th><th scope="col">{sq.state(l)}</th></tr></thead>
-    <tbody>{rows.map(row => <tr key={row.handle}><td className="live-mono"><bdi dir="ltr">{row.handle}</bdi></td><td data-label={m.colSignedIn(l)}><bdi dir="ltr">{whenSeconds(l,row.signed_in)}</bdi></td><td data-label={m.colEnds(l)}><bdi dir="ltr">{whenSeconds(l,row.ends)}</bdi></td><td data-label={sq.state(l)}>{sessionStateLabel(l,row.state)}</td></tr>)}</tbody></table></div>;
+    <tbody>{rows.map(row => <tr key={row.handle}><td className="live-mono"><bdi dir="ltr">{row.handle}</bdi></td><td data-label={m.colSignedIn(l)}><time dateTime={row.signed_in}>{whenSeconds(l,row.signed_in)}</time></td><td data-label={m.colEnds(l)}><time dateTime={row.ends}>{whenSeconds(l,row.ends)}</time></td><td data-label={sq.state(l)}>{sessionStateLabel(l,row.state)}</td></tr>)}</tbody></table></div>;
 }
 
 export function IntentRecovery({ l, api, store }: { l: Locale; api: AdminClient; store: IntentStore }) {

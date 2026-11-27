@@ -2,12 +2,12 @@
 type: ReviewRecord
 title: Accessibility findings and corrective verification
 description: Evidence ledger for the ongoing phase 2–5 accessibility audit.
-status: draft
+status: stable
 ---
 
 # Current status
 
-Audit remains in progress; no whole-ticket accessibility PASS, owner acceptance or merge is claimed. Initial collection covered 144 default-screen combinations (L01 plus M01–M05, O01–O03 and P01–P07; EN/KO/AR at 1440/640/320). It was exploratory: the reviewer found that absence of aria-busy could precede a loading effect and that fonts.ready alone does not prove font success. The runner now waits for the expected route response and rendered screen plus settling state, and records failed/loaded font faces. The corrected baseline completed 156 captures (adds EN L02 at three widths and EN/KO/AR L03 at all three widths), with zero document overflows and page errors, and expected locale-specific IBM Plex faces loaded. M02 providers and M03 roles are static unavailable guidance and intentionally make no read. Dynamic policy/grant views remain separate journey checks. Initial zero text-contrast candidates do not establish contrast compliance; controls, placeholders, ambiguous compositing and dynamic states require further checks.
+Closed on 2026-11-27 with a scoped result: the checks recorded below were run under Chromium (headless shell 1243) on macOS arm64 against the console with synthetic data, and the failures they found were corrected. No whole-product WCAG conformance, owner screen acceptance, native-language review or assistive-technology test is claimed. What remains is listed under "Residual verification" and carried by HYB-399.
 
 # Findings
 
@@ -24,18 +24,16 @@ Further scoped evidence is recorded in [Control paint and enlarged-layout verifi
 | M01 unavailable-read Retry removes its focused control and successful recovery has no live completion message | Focus existing stable Reload before Retry starts; announce only the latest successful user-triggered read using established localized copy | Six EN/KO/AR desktop/mobile keyboard cases, repeated failure, new announcement transitions, later user focus movement and separate response-order/filter-supersession checks pass; scoped independent source and actual visual review recorded in read-recovery.md |
 | P01–P05 Retry disappears on successful read, leaving BODY focused and no read-completion status | Transfer focus to existing reload control and publish a dedicated localized status only after latest/current-scope success | Thirty locale/width journeys, five ordering/terminal cases and five actual actor-replacement cases pass; scoped source/TW and sixty-render Claude review recorded in admin-read-recovery.md |
 
-# Remaining verification
+# Residual verification
 
-Modal containment and focus return beyond the tested M01/M02 flows, approval/error recovery outside the tested M02 policy and M03 grant flows, 200% enlargement, colour-independent state meaning and control/placeholder/focus contrast remain open. P06/P07 in main are preview-only and cannot certify live behavior. Native language and human assistive-technology acceptance remain unverified. Screenshot counts are not journey coverage.
+Rewritten at closing (2026-11-27) after an independent closing review.
 
-
-The first M01 keyboard journey reached a real grant-scope refusal for the seed member's account suspension preview. The seed has no active workspace membership. This invalidates the assumed successful-preview fixture; it is not classified as a product defect. The failed preview did not execute revocation. The corrected fixture redeems the existing member link in a separate context and verifies active member membership before the journey. Passing baseline captures were not repeated for this fixture correction.
-
-Additional entry checks: 12 header renders including 375px, three CSS zoom 200% captures at 640px (not native browser zoom), and twelve Chromium colour-vision emulation captures completed. Root inspected AR enlargement and EN achromatopsia; labels and underlines remain visible with no horizontal overflow. Other emulation captures are generated evidence, not a claim of human review of every image. Full build/typecheck passed with the existing bundle-size warning.
-
-
-The corrected eligible-member M01 journey passed keyboard search, selection, membership preview, modal navigation, Escape/focus return and discard with no execute request. A bare native showModal comparison reproduced Chromium's temporary unfocused BODY when keyboard navigation enters browser chrome; the runner permits only that unfocused state, rejects any underlying page control, and verifies return into the modal. This is not treated as a product focus-escape defect. The final journey-only rerun passed explicit one-target/zero-exclusion response and rendered counts, member identity, discard live announcement and authenticated membership read-back unchanged. The added read initially omitted CSRF and correctly received 403; the harness now obtains the current session token without logging or storing it. Final result: five recorded checks, no page errors. No revocation execute request was sent.
-
+- Modal containment and focus return: partly covered — P02–P05 command forms (focus in on open, Cancel returns to the opener, all 44 openers at both widths) and the M03 approval form; not covered: Tab containment, Escape and focus return in the other dialogs, and the return from confirmation to editing. Carried by HYB-399.
+- Approval and error recovery: partly covered — P02–P05 empty-submit error summary and field links, P02–P05 confirmation step; not covered: M, O and P01 error states, errors other than an empty submission, and busy, done, refused and uncertain states after the final press. Carried by HYB-399.
+- 200% enlargement (WCAG 1.4.4): layout measured, zoom inferred. The 62 views were measured at 640 and 720 CSS px (EN 640, AR 640, EN 720, KO 720; `tools/views-qa.mjs`, 1,738 checks, none failed), the layouts a 1280–1440 px window shows at 200% page zoom; reflow at 320 px is measured separately (1.4.10). Native browser zoom was not executed, and CSS zoom does not reproduce it exactly (media queries see the unzoomed viewport); the console sizes text in px, which Chromium page zoom scales (technique G142), while a text-only enlargement setting would not. The detector does not find vertical clipping or line clamping. Native zoom and a clipping detector are carried by HYB-399.
+- Colour-independent meaning: covered for default views and the P02–P05 error state; not covered: states that appear later, pale tints, SVG and pseudo-element marks, and colour-vision emulation on the authenticated screens. Carried by HYB-399.
+- Control, placeholder and focus contrast: focus outlines of at least 3:1 in P02–P05 forms and confirmations; on M, O and P01 only the presence of an outline is checked. Placeholders: none is rendered on the live entry routes (five entry views in English, Korean and Arabic, measured 2026-11-27); the baseline ratios stay provisional (presentation-verification.md). Focus contrast on M, O and P01 and hover states are carried by HYB-399.
+- P06/P07: preview-only; carried by HYB-399.
 
 # Additional L02 locale and enlargement checks
 

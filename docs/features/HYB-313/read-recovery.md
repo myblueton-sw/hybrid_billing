@@ -2,8 +2,12 @@
 type: ReviewRecord
 title: User-list retry focus and refresh announcements
 description: Reproduced keyboard continuity failure and verification of scoped M01 read recovery.
-status: draft
+status: stable
 ---
+
+# Final status
+
+Record of a step of HYB-313, which closed on 2026-11-27; the remaining verification is listed in [findings](findings.md) and carried by HYB-399.
 
 # Finding and correction
 

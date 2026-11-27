@@ -2,8 +2,12 @@
 type: ReviewRecord
 title: Administration read-recovery accessibility
 description: P01–P05 retry focus, localized read-completion status and stale-response checks.
-status: draft
+status: stable
 ---
+
+# Final status
+
+Record of a step of HYB-313, which closed on 2026-11-27; the remaining verification is listed in [findings](findings.md) and carried by HYB-399.
 
 # Reproduction and implemented scope
 

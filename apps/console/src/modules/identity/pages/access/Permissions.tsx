@@ -153,9 +153,9 @@ function Filters({ l, filters, actions, onParams, onSent }: { l: Locale; filters
   const text = (key: Field, label: string, hint?: string, ltr = true) => (
     <div className="service-field">
       <label htmlFor={"acc-" + key}>{label}</label>
-      {hint && <p className="service-hint" id={"acc-" + key + "-hint"}>{hint}</p>}
       <input id={"acc-" + key} dir={ltr ? "ltr" : undefined} value={draft[key]} aria-describedby={hint ? "acc-" + key + "-hint" : undefined} autoComplete="off"
         onChange={(e) => { if (e.target.value.length <= 128) set(key, e.target.value); }} />
+      {hint && <p className="service-hint" id={"acc-" + key + "-hint"}>{hint}</p>}
     </div>
   );
   const select = (key: Field, label: string, options: [string, string][]) => (
@@ -169,11 +169,11 @@ function Filters({ l, filters, actions, onParams, onSent }: { l: Locale; filters
   );
   const [open, setOpen] = useState(filters.applied > 0);
   return (
-    <div className="access-filters" data-open={open ? "true" : "false"}>
+    <section className="access-filters list-filters" data-open={open ? "true" : "false"} aria-labelledby="acc-filters-title">
+      <h3 id="acc-filters-title" className="list-filters-title">{lc.filters(l)}</h3>
       <button type="button" className="live-secondary access-filters-toggle" aria-expanded={open} aria-controls="access-filter-form" onClick={() => setOpen(!open)}>{p.filters(l, filters.applied)}</button>
       <form id="access-filter-form" className="access-filter-form" onSubmit={submit} noValidate>
-      <p className="live-meta access-filter-note">{p.byName(l)}</p>
-      <div className="access-filter-grid">
+      <div className="list-filter-grid">
         {text("q", qcopy(l, "search"), p.searchHint(l), false)}
         {text("subject", p.holderId(l), p.holderHint(l))}
         {select("action", qcopy(l, "action"), actions.map((id) => [id, actionLabel(l, id) ?? id]))}
@@ -183,8 +183,8 @@ function Filters({ l, filters, actions, onParams, onSent }: { l: Locale; filters
         {select("state", qcopy(l, "state"), states.map((s) => [s, stateWord(l, s)]))}
         <div className="service-field">
           <label htmlFor="acc-before">{p.endsBefore(l)}</label>
-          <p className="service-hint" id="acc-before-hint">{p.endsBeforeHint(l)}</p>
           <input id="acc-before" type="date" dir="ltr" value={draft.before} aria-describedby="acc-before-hint" onChange={(e) => set("before", e.target.value)} />
+          <p className="service-hint" id="acc-before-hint">{p.endsBeforeHint(l)}</p>
         </div>
       </div>
       <div className="live-buttons">
@@ -192,7 +192,7 @@ function Filters({ l, filters, actions, onParams, onSent }: { l: Locale; filters
         <button type="button" className="live-secondary access-reset" onClick={reset}>{qcopy(l, "reset")}</button>
       </div>
       </form>
-    </div>
+    </section>
   );
 }
 

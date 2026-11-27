@@ -2,7 +2,7 @@
 type: DesignSystemReference
 title: The console's data list pattern
 description: One shared anatomy for the console's server-paged lists — filters, applied-filter chips, summary line, table, pager with rows per page, states and the list settings disclosure — with the references adopted and rejected.
-status: draft
+status: stable
 ---
 
 # Scope and ownership
@@ -119,4 +119,4 @@ Increments: shared components and CSS (`ListSummary`, `ListPager`, `AppliedFilte
 
 # Not decided by reading
 
-Today's rendered spacing; whether the project's 44 px minimum applies to desktop chip controls (40 px meets WCAG 2.5.8); whether `--c-subtle` and `--surface-hover` differ enough to tell hover from selection; whether paging pushes or replaces history entries (HYB-379); native-language review of the Korean and Arabic copy; whether "Reset filters" and "Clear filters" should share one label.
+Today's rendered spacing; whether the project's 44 px minimum applies to desktop chip controls (40 px meets WCAG 2.5.8); whether `--c-subtle` and `--surface-hover` differ enough to tell hover from selection; native-language review of the Korean and Arabic copy; whether "Reset filters" and "Clear filters" should share one label.

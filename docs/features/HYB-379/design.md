@@ -2,7 +2,7 @@
 type: DesignPlan
 title: HYB-379 — list filters, page size and page position in the address for M02, M03 requests and revocations, and M05 operations
 description: Which list state each remaining M02, M03 and M05 list keeps in the address, under which names, and how Back, Forward and reload restore it.
-status: draft
+status: stable
 ---
 
 # Scope and ownership
@@ -39,6 +39,8 @@ status: draft
 Each: unit tests for parse and normalisation, rendered checks including Back and Forward, independent change review, all M02–M05 checks rerun.
 
 # Progress
+
+- HYB-379 closed on 2026-11-27 after U1 to U3 (PRs 510 to 512); the scope-change reset noted under U3 was built in HYB-385 (PR 516): sign-in drops every list position.
 
 - U3 (2026-11-27): M05 operations list (`op_a`); the sessions list reads only its own six address keys, so operations paging does not reread it. A change of user, workspace or current session remounts the screen but does not clear `op_a` or `safter` (as before for `safter`); a cursor the service then refuses shows First. Follow-up if the plan's reset-on-scope-change rule is to be enforced in the address. Check again and a refresh return it to the first page (refresh with a replace); M05 address writes may now replace. m05-operations 41 with Back/Forward/reload.
 - U2 (2026-11-27): M03 requests and revocations done; independent review pass with one documentation condition, taken. m03-revocations 81 with Back/Forward/reload.

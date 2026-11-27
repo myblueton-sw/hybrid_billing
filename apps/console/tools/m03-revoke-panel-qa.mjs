@@ -62,6 +62,33 @@ try {
 
   await page.setViewportSize({ width: 1440, height: 1000 });
   await open("en");
+  const widths = await page.evaluate(() => ({ list: document.querySelector(".live-users > .live-list").getBoundingClientRect().width, all: document.querySelector('.live-users[data-live="grants"]').getBoundingClientRect().width }));
+  check("at 1440 the list takes the full width until a panel is asked for", (await page.locator("#access-panel").count()) === 0 && Math.abs(widths.list - widths.all) <= 2 && (await page.locator(".access-grant-open").getAttribute("aria-expanded")) === "false", JSON.stringify(widths));
+  await page.locator(".access-grant-open").click();
+  await page.locator("#access-capability-hint").waitFor();
+  check("opening the request form puts focus on its heading, offers Close and marks Request access expanded", (await page.evaluate(() => document.activeElement?.matches("#access-panel h2"))) && (await page.locator("#access-panel .access-panel-close button").count()) === 1 && (await page.locator(".access-grant-open").getAttribute("aria-expanded")) === "true");
+  await page.locator("#access-capability").focus();
+  await page.locator(".access-grant-open").click();
+  check("Request access while the form is open moves focus back to the form's heading", await page.evaluate(() => document.activeElement?.matches("#access-panel h2")));
+  for (const [lang, width] of [["en", 1440], ["ar", 1440], ["en", 1280], ["ar", 1280], ["ko", 1280]]) {
+    await page.setViewportSize({ width, height: 1000 });
+    await open(lang);
+    await page.locator(".access-grant-open").click();
+    await page.locator("#access-panel h2").waitFor();
+    await page.mouse.move(0, 0);
+    const box = await page.evaluate(() => { const h = document.querySelector("#access-panel h2").getBoundingClientRect(), c = document.querySelector("#access-panel .access-panel-close button").getBoundingClientRect(), p = document.querySelector("#access-panel").getBoundingClientRect(), r = document.documentElement.dir === "rtl"; const range = document.createRange(); range.selectNodeContents(document.querySelector("#access-panel h2")); const text = [...range.getClientRects()]; const clear = text.every((t) => r ? t.left >= c.right - 1 : t.right <= c.left + 1); return { clear, top: Math.abs(c.top - h.top), panel: Math.round(p.width) }; });
+    check(`${lang} ${width}: Close sits on the heading's first line without touching its text, and the panel is about a third wide`, box.clear && box.top <= 4 && box.panel >= 360 && box.panel <= 444, JSON.stringify(box));
+    if (args.shots) await page.screenshot({ path: `${args.shots}/m03-panel-${lang}-${width}.png` });
+  }
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await open("en");
+  await page.locator(".access-grant-open").click();
+  await page.locator("#access-capability-hint").waitFor();
+  await page.locator("#access-panel .access-panel-close button").click();
+  await page.locator("#access-panel").waitFor({ state: "detached" });
+  check("Close removes the panel and returns focus to Request access", await page.evaluate(() => document.activeElement?.classList.contains("access-grant-open")));
+  await page.locator(".access-grant-open").click();
+  await page.locator("#access-capability-hint").waitFor();
   check("the console ceiling section is gone and the request form carries the hint about the console's own limits", (await page.locator("#access-ceiling").count()) === 0 && (await page.locator("#access-capability-hint").innerText()).includes(copy.en.hint) && (await page.locator("#access-capability").getAttribute("aria-describedby")).includes("access-capability-hint"));
   const real = page.locator(".access-permissions .live-revoke[data-grant]").first();
   if (await real.count()) {

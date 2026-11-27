@@ -119,25 +119,6 @@
   display: grid;
   gap: 16px;
 }
-.access-filter-note {
-  margin: 0 0 8px;
-}
-.access-filter-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
-  gap: 16px;
-  align-items: end;
-  margin-block-end: 12px;
-}
-.access-filter-grid .service-field {
-  margin: 0;
-  max-inline-size: 20rem;
-}
-.access-filter-grid input,
-.access-filter-grid select {
-  inline-size: 100%;
-  box-sizing: border-box;
-}
 .access-filters-toggle {
   display: none;
 }
@@ -179,14 +160,14 @@
   border-color: var(--hb-line-row);
   background: var(--c-subtle);
 }
-.acc-col-holder { inline-size: 15%; }
-.acc-col-access { inline-size: 17%; }
-.acc-col-scope { inline-size: 15%; }
-.acc-col-source { inline-size: 9%; }
-.acc-col-parent { inline-size: 10%; }
-.acc-col-validity { inline-size: 12%; }
+.acc-col-holder { inline-size: 13%; }
+.acc-col-access { inline-size: 16%; }
+.acc-col-scope { inline-size: 13%; }
+.acc-col-source { inline-size: 8%; }
+.acc-col-parent { inline-size: 11%; }
+.acc-col-validity { inline-size: 13%; }
 .acc-col-effective { inline-size: 13%; }
-.acc-col-action { inline-size: 9%; }
+.acc-col-action { inline-size: 13%; }
 .remaining-security .access-permissions td > .acc-folded {
   display: none;
 }
@@ -436,4 +417,26 @@
 }
 .remaining-security [data-catalog-none] {
   margin-block: 8px 16px;
+}
+.live-users[data-live="grants"][data-wide="true"][data-panel="false"] {
+  grid-template-columns: minmax(0, 1fr);
+}
+.access-panel-close {
+  display: flex;
+  justify-content: flex-end;
+  margin-block-end: -44px;
+}
+.live-panel[data-closable] > .live-step > h2:first-child {
+  padding-inline-end: 112px;
+  min-block-size: 44px;
+}
+@container (max-width: 600px) {
+  .remaining-security .list-filters-title {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
 }

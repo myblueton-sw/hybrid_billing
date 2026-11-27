@@ -52,6 +52,7 @@ try {
     await page.goto(`${base}/?service=api&lang=${lang}&qa=${++navigation}#/access?${new URLSearchParams({ lang, view })}`);
     await page.locator(view === "grants" ? "#access-list" : '[data-live="effects"]').waitFor();
     if (view === "grants" && page.viewportSize().width < 1280) { await page.locator(".access-grant-open").waitFor(); return; }
+    if (view === "grants") { await page.locator(".access-grant-open").click(); await page.locator(".live-panel .person-picker").waitFor(); }
     await page.locator(".person-picker .person-status, [data-person-none]").first().waitFor();
     await page.waitForFunction(() => { const s = document.querySelector(".person-picker .person-status"); return !s || !/…$/.test(s.textContent.trim()); });
   };

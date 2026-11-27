@@ -42,6 +42,7 @@ try {
   let real = null;
   page.on("response", async (r) => { if (isWhole(r.url()) && r.status() === 200 && !real) real = await r.json().catch(() => null); });
   await open("en");
+  await page.locator(".access-grant-open").click();
   await page.locator("#access-capability").waitFor();
   check("the real service sends a complete catalog and the form shows no shortage sentence", real?.catalog_incomplete === false && real.catalog.length > 0 && (await page.locator("[data-catalog-short], [data-catalog-none]").count()) === 0 && (await page.locator("#access-capability").getAttribute("aria-describedby")) === "access-capability-hint", JSON.stringify(real && { flag: real.catalog_incomplete, n: real.catalog.length }));
 
@@ -55,7 +56,7 @@ try {
       await route.fulfill({ response, json: { ...body, catalog_incomplete: true, catalog: mode === "none" ? [] : body.catalog } });
     });
     await open(lang);
-    if (width === 390) await page.locator(".access-grant-open").click();
+    await page.locator(".access-grant-open").click();
     await page.locator("#access-capability").waitFor();
     check(`${at}: the request form says some access could not be listed, as a hint tied to the Access field`, (await page.locator("#access-capability-short").innerText()).startsWith(copy[lang].short) && (await page.locator("#access-capability").getAttribute("aria-describedby")) === "access-capability-hint access-capability-short" && (await page.locator("#access-capability-short").evaluate((el) => el.classList.contains("service-hint") && getComputedStyle(el).fontWeight < 600)) && (await page.locator("#access-capability option").count()) > 1);
     const shown = await inspectView(page);

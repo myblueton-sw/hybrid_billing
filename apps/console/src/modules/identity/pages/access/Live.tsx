@@ -1,3 +1,4 @@
+import { lc } from "../../../../shared/list/list-copy";
 import { ListSettings } from "../../../../shared/list/ListParts";
 import { pageLimitOf } from "../../../../service/query-settings";
 import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
@@ -68,7 +69,7 @@ function GrantForm({ l, api, page, self, onDone, onCancel, onReload, onRefresh, 
     if (!kept.current) tried.current = attempt();
     kept.current = false;
   }, [page.revision]);
-  useEffect(() => { if (stepping) heading.current?.focus(); }, [stepping]);
+  useEffect(() => { heading.current?.focus(); }, []);
   const paused = additionsPaused(page.ledger);
   const edit = (f: (v: string) => void) => (v: string) => { tried.current = attempt(); f(v); };
   useEffect(() => {
@@ -465,7 +466,7 @@ export default function LiveAccess({ locale: l, view, session, onSignOut, onView
     panel = <Revoke key={selected} l={l} api={api} page={page} target={mode.target} onReload={load}
       onCancel={() => { setMode(null); setFocusTo(back); }}
       onDone={(message) => { say(message, mode.target.kind === "grant" ? "requests" : "list"); setMode(null); setFormKey((k) => k + 1); load(); setFocusTo(mode.target.kind === "grant" ? "#access-requests" : "#access-revocations"); }} />;
-  } else if (page && grantCapabilities(page).length > 0 && (wide || mode?.kind === "form")) {
+  } else if (page && grantCapabilities(page).length > 0 && mode?.kind === "form") {
     panel = <GrantForm key={formKey} l={l} api={api} page={page} self={self} stepping={!wide} onReload={load} onRefresh={refresh}
       onCancel={() => { setMode(null); setFocusTo(".access-grant-open"); }}
       onDone={() => { say(q.requestSent(l), "requests"); setMode(null); setFormKey((k) => k + 1); load(); setFocusTo("#access-requests"); }} />;
@@ -474,7 +475,7 @@ export default function LiveAccess({ locale: l, view, session, onSignOut, onView
   const backTo = mode?.kind === "revoke" ? (mode.target.kind === "grant" ? `[data-grant="${mode.target.id}"]` : `[data-delegation="${mode.target.id}"]`)
     : mode?.kind === "decide" ? `[data-request="${mode.row.id}"] [data-act="${mode.action}"]` : ".access-grant-open";
   return (
-    <div className="live-users" data-live="grants" data-wide={wide ? "true" : "false"}>
+    <div className="live-users" data-live="grants" data-wide={wide ? "true" : "false"} data-panel={panel ? "true" : "false"}>
       <p className="visually-hidden" role="status" aria-live="polite">{announce}</p>
       {!stepping && (
         <div className="live-list live-sections">
@@ -484,7 +485,8 @@ export default function LiveAccess({ locale: l, view, session, onSignOut, onView
                 <h2 id="access-list" tabIndex={-1}>{p.title(l)}</h2>
               </div>
               <div className="live-tools">
-                {!wide && page && grantCapabilities(page).length > 0 && <button type="button" className="live-primary access-grant-open" onClick={() => { setNotice(""); setMode({ kind: "form" }); }}>{q.requestTitle(l)}</button>}
+                {page && grantCapabilities(page).length > 0 && <button type="button" className="live-primary access-grant-open" aria-expanded={mode?.kind === "form"} aria-controls="access-panel"
+                  onClick={() => { setNotice(""); if (mode?.kind === "form") document.querySelector<HTMLElement>("#access-panel h2")?.focus(); else { setMode({ kind: "form" }); setFocusTo("#access-panel h2"); } }}>{q.requestTitle(l)}</button>}
                 <button type="button" className="live-secondary" onClick={() => { setNotice(""); load(); }}>{w.reload(l)}</button>
               </div>
             </div>
@@ -503,9 +505,10 @@ export default function LiveAccess({ locale: l, view, session, onSignOut, onView
         </div>
       )}
       {(wide || stepping) && panel && (
-        <aside className="live-panel" aria-label={mode?.kind === "revoke" ? (mode.target.kind === "grant" ? q.requestRevocation(l) : a.revokeDelegTitle(l))
+        <aside className="live-panel" id="access-panel" data-closable={wide ? "true" : undefined} aria-label={mode?.kind === "revoke" ? (mode.target.kind === "grant" ? q.requestRevocation(l) : a.revokeDelegTitle(l))
           : mode?.kind === "decide" ? (mode.action === "approve" ? q.approveTitle(l) : mode.action === "reject" ? q.rejectTitle(l) : q.withdrawTitle(l)) : q.requestTitle(l)}>
           {stepping && <button type="button" className="service-button-link live-back" onClick={() => { setMode(null); setFocusTo(backTo); }}>{a.backToGrants(l)}</button>}
+          {wide && <div className="access-panel-close"><button type="button" className="live-secondary" onClick={() => { setMode(null); setFocusTo(backTo); }}>{lc.close(l)}</button></div>}
           {panel}
         </aside>
       )}

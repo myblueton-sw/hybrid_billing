@@ -22,7 +22,6 @@ export const p = {
   legalEntityId: (l: Locale) => t(l, "Legal entity ID", "법인 ID", "معرّف الكيان القانوني"),
   endsBefore: (l: Locale) => t(l, "Ends before", "종료 기준일(이전)", "تنتهي قبل"),
   endsBeforeHint: (l: Locale) => t(l, "Date in UTC; ends before 00:00 of that day.", "UTC 기준 날짜이며, 그날 00:00 이전에 끝나는 항목입니다.", "تاريخ بتوقيت UTC؛ ما ينتهي قبل الساعة 00:00 من ذلك اليوم."),
-  filters: (l: Locale, n: number) => t(l, `Filters (${n} applied)`, `필터(${n}개 적용)`, `عوامل التصفية (المطبّق: ${n})`),
   endedChain: (l: Locale) => t(l, "Ended through delegation chain", "위임 경로에서 종료됨", "انتهى عبر سلسلة التفويض"),
   invalidFilters: (l: Locale) => t(l, "These filters cannot be read. Reset them.", "이 필터를 읽을 수 없습니다. 초기화하세요.", "تعذّرت قراءة عوامل التصفية هذه. أعد تعيينها."),
 };

@@ -157,7 +157,7 @@ try {
     await page.waitForFunction(() => document.querySelectorAll(".access-permissions tbody tr").length === 1);
     check(`${at}: the source filter lists delegations only with an exact count`, (await page.locator(".access-list-body .list-summary").innerText()).includes(`${copy[lang].count}: 1`) && (await page.locator(".access-permissions tbody tr").getAttribute("data-permission")) === "delegation/h-first" && asked[asked.length - 1] === "?q=h&source=delegation&state=active&limit=50" && await page.evaluate(() => document.activeElement?.classList.contains("list-summary")));
     if (args.shots) await page.locator(".access-list-body").screenshot({ path: `${args.shots}/m03-list-filtered-${lang}-${width}.png` });
-    if (width === 390) check(`${at}: the collapsed filters say three are applied and stay open`, (await page.locator(".access-filters-toggle").innerText()).includes("3") && (await page.locator(".access-filters-toggle").getAttribute("aria-expanded")) === "true" && await page.locator("#acc-source").isVisible());
+    if (width === 390) check(`${at}: after Apply the filters collapse, the toggle says three are applied and the chips show them`, (await page.locator(".access-filters-toggle").innerText()).includes("3") && (await page.locator(".access-filters-toggle").getAttribute("aria-expanded")) === "false" && !(await page.locator("#acc-source").isVisible()) && (await page.locator(".access-list-body .list-chip").count()) === 3);
     mode = "fail";
     await page.locator(".live-toolbar .live-secondary").last().click();
     await page.locator(".access-list-failure").waitFor();

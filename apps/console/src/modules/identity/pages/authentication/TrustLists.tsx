@@ -1,4 +1,6 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
+import { AppliedFilters, type Chip } from "../../../../shared/list/ListParts";
+import { lc } from "../../../../shared/list/list-copy";
 import type { Locale } from "../../../../shared/types";
 import { counted } from "../../../../shared/plural";
 import type { AdminClient } from "../../../../service/admin";
@@ -99,30 +101,52 @@ function PagedSection({ l, api, group, state, filter, generation, pageLimit, sel
     size={{ id: "m02-size-" + group, requested: wanted, limit: pageLimit, onChange: setWanted }} />;
 }
 
+const filterFocus = () => {
+  const toggle = document.querySelector<HTMLElement>(".m02-filters .list-filters-toggle");
+  return toggle && toggle.offsetParent ? toggle : document.getElementById("m02-filters-title");
+};
+
+export function chipsOf(l: Locale, filter: ListFilter): Chip[] {
+  return [
+    ...(filter.q ? [{ key: "q", label: tl.searchLabel(l), value: filter.q, mono: true }] : []),
+    ...(filter.state ? [{ key: "state", label: qcopy(l, "state"), value: ty.state(l, filter.state) }] : []),
+  ];
+}
+
 function Filters({ l, applied, onApply }: { l: Locale; applied: ListFilter; onApply: (next: ListFilter) => void }) {
   const [draft, setDraft] = useState(applied);
-  const submit = (event: FormEvent) => { event.preventDefault(); onApply({ q: draft.q.trim(), state: draft.state }); };
+  const [open, setOpen] = useState(false);
+  useEffect(() => setDraft(applied), [applied]);
+  const submit = (event: FormEvent) => { event.preventDefault(); setOpen(false); onApply({ q: draft.q.trim(), state: draft.state }); };
   const reset = () => { setDraft(noFilter); onApply(noFilter); };
   return (
-    <form className="m02-filters" aria-label={tl.filters(l)} onSubmit={submit} noValidate>
-      <div className="service-field">
-        <label htmlFor="m02-filter-q">{tl.searchLabel(l)}</label>
-        <input id="m02-filter-q" name="change-id" dir="ltr" value={draft.q} aria-describedby="m02-filter-q-hint" autoComplete="off" spellCheck={false}
-          onChange={(e) => { if (searchFits(e.target.value)) setDraft({ ...draft, q: e.target.value }); }} />
-        <p className="service-hint" id="m02-filter-q-hint">{tl.searchHint(l)}</p>
-      </div>
-      <div className="service-field">
-        <label htmlFor="m02-filter-state">{qcopy(l, "state")}</label>
-        <select id="m02-filter-state" name="state" className="live-select" value={draft.state} onChange={(e) => setDraft({ ...draft, state: e.target.value as ListFilter["state"] })}>
-          <option value="">{qcopy(l, "all")}</option>
-          {[...trustGroups.open, ...trustGroups.closed].map((s) => <option key={s} value={s}>{ty.state(l, s)}</option>)}
-        </select>
-      </div>
-      <div className="live-buttons m02-filter-buttons">
-        <button type="submit" className="live-secondary">{qcopy(l, "apply")}</button>
-        <button type="button" className="live-secondary" onClick={reset}>{qcopy(l, "reset")}</button>
-      </div>
-    </form>
+    <section className="m02-filters list-filters" data-open={open ? "true" : "false"} aria-labelledby="m02-filters-title">
+      <h3 id="m02-filters-title" className="list-filters-title" tabIndex={-1}>{tl.filters(l)}</h3>
+      <button type="button" className="live-secondary list-filters-toggle" aria-expanded={open} aria-controls="m02-filter-form" onClick={() => setOpen(!open)}>
+        {lc.toggle(l, chipsOf(l, applied).length)}
+      </button>
+      <form id="m02-filter-form" className="list-filter-form" onSubmit={submit} noValidate>
+        <div className="list-filter-grid">
+          <div className="service-field">
+            <label htmlFor="m02-filter-q">{tl.searchLabel(l)}</label>
+            <input id="m02-filter-q" name="change-id" dir="ltr" value={draft.q} aria-describedby="m02-filter-q-hint" autoComplete="off" spellCheck={false}
+              onChange={(e) => { if (searchFits(e.target.value)) setDraft({ ...draft, q: e.target.value }); }} />
+            <p className="service-hint" id="m02-filter-q-hint">{tl.searchHint(l)}</p>
+          </div>
+          <div className="service-field">
+            <label htmlFor="m02-filter-state">{qcopy(l, "state")}</label>
+            <select id="m02-filter-state" name="state" className="live-select" value={draft.state} onChange={(e) => setDraft({ ...draft, state: e.target.value as ListFilter["state"] })}>
+              <option value="">{qcopy(l, "all")}</option>
+              {[...trustGroups.open, ...trustGroups.closed].map((s) => <option key={s} value={s}>{ty.state(l, s)}</option>)}
+            </select>
+          </div>
+        </div>
+        <div className="live-buttons m02-filter-buttons">
+          <button type="submit" className="live-secondary">{qcopy(l, "apply")}</button>
+          <button type="button" className="live-secondary" onClick={reset}>{qcopy(l, "reset")}</button>
+        </div>
+      </form>
+    </section>
   );
 }
 
@@ -134,10 +158,13 @@ export function TrustLists({ l, api, generation, pageLimit, selected, reduced, o
   const [applied, setApplied] = useState(0);
   const open = sectionState(filter, "open");
   const closed = sectionState(filter, "closed");
+  const apply = (next: ListFilter) => { setFilter(next); setApplied((n) => n + 1); };
   const shared = { l, api, filter, generation: generation * 1000 + applied, pageLimit, selected, reduced, onOpen, onSignOut, onRefresh };
   return (
     <div className="m02-lists">
-      <Filters l={l} applied={filter} onApply={(next) => { setFilter(next); setApplied((n) => n + 1); }} />
+      <Filters l={l} applied={filter} onApply={apply} />
+      <AppliedFilters l={l} id="m02-applied" chips={chipsOf(l, filter)} onRemove={(key) => apply({ ...filter, [key]: "" })} onClear={() => apply(noFilter)}
+        fallback={filterFocus} />
       {open && <PagedSection key="open" group="open" state={open} {...shared} />}
       {closed && <PagedSection key="closed" group="closed" state={closed} {...shared} />}
     </div>

@@ -12,6 +12,7 @@ export const lc = {
   previous: (l: Locale) => t(l, "Previous", "이전", "السابق"),
   next: (l: Locale) => t(l, "Next", "다음", "التالي"),
   filters: (l: Locale) => t(l, "Filters", "필터", "عوامل التصفية"),
+  toggle: (l: Locale, n: number) => t(l, `Filters (${n} applied)`, `필터(${n}개 적용)`, `عوامل التصفية (المطبّق: ${n})`),
   close: (l: Locale) => t(l, "Close", "닫기", "إغلاق"),
   applied: (l: Locale) => t(l, "Applied filters", "적용된 필터", "عوامل التصفية المطبّقة"),
   remove: (l: Locale) => t(l, "Remove filter", "필터 제거", "إزالة عامل التصفية"),

@@ -167,11 +167,11 @@ function Filters({ l, filters, actions, onParams, onSent }: { l: Locale; filters
       </select>
     </div>
   );
-  const [open, setOpen] = useState(filters.applied > 0);
+  const [open, setOpen] = useState(false);
   return (
     <section className="access-filters list-filters" data-open={open ? "true" : "false"} aria-labelledby="acc-filters-title">
       <h3 id="acc-filters-title" className="list-filters-title">{lc.filters(l)}</h3>
-      <button type="button" className="live-secondary access-filters-toggle" aria-expanded={open} aria-controls="access-filter-form" onClick={() => setOpen(!open)}>{p.filters(l, filters.applied)}</button>
+      <button type="button" className="live-secondary access-filters-toggle" aria-expanded={open} aria-controls="access-filter-form" onClick={() => setOpen(!open)}>{lc.toggle(l, filters.applied)}</button>
       <form id="access-filter-form" className="access-filter-form" onSubmit={submit} noValidate>
       <div className="list-filter-grid">
         {text("q", qcopy(l, "search"), p.searchHint(l), false)}

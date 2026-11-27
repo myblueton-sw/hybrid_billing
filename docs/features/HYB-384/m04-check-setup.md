@@ -42,7 +42,7 @@ hb-api --listen 127.0.0.1:8820 --data <fresh directory> --seed sample \
 | `m04-completion-qa.mjs --group declaration` | pass (3) |
 | `m04-consumer-qa.mjs`, `m04-errors-qa.mjs` | pass |
 | `m04-lists-qa.mjs` | 109 passed |
-| `m04-completion-qa.mjs --group actions` | cannot run: needs the fixture-only clock control `POST /__qa/advance` described in `docs/features/HYB-304/m04-completion.md`, which is not in the repository |
-| `service-accounts-qa.mjs` | cannot run: written on 2026-11-19 for a create form that was always open; the current screen opens it on demand and chooses the owner through a picker. Its journeys are covered by the completion, consumer and errors checks. |
+| `m04-completion-qa.mjs --group actions` | pass (3 scenarios) since HYB-386: the revoke step-up journey routes the credential detail read to report reauthentication required until the real password confirmation, instead of the clock control that was never in the repository. The routed answer also reports rotation as needing reauthentication, as a real stale session would; the return to ready comes from removing the route, not from the reauthentication, so this check proves the screen's behaviour, not the server's expiry. The server side (a step-up older than the default 15-minute window becoming `reauthentication_required`, with revoke unavailable) is covered by `apps/api/server/servicequery_credential_controls_test.go` and `servicequery_detail_test.go`; configured windows by `stepup_test.go` (`TestStepUpWindows`). |
+| `service-accounts-qa.mjs` | cannot run: written on 2026-11-19 for the earlier create and issue controls; it covers held-issue, unknown-outcome and retry journeys no newer check covers, so it is to be updated, not retired (HYB-387). |
 
-The last two are carried by [HYB-386](https://linear.app/myblueton/issue/HYB-386).
+The actions group was fixed in HYB-386; the service-accounts check is HYB-387.

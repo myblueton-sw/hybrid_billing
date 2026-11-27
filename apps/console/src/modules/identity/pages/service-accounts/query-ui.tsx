@@ -1,5 +1,6 @@
 import { shownTime } from "./live-model";
-import { useCallback, useId, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useId, useRef, useState, type ReactNode, type RefObject } from "react";
+import { ListPager, ListSummary } from "../../../../shared/list/ListParts";
 import type { Locale } from "../../../../shared/types";
 import type {
   PageQuery,
@@ -39,7 +40,7 @@ function describeRead(l: Locale, error: unknown) {
   };
 }
 export function Moment({ l, iso }: { l: Locale; iso: string }) {
-  return <bdi dir="ltr"><time dateTime={iso} title={iso}>{shownTime(l, iso)}</time></bdi>;
+  return <time dateTime={iso} title={iso}>{shownTime(l, iso)}</time>;
 }
 
 export function Facts({ items }: { items: [string, ReactNode][] }) {
@@ -90,51 +91,75 @@ export function ReadBoundary<T>({
     );
   return <>{children(read.value)}</>;
 }
-export function PageInfo<T>({
+export function usePageFocus(state: string, value: unknown) {
+  const summary = useRef<HTMLDivElement>(null);
+  const want = useRef<string | null>(null);
+  useEffect(() => {
+    if (want.current === null || state === "loading") return;
+    const target = want.current;
+    want.current = null;
+    if (state !== "ready") return;
+    if (target === "summary") summary.current?.focus();
+    else document.getElementById(target)?.focus();
+  }, [state, value]);
+  return { summary, want };
+}
+export function PageSummary<T>({
   l,
   page,
-  first,
-  next,
-  previous,
+  summaryRef,
 }: {
   l: Locale;
   page: ServicePage<T>;
-  first: () => void;
-  next: () => void;
-  previous: () => void;
+  summaryRef?: RefObject<HTMLDivElement | null>;
 }) {
   return (
-    <div className="live-sections">
-      <Facts
-        items={[
-          [
-            t(l, page.count.certainty === "exact" ? "exact" : "lower"),
-            page.count.value,
-          ],
-          [t(l, "reference"), <Moment l={l} iso={page.reference_at} />],
-          [t(l, "observed"), <Moment l={l} iso={page.observed_at} />],
-        ]}
+    <>
+      <ListSummary
+        l={l}
+        count={page.count.value}
+        exact={page.count.certainty === "exact"}
+        reference={<Moment l={l} iso={page.reference_at} />}
+        summaryRef={summaryRef}
+        extra={<>{t(l, "observed")}: <Moment l={l} iso={page.observed_at} /></>}
       />
       {page.rows.length === 0 && (
         <p className="live-empty">{t(l, page.next ? "incomplete" : "empty")}</p>
       )}
-      <nav aria-label={t(l, "size")} className="live-buttons">
-        <button type="button" className="live-secondary" onClick={first}>
-          {t(l, "first")}
-        </button>
-        <button type="button" className="live-secondary" onClick={previous}>
-          {t(l, "previous")}
-        </button>
-        <button
-          type="button"
-          className="live-secondary"
-          disabled={!page.next}
-          onClick={next}
-        >
-          {t(l, "next")}
-        </button>
-      </nav>
-    </div>
+    </>
+  );
+}
+export function PagePager<T>({
+  l,
+  title,
+  page,
+  first,
+  onFirst,
+  onPrevious,
+  onNext,
+  size,
+}: {
+  l: Locale;
+  title: string;
+  page: ServicePage<T>;
+  first: boolean;
+  onFirst: () => void;
+  onPrevious: () => void;
+  onNext: () => void;
+  size?: { id: string; requested: number; onChange: (n: number) => void };
+}) {
+  return (
+    <ListPager
+      l={l}
+      title={title}
+      first={first}
+      hasNext={!!page.next}
+      rows={page.rows.length}
+      size={size && { ...size, current: page.query.limit, limit: 100 }}
+      onFirst={onFirst}
+      onPrevious={onPrevious}
+      onNext={onNext}
+    />
   );
 }
 export function Picker<T extends { id: string }>({
@@ -199,6 +224,7 @@ export function Picker<T extends { id: string }>({
       ? label(known.result.value.row)
       : value + " · " + t(l, "unavailable");
   const key = queryKey(query);
+  const focus = usePageFocus(read.result.state, read.result.state === "ready" ? read.result.value : null);
   return (
     <fieldset
       className="live-sections"
@@ -208,7 +234,7 @@ export function Picker<T extends { id: string }>({
     >
       <legend>{name}</legend>
       {field && <FieldMessage field={field} error={error} />}
-      <div className="service-field">
+      <div className="service-field svc-picker-search">
         <label htmlFor={searchId}>{t(l, "search")}</label>
         <input
           id={searchId}
@@ -241,12 +267,13 @@ export function Picker<T extends { id: string }>({
         }}
       >
         {(page) => (
-          <>
+          <div className="svc-list-body">
             {emptyCatalog &&
               !query.q &&
               !query.after &&
               page.count.certainty === "exact" &&
               page.count.value === "0" && <p>{t(l, "emptyCatalog")}</p>}
+            <PageSummary l={l} page={page} summaryRef={focus.summary} />
             <label htmlFor={controlId}>{name}</label>
             <select
               {...attributes}
@@ -265,19 +292,26 @@ export function Picker<T extends { id: string }>({
                 </option>
               ))}
             </select>
-            <PageInfo
+            <PagePager
               l={l}
+              title={name}
               page={page}
-              first={() => {
+              first={!after}
+              onFirst={() => {
+                focus.want.current = "summary";
                 setAfter("");
                 trail.clear();
               }}
-              previous={() => setAfter(trail.previous(key))}
-              next={() => {
+              onPrevious={() => {
+                focus.want.current = "summary";
+                setAfter(trail.previous(key));
+              }}
+              onNext={() => {
+                focus.want.current = "summary";
                 if (trail.next(key, after, page.next)) setAfter(page.next);
               }}
             />
-          </>
+          </div>
         )}
       </ReadBoundary>
     </fieldset>

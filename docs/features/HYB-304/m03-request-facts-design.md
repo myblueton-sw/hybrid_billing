@@ -2,7 +2,7 @@
 type: DesignPlan
 title: M03 request rows without whole-population facts
 description: How the bounded requests read builds a request row's eligibility without loading the whole roster, every user, every grant and every delegation, while the rule stays the one the commands use.
-status: draft
+status: stable
 ---
 
 # Scope and ownership

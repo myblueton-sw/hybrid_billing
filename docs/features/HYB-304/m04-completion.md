@@ -2,11 +2,15 @@
 type: VerificationPlan
 title: HYB-304 finite M04 integration closure
 description: Maps the remaining bounded navigation, declaration and action journeys to actual-app evidence before final M04 integration.
-status: draft
+status: stable
 sources:
   - resource: ./m04-consumer.md
   - resource: ./m04-query-lifecycle.md
 ---
+
+# Final status
+
+HYB-304 closed on 2026-11-27 ([closing audit](closing-audit.md)). The 100 percent server coverage gate named here was accepted by the owner on 2026-11-26 with 28 uncovered weighted statements, as recorded in [main integration](main-integration.md). Pre-existing failures of the M04 rendered checks on main are tracked in HYB-384.
 
 # Ownership and completion boundary
 

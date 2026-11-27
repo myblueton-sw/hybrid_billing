@@ -2,7 +2,7 @@
 type: DesignPlan
 title: M03 revocations on a paged read — composition
 description: The ui-designer's composition for the revocations section of the M03 grants view once it reads kept revocations a page at a time, recorded before implementation.
-status: draft
+status: stable
 ---
 
 # Scope and ownership

@@ -2,13 +2,17 @@
 type: ImplementationPlan
 title: HYB-304 M04 strict consumer and scoped recovery
 description: Records the bounded read client checkpoint and the ordered Console state, recovery and declaration form migration before full M04 integration.
-status: draft
+status: stable
 sources:
   - resource: ./m04-queries.md
   - resource: ./query-evidence.json
   - resource: ./m04-declarations.md
   - resource: ../../ui/screens/M04/spec.md
 ---
+
+# Final status
+
+Checkpoint record. The work it names as remaining or not yet built was completed later in HYB-304, which closed on 2026-11-27 ([closing audit](closing-audit.md)).
 
 # Ownership and current boundary
 

@@ -2,10 +2,14 @@
 type: VerificationReport
 title: HYB-304 service command dependency and staged conflict preservation
 description: Defines component verification of execution-time dependency refusals and a supported public identity insertion before final create admission.
-status: draft
+status: stable
 sources:
   - resource: ./m04-reservation-input-contracts.md
 ---
+
+# Final status
+
+Checkpoint record. The work it names as remaining or not yet built was completed later in HYB-304, which closed on 2026-11-27 ([closing audit](closing-audit.md)).
 
 # Scope and reviewed ownership
 

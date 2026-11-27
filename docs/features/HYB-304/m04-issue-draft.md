@@ -2,11 +2,15 @@
 type: ValidationRecord
 title: HYB-304 issuance draft recovery across authentication refresh
 description: Records the reproduced issuance draft loss, lease-scoped fix and actual authentication, lifecycle and mutation verification.
-status: draft
+status: stable
 sources:
   - resource: ./m04-consumer.md
   - resource: ./issue-draft-evidence.json
 ---
+
+# Final status
+
+Checkpoint record. The work it names as remaining or not yet built was completed later in HYB-304, which closed on 2026-11-27 ([closing audit](closing-audit.md)).
 
 # Reproduction and correction
 

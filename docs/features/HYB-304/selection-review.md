@@ -9,6 +9,10 @@ sources:
   - resource: ./plan.md
 ---
 
+# Final status
+
+Checkpoint record. The work it names as remaining or not yet built was completed later in HYB-304, which closed on 2026-11-27 ([closing audit](closing-audit.md)).
+
 # Scope and provenance
 
 Root is sole writer and test executor on machine mac_mini. Independent read-only reviewer `/root/hyb310_review` inspected the uncommitted selection/operation changes against foundation79856aed and the approved design. Independent read-only technical writer `/root/hyb310_copy_render` inspected the two integration documents against actual handlers and client contracts. Neither reviewer edited files, executed tests or started services. Their source verdicts do not certify runtime behavior or full M05 completion.

@@ -2,10 +2,14 @@
 type: ValidationRecord
 title: HYB-304 service query lifetime and boundary checks
 description: Records real expiry and membership transitions, public-module source interleavings and authenticated query-boundary robustness without changing production behavior.
-status: draft
+status: stable
 sources:
   - resource: ./m04-invariant-cleanup.md
 ---
+
+# Final status
+
+Checkpoint record. The work it names as remaining or not yet built was completed later in HYB-304, which closed on 2026-11-27 ([closing audit](closing-audit.md)).
 
 # Scope and fixture design
 

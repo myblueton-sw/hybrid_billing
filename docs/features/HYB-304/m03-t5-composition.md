@@ -2,7 +2,7 @@
 type: DesignPlan
 title: M03 revoke panel, person picker and ceiling table — composition
 description: The ui-designer's composition for the last screen increment of the M03 transition, with its strings in three languages, recorded before implementation.
-status: draft
+status: stable
 ---
 
 # Scope and ownership

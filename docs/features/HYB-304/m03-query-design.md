@@ -2,8 +2,12 @@
 type: DesignPlan
 title: M03 bounded access queries (HYB-304 increment C)
 description: Design of the bounded, independently paged reads for the M03 access screen under the common contract of the HYB-304 plan, split into reviewable increments.
-status: draft
+status: stable
 ---
+
+# Final status
+
+Decided since: the owner chose removal of the five population fields on 2026-11-27 (see "Decided by the owner" below), and the filter-wide selection manifest does not apply while M03 has no bulk action. HYB-304 closed on 2026-11-27 ([closing audit](closing-audit.md)).
 
 # Scope and ownership
 

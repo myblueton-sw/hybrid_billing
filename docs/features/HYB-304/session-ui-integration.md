@@ -2,7 +2,7 @@
 type: ImplementationPlan
 title: HYB-304 M05 bounded session UI integration
 description: Defines the remaining session query, immutable confirmation and operation recovery consumer work without declaring visual acceptance.
-status: draft
+status: stable
 sources:
   - resource: ./plan.md
   - resource: ./selection-integration.md
@@ -10,6 +10,10 @@ sources:
   - resource: https://support.google.com/accounts/answer/3067630?hl=en
   - resource: https://support.microsoft.com/en-us/accounts-billing/work-school/view-your-work-or-school-account-sign-in-activity-from-my-sign-ins
 ---
+
+# Final status
+
+This work was completed: `/me` no longer emits full session populations or expanded operation arrays, and M05 reads the dedicated query, selection and result routes. Later list-pattern and address-state work is in HYB-376, HYB-378 and HYB-379. HYB-304 closed on 2026-11-27 ([closing audit](closing-audit.md)).
 
 # Ownership and design boundary
 

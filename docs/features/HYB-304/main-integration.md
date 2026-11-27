@@ -2,7 +2,7 @@
 type: IntegrationRecord
 title: HYB-304 M04 branch integrated with main and credential rotation
 description: How the bounded M04 service-account branch was merged with main after credential rotation landed there, what was decided, what was verified and what is left for the owner.
-status: draft
+status: stable
 ---
 
 # Scope and ownership

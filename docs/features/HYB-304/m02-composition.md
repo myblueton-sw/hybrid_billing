@@ -2,7 +2,7 @@
 type: DesignPlan
 title: M02 trust changes on the bounded reads — composition
 description: The ui-designer's composition for moving the M02 list of trust changes onto the bounded list and detail reads, with the copy in three languages.
-status: draft
+status: stable
 ---
 
 # Scope and ownership

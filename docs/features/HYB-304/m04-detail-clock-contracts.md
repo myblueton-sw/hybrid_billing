@@ -2,10 +2,14 @@
 type: ImplementationPlan
 title: HYB-304 detail read authority at clock boundaries
 description: Sweeps instance-owned wall-clock observation boundaries in two quiesced detail handlers while verifying fail-closed authority and unchanged service data.
-status: draft
+status: stable
 sources:
   - resource: ./m04-lookup-parser-contracts.md
 ---
+
+# Final status
+
+Checkpoint record. The work it names as remaining or not yet built was completed later in HYB-304, which closed on 2026-11-27 ([closing audit](closing-audit.md)).
 
 # Reviewed scope and ownership
 

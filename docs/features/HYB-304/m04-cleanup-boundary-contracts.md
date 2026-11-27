@@ -2,10 +2,14 @@
 type: ImplementationPlan
 title: HYB-304 cleanup and admission boundary contracts
 description: Verifies stale cleanup callbacks, pickup replacement indexes, revoked held-delivery actions and selection expiry after the existing admission hook.
-status: draft
+status: stable
 sources:
   - resource: ./m04-service-reference-contracts.md
 ---
+
+# Final status
+
+Checkpoint record. The work it names as remaining or not yet built was completed later in HYB-304, which closed on 2026-11-27 ([closing audit](closing-audit.md)).
 
 # Reviewed scope and ownership
 

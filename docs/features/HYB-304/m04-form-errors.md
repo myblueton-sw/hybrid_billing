@@ -2,12 +2,16 @@
 type: ValidationRecord
 title: HYB-304 M04 field errors and keyboard recovery
 description: Records field-specific validation, stable picker focus, rejected-edit preservation and correction of an Arabic credential ratio reversal.
-status: draft
+status: stable
 sources:
   - resource: ./m04-consumer.md
   - resource: ./m04-command-errors.md
   - resource: ./form-error-evidence.json
 ---
+
+# Final status
+
+Checkpoint record. The work it names as remaining or not yet built was completed later in HYB-304, which closed on 2026-11-27 ([closing audit](closing-audit.md)).
 
 # Reproductions and owned change
 

@@ -2,11 +2,15 @@
 type: ImplementationPlan
 title: HYB-304 command failure meaning and original uncertainty
 description: Corrects M04 command failure wording and safe references while preserving the unknown outcome of an original request after a refused retry.
-status: draft
+status: stable
 sources:
   - resource: ./m04-consumer.md
   - resource: ./m04-action-draft.md
 ---
+
+# Final status
+
+Checkpoint record. The work it names as remaining or not yet built was completed later in HYB-304, which closed on 2026-11-27 ([closing audit](closing-audit.md)).
 
 # Reproduction and owned scope
 

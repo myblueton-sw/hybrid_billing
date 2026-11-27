@@ -2,10 +2,14 @@
 type: VerificationReport
 title: HYB-304 malformed reservation charge preservation
 description: Verifies malformed internal charge inputs cannot evict genuine retained operations or corrupt exact session-record accounting.
-status: draft
+status: stable
 sources:
   - resource: ./m04-detail-clock-contracts.md
 ---
+
+# Final status
+
+Checkpoint record. The work it names as remaining or not yet built was completed later in HYB-304, which closed on 2026-11-27 ([closing audit](closing-audit.md)).
 
 # Reviewed scope and ownership
 

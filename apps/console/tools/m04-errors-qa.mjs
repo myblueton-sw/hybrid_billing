@@ -329,11 +329,21 @@ try {
             .getAttribute("dir"),
           locale === "ar" ? "rtl" : "ltr",
         );
+        const fits = await page
+          .waitForFunction(() => document.documentElement.scrollWidth <= innerWidth, null, { timeout: 3000 })
+          .then(() => true, () => false);
         assert.equal(
-          await page.evaluate(
-            () => document.documentElement.scrollWidth <= innerWidth,
-          ),
+          fits,
           true,
+          "wider than the viewport: " +
+            JSON.stringify(
+              await page.evaluate(() =>
+                [...document.querySelectorAll("body *")]
+                  .filter((e) => e.getBoundingClientRect().right > innerWidth + 1)
+                  .slice(0, 5)
+                  .map((e) => e.tagName + "." + String(e.className).split(" ")[0] + " " + Math.round(e.getBoundingClientRect().right)),
+              ),
+            ),
         );
         assert.equal(
           await page

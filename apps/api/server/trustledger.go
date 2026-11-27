@@ -212,7 +212,10 @@ func (s *Server) replayTrust() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	s.trust, _ = trustchange.New(run, s.clock)
+	s.trust, err = trustchange.New(run, s.clock)
+	if err != nil {
+		return false, err
+	}
 	st := decisionledger.Status{}
 	if s.ledger != nil {
 		st = s.ledger.Status()
@@ -220,7 +223,9 @@ func (s *Server) replayTrust() (bool, error) {
 	rec, ok := latestTrust(records, s.bootWorkspace)
 	older := ok && st.Isolation == decisionledger.IsolationMismatch && st.MarkerUsable && rec.Decision.Trust.NewEpoch>>32 < st.Generation
 	if !older {
-		_ = s.trust.Restore(views)
+		if err := s.trust.Restore(views); err != nil {
+			return false, fmt.Errorf("restore the trust changes of earlier runs: %w", err)
+		}
 	}
 	if ok && !older {
 		t := rec.Decision.Trust

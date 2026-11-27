@@ -378,11 +378,16 @@ func (r *Registry) List(workspace string) []View {
 func (r *Registry) Restore(views []View) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
+	seen := map[string]bool{}
 	for _, v := range views {
 		run, ok := RunOf(v.ID)
-		if !ok || run == r.run || r.changes[v.ID] != nil || v.State != StateActivated {
+		if !ok || run == r.run || r.changes[v.ID] != nil || seen[v.ID] || v.State != StateActivated {
 			return ErrInvalid
 		}
+		seen[v.ID] = true
+	}
+	for _, v := range views {
+		run, _ := RunOf(v.ID)
 		x := copyView(v)
 		x.Run, x.EarlierRun = run, true
 		r.changes[x.ID] = &x

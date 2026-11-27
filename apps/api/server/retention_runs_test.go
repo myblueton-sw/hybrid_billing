@@ -189,7 +189,7 @@ func TestRetentionTombstonesOfTheWindowArePagedNewestFirst(t *testing.T) {
 	decisions := retSection(f.retentionRead(root), "decisions")
 	section := decisions["tombstones"].(map[string]any)
 	rows := retRows(section)
-	if len(rows) != retentionShown || whole(section["total"]) != total || section["more"] != true || section["next"] != fmt.Sprint(rows[len(rows)-1]["sequence"]) {
+	if len(rows) != retentionShown || whole(section["total"]) != total || section["more"] != true || section["next"] != f.s.tombstoneCursor(fmt.Sprint(rows[len(rows)-1]["artifact"])) {
 		t.Fatalf("the main read lists the newest fifty and says where it stopped: %d rows of %v, next %v", len(rows), section["total"], section["next"])
 	}
 	path := "/api/v1/retention/tombstones"
@@ -197,7 +197,7 @@ func TestRetentionTombstonesOfTheWindowArePagedNewestFirst(t *testing.T) {
 	for next != "" {
 		page := f.readAs(root, path+"?limit=30&after="+next)
 		if page.status != 200 || whole(page.body["total"]) != total || whole(page.body["matching"]) != total || page.body["order"] != "newest_first" || whole(page.body["window"]) != retentionWindow ||
-			whole(page.body["watermark"]) != whole(decisions["watermark"]) {
+			page.body["watermark"] != nil || decisions["watermark"] != nil {
 			t.Fatalf("after %s: %s", next, page.raw[:min(len(page.raw), 300)])
 		}
 		for _, raw := range page.body["tombstones"].([]any) {
@@ -211,12 +211,26 @@ func TestRetentionTombstonesOfTheWindowArePagedNewestFirst(t *testing.T) {
 	if len(all) != total {
 		t.Fatalf("the pages hold %d of %d", len(all), total)
 	}
+	kept, _ := f.s.retention.Tombstones(0, int(f.s.retention.Watermark()))
+	expected := []string{}
+	for index := len(kept) - 1; index >= 0; index-- {
+		if f.s.ret.visibleArtifact(kept[index].Artifact, SampleWorkspace) {
+			expected = append(expected, kept[index].Artifact)
+		}
+	}
+	listed := []string{}
+	for _, row := range all {
+		listed = append(listed, fmt.Sprint(row["artifact"]))
+	}
+	if strings.Join(listed, " ") != strings.Join(expected, " ") {
+		t.Fatal("the records are not the workspace's, newest first, each once")
+	}
 	for index, row := range all {
 		if strings.HasPrefix(fmt.Sprint(row["artifact"]), "elsewhere-") || row["other_scope"] != false {
 			t.Fatalf("another workspace's record is listed: %v", row)
 		}
-		if index > 0 && whole(row["sequence"]) >= whole(all[index-1]["sequence"]) {
-			t.Fatalf("the records are not newest first at %d", index)
+		if row["sequence"] != nil {
+			t.Fatalf("a sequence is sent at %d", index)
 		}
 	}
 	whole50 := f.readAs(root, path)
@@ -249,7 +263,7 @@ func TestRetentionTombstonesOfTheWindowArePagedNewestFirst(t *testing.T) {
 	}
 	f.s.fault = nil
 	f.s.bootWorkspace = "elsewhere"
-	if out := f.readAs(root, path); out.status != 200 || len(out.body["tombstones"].([]any)) != 0 || whole(out.body["total"]) != 0 || whole(out.body["watermark"]) != 0 {
-		t.Errorf("another workspace: %d %v", out.status, out.body["watermark"])
+	if out := f.readAs(root, path); out.status != 200 || len(out.body["tombstones"].([]any)) != 0 || whole(out.body["total"]) != 0 || out.body["watermark"] != nil {
+		t.Errorf("another workspace: %d %s", out.status, out.raw)
 	}
 }

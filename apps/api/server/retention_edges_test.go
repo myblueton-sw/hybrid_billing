@@ -362,9 +362,9 @@ func TestRetentionRowsAreBounded(t *testing.T) {
 	hold := retHold(t, got, "bulk-hold")
 	sizes := fmt.Sprint(len(claim["artifacts"].([]any)), claim["total"], claim["more"], len(retRows(holds)), holds["total"], holds["more"], len(retRows(refs)), refs["total"],
 		refs["more"], len(retRows(deletion)), deletion["total"], deletion["more"], len(retRows(proposals)), proposals["total"], proposals["more"],
-		len(retRows(tomb)), tomb["total"], tomb["more"], retRows(tomb)[0]["sequence"], len(run["artifacts"].(map[string]any)["rows"].([]any)), run["artifacts"].(map[string]any)["total"],
-		run["artifacts"].(map[string]any)["more"], len(hold["outcomes"].([]any)), hold["outcomes_more"], retSection(got, "decisions")["watermark"])
-	if sizes != "50 1002 true 53 53 false 50 51 true 51 53 true 50 58 true 50 1000 true 1003 50 1001 true 50 true 1003" {
+		len(retRows(tomb)), tomb["total"], tomb["more"], retRows(tomb)[0]["sequence"] == nil, len(run["artifacts"].(map[string]any)["rows"].([]any)), run["artifacts"].(map[string]any)["total"],
+		run["artifacts"].(map[string]any)["more"], len(hold["outcomes"].([]any)), hold["outcomes_more"], retSection(got, "decisions")["watermark"] == nil)
+	if sizes != "50 1002 true 53 53 false 50 51 true 51 53 true 50 58 true 50 1000 true true 50 1001 true 50 true true" {
 		t.Errorf("sizes %s", sizes)
 	}
 	pages := 0
@@ -620,8 +620,8 @@ func TestRetentionLeaksNothing(t *testing.T) {
 			}
 		}
 	}
-	if !strings.Contains(raws["read"], `"workspace_count":2`) || !strings.Contains(raws["read"], `"watermark":3`) {
-		t.Error("the installation-wide figures are missing")
+	if !strings.Contains(raws["read"], `"workspace_count":2`) || strings.Contains(raws["read"], `"watermark"`) || strings.Contains(raws["read"], `"sequence"`) {
+		t.Error("the workspace count is missing, or the installation's deletion sequence is sent")
 	}
 }
 
@@ -639,7 +639,7 @@ func TestRetentionHiddenArtifactsInVisibleRuns(t *testing.T) {
 	deletion := retSection(got, "deletion")
 	tomb := retSection(got, "decisions")["tombstones"].(map[string]any)
 	if s := fmt.Sprint(deletion["total"], " ", tomb["total"], " ", retSection(got, "decisions")["watermark"], " ", retArtifact(t, got, "sample-source-5")["run"]); s !=
-		"2 2 3 <nil>" {
+		"2 2 <nil> <nil>" {
 		t.Errorf("hidden %s", s)
 	}
 	for _, word := range []string{"other-d", "other-x", "other-tenant", `"` + run + `"`, runTarget(run)} {

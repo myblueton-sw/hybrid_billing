@@ -147,6 +147,7 @@ type Server struct {
 	recovery         *recovery.Registry
 	rec              *recoveryStore
 	retention        *retention.Registry
+	tombstoneWindow  tombstoneIndex
 	ret              *retentionStore
 	trace            *releasetrace.Registry
 	perf             *perfgate.Registry

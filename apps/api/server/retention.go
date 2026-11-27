@@ -221,7 +221,6 @@ type retentionRestoreSection struct {
 }
 
 type retentionTombstoneRow struct {
-	Sequence   uint64           `json:"sequence"`
 	Artifact   string           `json:"artifact"`
 	Class      string           `json:"class"`
 	Run        *retentionRunRef `json:"run"`
@@ -239,7 +238,6 @@ type retentionTombstones struct {
 }
 
 type retentionDecisionsSection struct {
-	Watermark     uint64              `json:"watermark"`
 	Tombstones    retentionTombstones `json:"tombstones"`
 	Ledger        string              `json:"ledger"`
 	Epoch         string              `json:"epoch"`
@@ -715,18 +713,17 @@ func (f *retentionFacts) deletion() (retentionDeletionSection, error) {
 func (f *retentionFacts) decisions() (retentionDecisionsSection, error) {
 	section := retentionDecisionsSection{Tombstones: retentionTombstones{Window: retentionWindow, Rows: []retentionTombstoneRow{}}, Ledger: retentionLedger,
 		Epoch: notConnected, DurableCommit: notConnected, RestoreCheck: notConnected}
-	watermark, visible, err := f.windowTombstones()
+	visible, err := f.windowTombstones()
 	if err != nil {
 		return retentionDecisionsSection{}, err
 	}
-	section.Watermark = watermark
 	t := &section.Tombstones
 	t.Total = len(visible)
 	for _, x := range visible[:min(len(visible), retentionShown)] {
 		t.Rows = append(t.Rows, f.tombstoneRow(x))
 	}
 	if t.More = t.Total > len(t.Rows); t.More {
-		t.Next = keptCursor(t.Rows[len(t.Rows)-1].Sequence)
+		t.Next = f.s.tombstoneCursor(t.Rows[len(t.Rows)-1].Artifact)
 	}
 	return section, nil
 }

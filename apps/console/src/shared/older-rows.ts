@@ -19,8 +19,8 @@ export type OlderRows<T> = {
 };
 
 export function newestFirst<T extends Numbered>(first: T[], older: T[]): T[];
-export function newestFirst<T>(first: T[], older: T[], numberOf: (row: T) => number | null): T[];
-export function newestFirst<T>(first: T[], older: T[], numberOf: (row: T) => number | null = (row) => (row as Numbered).number): T[] {
+export function newestFirst<T>(first: T[], older: T[], numberOf: (row: T) => number | string | null): T[];
+export function newestFirst<T>(first: T[], older: T[], numberOf: (row: T) => number | string | null = (row) => (row as Numbered).number): T[] {
   const newest = [...first].reverse();
   const seen = new Set(newest.map(numberOf));
   return [...newest, ...older.filter((x) => numberOf(x) === null || !seen.has(numberOf(x)))];
@@ -31,7 +31,7 @@ export function useOlderRows<T extends Numbered>(
   facts: OlderFacts | null,
   first: T[] | null,
   read: ((after: string) => Promise<OlderPage<T>>) | undefined,
-  onRefused: (err: unknown) => boolean,
+  onRefused: (err: unknown) => boolean | "restart",
   recorded?: boolean,
 ): OlderRows<T>;
 export function useOlderRows<T>(
@@ -39,18 +39,18 @@ export function useOlderRows<T>(
   facts: OlderFacts | null,
   first: T[] | null,
   read: ((after: string) => Promise<OlderPage<T>>) | undefined,
-  onRefused: (err: unknown) => boolean,
+  onRefused: (err: unknown) => boolean | "restart",
   recorded: boolean,
-  numberOf: (row: T) => number | null,
+  numberOf: (row: T) => number | string | null,
 ): OlderRows<T>;
 export function useOlderRows<T>(
   key: string,
   facts: OlderFacts | null,
   first: T[] | null,
   read: ((after: string) => Promise<OlderPage<T>>) | undefined,
-  onRefused: (err: unknown) => boolean,
+  onRefused: (err: unknown) => boolean | "restart",
   recorded = true,
-  numberOf?: (row: T) => number | null,
+  numberOf?: (row: T) => number | string | null,
 ): OlderRows<T> {
   const blank = (): State<T> => ({ key, rows: [], next: null, total: null, status: "idle" });
   const [state, setState] = useState<State<T>>(blank);
@@ -86,7 +86,14 @@ export function useOlderRows<T>(
       })
       .catch((err: unknown) => {
         if (mine !== token.current) return;
-        setState({ ...current, status: onRefused(err) ? "idle" : "failed" });
+        const outcome = onRefused(err);
+        if (outcome === "restart") {
+          loaded.current = { key, rows: 0 };
+          setState(blank());
+          setReset(true);
+          return;
+        }
+        setState({ ...current, status: outcome ? "idle" : "failed" });
       });
   };
   const cut = rows !== null && facts !== null && total > (first?.length ?? 0);

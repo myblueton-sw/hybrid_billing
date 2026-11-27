@@ -1,3 +1,4 @@
+import { pageLimitOf } from "../../../../service/query-settings";
 import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { diagnosticCopy } from "../../../../service/diagnostic-copy";
 import type { Locale } from "../../../../shared/types";
@@ -43,8 +44,8 @@ function describeFor(kind: "grant" | "revoke" | "load") {
   };
 }
 
-function GrantForm({ l, api, page, self, onDone, onCancel, onReload, stepping }: {
-  l: Locale; api: AdminClient; page: AccessPage; self: string; onDone: (login: string) => void; onCancel: () => void; onReload: () => void; stepping: boolean;
+function GrantForm({ l, api, page, self, onDone, onCancel, onReload, onRefresh, stepping }: {
+  l: Locale; api: AdminClient; page: AccessPage; self: string; onDone: (login: string) => void; onCancel: () => void; onReload: () => void; onRefresh: () => void; stepping: boolean;
 }) {
   const capabilities = grantCapabilities(page);
   const [capability, setCapability] = useState(() => capabilities.length === 1 ? capabilityKey(capabilities[0]) : "");
@@ -125,7 +126,7 @@ function GrantForm({ l, api, page, self, onDone, onCancel, onReload, stepping }:
       {paused && <p className="live-strong" id="access-paused">{q.additionsPaused(l)}</p>}
       {problems.length > 0 && <Summary locale={l} title={c.check(l)} problems={problems} focusKey={focusKey} />}
       {error !== null && <FailureBox l={l} error={error} focusKey={focusKey} describe={describeFor("grant")} />}
-      <PersonPicker l={l} api={api} id="access-person" self={self} chosen={person} error={field("access-person") ?? ""} disabled={busy}
+      <PersonPicker l={l} api={api} id="access-person" self={self} pageLimit={pageLimitOf(page.query_settings)} onRefresh={onRefresh} chosen={person} error={field("access-person") ?? ""} disabled={busy}
         flagLine={pc.requestUnconfirmed(l)} onChoose={(next) => { tried.current = attempt(); setPerson(next); }} />
       <div className="service-field">
         <label htmlFor="access-capability">{a.access(l)}</label>
@@ -261,7 +262,7 @@ function Revoke({ l, api, page, target, onDone, onCancel, onReload }: {
   );
 }
 
-function Effects({ l, api, page }: { l: Locale; api: AdminClient; page: AccessPage }) {
+function Effects({ l, api, page, onRefresh }: { l: Locale; api: AdminClient; page: AccessPage; onRefresh: () => void }) {
   const kinds = Array.from(new Set(page.catalog.map((x) => x.kind)));
   const [person, setPerson] = useState<AccessSubject | null>(null);
   const subject = person?.user_id ?? "";
@@ -293,7 +294,7 @@ function Effects({ l, api, page }: { l: Locale; api: AdminClient; page: AccessPa
   return (
     <div className="live-users live-effects" data-live="effects">
       <form className="live-effects-form" onSubmit={run} noValidate>
-        <PersonPicker l={l} api={api} id="effect-person" self="" chosen={person} error="" flagLine={v.previewUnconfirmed(l)}
+        <PersonPicker l={l} api={api} id="effect-person" self="" pageLimit={pageLimitOf(page.query_settings)} onRefresh={onRefresh} chosen={person} error="" flagLine={v.previewUnconfirmed(l)}
           onChoose={(next) => { order.current.next(); setPerson(next); setResult(null); setState((x) => (x === "start" ? "start" : "cleared")); }} />
         <div className="service-field">
           {kinds.length > 1 ? (
@@ -403,20 +404,27 @@ export default function LiveAccess({ locale: l, view, session, onSignOut, onView
     setFocusTo("");
   }, [focusTo]);
   const say = (text: string, at: "list" | "requests" = "list") => { setNotice(text); setNoticeAt(at); setAnnounce(""); setTimeout(() => setAnnounce(text), 50); };
-  const load = useCallback(() => {
+  const read = useCallback((listsAfter: boolean) => {
     const n = order.current.next();
-    setListed((x) => x + 1);
+    if (!listsAfter) setListed((x) => x + 1);
     setStatus("loading");
     api.access().then(
-      (got) => { if (order.current.latest(n)) { setPage(got); setStatus("ready"); setError(null); } },
-      (e) => { if (order.current.latest(n)) { if (e instanceof AdminError && e.failure === "invalid") setPage(null); setError(e); setStatus("error"); } },
+      (got) => { if (order.current.latest(n)) { setPage(got); setStatus("ready"); setError(null); if (listsAfter) setListed((x) => x + 1); } },
+      (e) => {
+        if (!order.current.latest(n)) return;
+        if (e instanceof AdminError && e.failure === "invalid") setPage(null);
+        setError(e); setStatus("error");
+        if (listsAfter) setListed((x) => x + 1);
+      },
     );
   }, [api]);
+  const load = useCallback(() => read(false), [read]);
   useEffect(() => { if (view === "grants" || view === "effects") load(); }, [load, view]);
   useEffect(() => { setMode(null); setNotice(""); }, [view]);
   const toGrants = { label: a.goGrants(l), go: () => onView("grants") };
   if (view === "roles") return <Unavailable title={a.rolesTitle(l)} body={a.rolesBody(l)} action={toGrants} />;
   if (view === "support") return <Unavailable title={a.supportTitle(l)} body={a.supportBody(l)} action={toGrants} />;
+  const refresh = () => read(true);
   if (status === "error" && error instanceof AdminError && error.failure === "denied") {
     return (
       <div className="live-users"><section className="live-unavailable" aria-labelledby="access-denied"><h2 id="access-denied">{a.deniedTitle(l)}</h2><p>{a.denied(l)}</p></section></div>
@@ -434,7 +442,7 @@ export default function LiveAccess({ locale: l, view, session, onSignOut, onView
   );
   if (view === "effects") {
     if (!page) return <div className="live-users">{loadError || <p className="live-empty">{a.loading(l)}</p>}</div>;
-    return <>{loadError && <div className="live-users">{loadError}</div>}<Effects l={l} api={api} page={page} /></>;
+    return <>{loadError && <div className="live-users">{loadError}</div>}<Effects l={l} api={api} page={page} onRefresh={refresh} /></>;
   }
   const self = session.user;
   const selected = mode?.kind === "revoke" ? mode.target.id : mode?.kind === "decide" ? mode.row.id : "";
@@ -456,7 +464,7 @@ export default function LiveAccess({ locale: l, view, session, onSignOut, onView
       onCancel={() => { setMode(null); setFocusTo(back); }}
       onDone={(message) => { say(message, mode.target.kind === "grant" ? "requests" : "list"); setMode(null); setFormKey((k) => k + 1); load(); setFocusTo(mode.target.kind === "grant" ? "#access-requests" : "#access-revocations"); }} />;
   } else if (page && grantCapabilities(page).length > 0 && (wide || mode?.kind === "form")) {
-    panel = <GrantForm key={formKey} l={l} api={api} page={page} self={self} stepping={!wide} onReload={load}
+    panel = <GrantForm key={formKey} l={l} api={api} page={page} self={self} stepping={!wide} onReload={load} onRefresh={refresh}
       onCancel={() => { setMode(null); setFocusTo(".access-grant-open"); }}
       onDone={() => { say(q.requestSent(l), "requests"); setMode(null); setFormKey((k) => k + 1); load(); setFocusTo("#access-requests"); }} />;
   }
@@ -483,11 +491,12 @@ export default function LiveAccess({ locale: l, view, session, onSignOut, onView
             {status === "loading" && !page && <p role="status" className="live-meta">{a.loading(l)}</p>}
             {loadError}
             <PermissionList l={l} api={api} self={self} params={params} onParams={onParams} generation={listed} selected={selected} onSignOut={onSignOut}
+              pageLimit={page ? pageLimitOf(page.query_settings) : null} settled={page !== null || status !== "loading"} onRefresh={refresh}
               actions={page ? [...new Set(page.catalog.map((x) => x.action))] : []} onRevokeGrant={revokeGrant} onRevokeDelegation={revokeDelegation} />
           </section>
-          {page && <RequestSection l={l} api={api} generation={listed} startedAt={page.started_at} settings={page.settings} selected={selected}
+          {page && <RequestSection l={l} api={api} generation={listed} pageLimit={pageLimitOf(page.query_settings)} onRefresh={refresh} startedAt={page.started_at} settings={page.settings} selected={selected}
             notice={noticeAt === "requests" ? notice : ""} onAct={decide} onSignOut={onSignOut} />}
-          {page && <RevocationSection l={l} api={api} generation={listed} ledger={page.ledger} onSignOut={onSignOut} />}
+          {page && <RevocationSection l={l} api={api} generation={listed} pageLimit={pageLimitOf(page.query_settings)} onRefresh={refresh} ledger={page.ledger} onSignOut={onSignOut} />}
         </div>
       )}
       {(wide || stepping) && panel && (

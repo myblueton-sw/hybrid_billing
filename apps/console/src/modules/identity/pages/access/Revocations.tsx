@@ -1,3 +1,4 @@
+import { sized } from "../../../../service/query-settings";
 import type { ReactNode } from "react";
 import type { Locale } from "../../../../shared/types";
 import type { AdminClient, LedgerStatus } from "../../../../service/admin";
@@ -99,8 +100,10 @@ export function RevocationRecords({ l, rows }: { l: Locale; rows: ListedRevocati
   return <ol className="access-records">{rows.map((r) => <Record key={r.id} l={l} r={r} />)}</ol>;
 }
 
-export function RevocationSection({ l, api, generation, ledger, onSignOut }: { l: Locale; api: AdminClient; generation: number; ledger: LedgerStatus; onSignOut: () => void }) {
-  const list = usePagedList((after) => api.accessRevocations({ limit: 10, ...(after ? { after } : {}) }), "revocations", generation);
+export function RevocationSection({ l, api, generation, pageLimit, ledger, onSignOut, onRefresh }: {
+  l: Locale; api: AdminClient; generation: number; pageLimit: number | null; ledger: LedgerStatus; onSignOut: () => void; onRefresh: () => void;
+}) {
+  const list = usePagedList((after) => api.accessRevocations({ ...sized(10, pageLimit), ...(after ? { after } : {}) }), "revocations/" + String(pageLimit), generation);
   const page = list.read.state === "ready" ? list.read.page : null;
   return (
     <section aria-labelledby="access-revocations" className="access-revocation-section">
@@ -111,7 +114,7 @@ export function RevocationSection({ l, api, generation, ledger, onSignOut }: { l
       <p className="live-impact">{v.lead(l)}</p>
       <LedgerLine l={l} ledger={ledger} />
       {list.read.state === "loading" && <p role="status" className="live-meta">{a.loading(l)}</p>}
-      <ListFailure l={l} title={v.revocationsFailed(l)} list={list} onSignOut={onSignOut} />
+      <ListFailure l={l} title={v.revocationsFailed(l)} list={list} onSignOut={onSignOut} onRefresh={onRefresh} />
       {page && (page.rows.length === 0 ? <p className="live-empty">{page.next ? qcopy(l, "incomplete") : v.none(l)}</p> : <RevocationRecords l={l} rows={page.rows} />)}
       {page && <Reference l={l} page={page} list={list} />}
       <Paging l={l} label={v.title(l)} list={list} />

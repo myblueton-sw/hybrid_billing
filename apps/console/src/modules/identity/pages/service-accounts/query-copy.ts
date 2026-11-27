@@ -66,6 +66,11 @@ const terms = {
     "현재 접근 권한과 조회 맥락에서는 이 데이터를 확인할 수 없습니다.",
     "هذه البيانات غير متاحة ضمن صلاحيات الوصول والسياق الحاليين.",
   ],
+  readSizeRefused: [
+    "This page size is above this installation's current limit for lists. Reading again uses the current limit.",
+    "이 페이지 크기가 설치 환경의 현재 목록 한도를 넘습니다. 다시 불러오면 현재 한도를 적용합니다.",
+    "حجم الصفحة هذا أكبر من الحدّ الحالي للقوائم في هذا التثبيت. تستخدم إعادة التحميل الحدّ الحالي.",
+  ],
   readQueryChanged: [
     "This query or continuation is no longer valid. Start from the first page or reset the filters.",
     "이 조회 조건 또는 이어보기 정보는 더 이상 유효하지 않습니다. 첫 페이지부터 조회하거나 필터를 초기화하세요.",

@@ -1,3 +1,5 @@
+import { sized, sizeRefused } from "../../../../service/query-settings";
+import { qcopy } from "../service-accounts/query-copy";
 import { useEffect, useRef, useState } from "react";
 import type { Locale } from "../../../../shared/types";
 import type { AdminClient } from "../../../../service/admin";
@@ -5,12 +7,13 @@ import type { AccessSubject, SubjectPage } from "../../../../service/access-list
 import { c } from "../../../../service/copy";
 import { a } from "./live-copy";
 import { pc } from "./person-copy";
+import { w } from "../users/live-copy";
 
 const pageSize = 25;
-type Read = { state: "searching" } | { state: "failed"; term: string } | { state: "ready"; term: string; page: SubjectPage };
+type Read = { state: "searching" } | { state: "failed"; term: string; error: unknown } | { state: "ready"; term: string; page: SubjectPage };
 
-export function PersonPicker({ l, api, id, self, chosen, error, disabled, flagLine, onChoose }: {
-  l: Locale; api: AdminClient; id: string; self: string; chosen: AccessSubject | null; error: string; disabled?: boolean; flagLine: string;
+export function PersonPicker({ l, api, id, self, pageLimit, onRefresh, chosen, error, disabled, flagLine, onChoose }: {
+  l: Locale; api: AdminClient; id: string; self: string; pageLimit: number | null; onRefresh: () => void; chosen: AccessSubject | null; error: string; disabled?: boolean; flagLine: string;
   onChoose: (person: AccessSubject) => void;
 }) {
   const [draft, setDraft] = useState("");
@@ -26,12 +29,12 @@ export function PersonPicker({ l, api, id, self, chosen, error, disabled, flagLi
     if (!open) return;
     let active = true;
     setRead({ state: "searching" });
-    api.accessSubjects({ limit: pageSize, ...(term ? { q: term } : {}) }).then(
+    api.accessSubjects({ ...sized(pageSize, pageLimit), ...(term ? { q: term } : {}) }).then(
       (page) => { if (active) setRead({ state: "ready", term, page }); },
-      () => { if (active) setRead({ state: "failed", term }); },
+      (failure: unknown) => { if (active) setRead({ state: "failed", term, error: failure }); },
     );
     return () => { active = false; };
-  }, [api, term, tries, open]);
+  }, [api, term, tries, open, pageLimit]);
   useEffect(() => {
     if (focus.current === "toggle") toggle.current?.focus();
     if (focus.current === "input") input.current?.focus();
@@ -44,7 +47,7 @@ export function PersonPicker({ l, api, id, self, chosen, error, disabled, flagLi
   const nobody = !!page && term === "" && rows.length === 0 && !page.next;
   const status = read.state === "searching" ? pc.searching(l) : !page ? ""
     : rows.length === 0 ? (term === "" ? "" : page.rows.length > 0 ? pc.onlyYou(l, term) : pc.noMatch(l, term))
-      : page.next ? (term === "" ? pc.firstPage(l, pageSize) : pc.refine(l)) : pc.count(l, rows.length);
+      : page.next ? (term === "" ? pc.firstPage(l, page.query.limit) : pc.refine(l)) : pc.count(l, rows.length);
   const described = [id + "-hint", id + "-status", error ? id + "-error" : ""].filter(Boolean).join(" ");
   const name = (person: AccessSubject) => (
     <>
@@ -77,8 +80,10 @@ export function PersonPicker({ l, api, id, self, chosen, error, disabled, flagLi
       {open && <p className="live-meta person-status" role="status" id={id + "-status"}>{status}</p>}
       {open && read.state === "failed" && (
         <div className="live-error person-failed" role="alert">
-          <p>{pc.failed(l)}{chosen ? " " + pc.kept(l) : ""}</p>
-          <button type="button" className="live-secondary" onClick={() => { focus.current = "input"; setTries((n) => n + 1); }}>{c.tryAgain(l)}</button>
+          <p>{sizeRefused(read.error) ? qcopy(l, "readSizeRefused") : pc.failed(l)}{chosen ? " " + pc.kept(l) : ""}</p>
+          {sizeRefused(read.error)
+            ? <button type="button" className="live-secondary" onClick={() => { focus.current = "input"; onRefresh(); }}>{w.reload(l)}</button>
+            : <button type="button" className="live-secondary" onClick={() => { focus.current = "input"; setTries((n) => n + 1); }}>{c.tryAgain(l)}</button>}
         </div>
       )}
       {open && rows.length > 0 && (

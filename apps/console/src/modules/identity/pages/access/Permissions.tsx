@@ -1,3 +1,4 @@
+import { sizeFor, sizeRefused } from "../../../../service/query-settings";
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import type { Locale } from "../../../../shared/types";
 import { AdminError, type AdminClient } from "../../../../service/admin";
@@ -22,9 +23,17 @@ export const pageSize = 50;
 
 export type PermissionFilters = { valid: true; query: PermissionQuery; applied: number; draft: Record<Field, string> } | { valid: false };
 
-export function permissionFilters(params: URLSearchParams): PermissionFilters {
+export type IssuedCursor = { after: string; size: number | undefined } | null;
+
+export function withoutStaleCursor(filters: PermissionFilters, issued: IssuedCursor, size: number | undefined): { filters: PermissionFilters; stale: boolean } {
+  if (!filters.valid || !filters.query.after || !issued || issued.after !== filters.query.after || issued.size === size) return { filters, stale: false };
+  const { after: _dropped, ...query } = filters.query;
+  return { filters: { ...filters, query }, stale: true };
+}
+
+export function permissionFilters(params: URLSearchParams, size: number | undefined): PermissionFilters {
   const draft = Object.fromEntries(fields.map((f) => [f, ""])) as Record<Field, string>;
-  const query: PermissionQuery = { limit: pageSize };
+  const query: PermissionQuery = size === undefined ? {} : { limit: size };
   let applied = 0;
   for (const [name, value] of params) {
     if (!name.startsWith(prefix)) continue;
@@ -60,13 +69,13 @@ export function permissionFilters(params: URLSearchParams): PermissionFilters {
 
 type Read = { state: "loading" } | { state: "error"; error: unknown } | { state: "ready"; page: PermissionPage };
 
-export function usePermissions(api: AdminClient, filters: PermissionFilters, generation: number): { read: Read; reload: () => void } {
+export function usePermissions(api: AdminClient, filters: PermissionFilters, generation: number, settled = true): { read: Read; reload: () => void } {
   const key = filters.valid ? JSON.stringify(filters.query) : "";
   const [local, setLocal] = useState(0);
-  const token = useMemo(() => ({}), [api, key, generation, local]);
+  const token = useMemo(() => ({}), [api, key, generation, local, settled]);
   const [result, setResult] = useState<{ token: object; read: Read } | null>(null);
   useEffect(() => {
-    if (!filters.valid) return;
+    if (!filters.valid || !settled) return;
     let active = true;
     api.accessPermissions(filters.query).then(
       (page) => { if (active) setResult({ token, read: { state: "ready", page } }); },
@@ -78,6 +87,7 @@ export function usePermissions(api: AdminClient, filters: PermissionFilters, gen
 }
 
 export function readFailure(l: Locale, error: unknown): string {
+  if (sizeRefused(error)) return qcopy(l, "readSizeRefused");
   if (error instanceof AdminError && error.failure === "denied") return qcopy(l, "readDenied");
   const changed = error instanceof AdminError && (error.code === "revision_conflict" || error.code === "invalid_request");
   return qcopy(l, changed ? "readQueryChanged" : "readUnavailable");
@@ -225,23 +235,33 @@ function Rows({ l, rows, self, selected, onRevokeGrant, onRevokeDelegation }: {
   );
 }
 
-export function PermissionList({ l, api, self, params, onParams, generation, actions, selected, onSignOut, onRevokeGrant, onRevokeDelegation }: {
-  l: Locale; api: AdminClient; self: string; params: URLSearchParams; onParams: Change; generation: number; actions: string[]; selected: string; onSignOut: () => void;
+export function PermissionList({ l, api, self, params, onParams, generation, pageLimit, settled, onRefresh, actions, selected, onSignOut, onRevokeGrant, onRevokeDelegation }: {
+  l: Locale; api: AdminClient; self: string; params: URLSearchParams; onParams: Change; generation: number; pageLimit: number | null; settled: boolean; onRefresh: () => void;
+  actions: string[]; selected: string; onSignOut: () => void;
   onRevokeGrant: (row: Permission) => void; onRevokeDelegation: (row: Permission) => void;
 }) {
-  const filters = useMemo(() => permissionFilters(params), [params]);
-  const { read, reload } = usePermissions(api, filters, generation);
+  const sent = sizeFor(pageSize, pageLimit);
+  const issued = useRef<IssuedCursor>(null);
+  const base = useMemo(() => permissionFilters(params, sent), [params, sent]);
+  const { filters, stale } = withoutStaleCursor(base, issued.current, sent);
+  const { read, reload } = usePermissions(api, filters, generation, settled);
   const [trail] = useState(cursorTrail);
+  useEffect(() => {
+    if (!stale) return;
+    issued.current = null;
+    trail.clear();
+    onParams({ [prefix + "after"]: null });
+  }, [stale, trail, onParams]);
   const count = useRef<HTMLDivElement>(null);
   const wantFocus = useRef(false);
-  const key = filters.valid ? JSON.stringify({ ...filters.query, after: undefined }) : "";
+  const key = filters.valid ? JSON.stringify({ ...filters.query, after: undefined, limit: undefined }) : "";
   useEffect(() => {
     if (read.state !== "loading" && wantFocus.current) { wantFocus.current = false; (count.current ?? document.querySelector<HTMLElement>(".access-list-failure"))?.focus(); }
   }, [read]);
   const clear = () => onParams(Object.fromEntries([...fields, "after"].map((f) => [prefix + f, null])), true);
   if (!filters.valid)
     return <section className="access-list-body"><p role="alert">{p.invalidFilters(l)}</p><button type="button" className="live-secondary" onClick={clear}>{qcopy(l, "reset")}</button></section>;
-  const go = (after: string | null) => { wantFocus.current = true; onParams({ [prefix + "after"]: after }, true); };
+  const go = (after: string | null) => { wantFocus.current = true; issued.current = after ? { after, size: sent } : null; onParams({ [prefix + "after"]: after }, true); };
   const first = !filters.query.after;
   return (
     <div className="access-list-body">
@@ -254,8 +274,8 @@ export function PermissionList({ l, api, self, params, onParams, generation, act
           <div className="live-buttons">
             {read.error instanceof AdminError && read.error.failure === "unauthenticated"
               ? <button type="button" className="live-secondary" onClick={onSignOut}>{w.signInAgain(l)}</button>
-              : <button type="button" className="live-secondary" onClick={reload}>{w.reload(l)}</button>}
-            <button type="button" className="live-secondary" onClick={() => { trail.clear(); go(null); }}>{qcopy(l, "first")}</button>
+              : <button type="button" className="live-secondary" onClick={sizeRefused(read.error) ? onRefresh : reload}>{w.reload(l)}</button>}
+            {!sizeRefused(read.error) && <button type="button" className="live-secondary" onClick={() => { trail.clear(); go(null); }}>{qcopy(l, "first")}</button>}
           </div>
         </section>
       )}

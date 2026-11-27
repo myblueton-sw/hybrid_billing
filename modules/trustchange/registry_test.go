@@ -262,6 +262,22 @@ func TestRestorePrunesInOneCall(t *testing.T) {
 	}
 }
 
+func TestRestoreRefusesTheWholeListWhenOneViewIsInvalid(t *testing.T) {
+	f := setup(t)
+	before := f.r.version
+	for name, views := range map[string][]View{
+		"second invalid":   {{ID: "trust-11111111-1", Workspace: "w1", State: StateActivated}, {ID: "x", State: StateActivated}},
+		"repeated in list": {{ID: "trust-11111111-2", Workspace: "w1", State: StateActivated}, {ID: "trust-11111111-2", Workspace: "w1", State: StateActivated}},
+	} {
+		if err := f.r.Restore(views); err != ErrInvalid {
+			t.Errorf("%s: %v", name, err)
+		}
+		if len(f.r.order) != 0 || len(f.r.changes) != 0 || f.r.version != before {
+			t.Errorf("%s: kept %d, version %d", name, len(f.r.order), f.r.version)
+		}
+	}
+}
+
 func itoa(n int) string {
 	out := ""
 	for ; n > 0; n /= 10 {

@@ -15,14 +15,14 @@ export function DecisionsView(shared: Shared) {
   const older = useOlderRows<Tombstone>(page.revision, facts, t.rows, shared.api.retentionTombstones, (e) => {
     if (e instanceof AdminError && e.failure === "denied") { void shared.onReload(); return true; }
     if (e instanceof AdminError && e.failure === "unauthenticated") { shared.onSignedOut(); return true; }
+    if (e instanceof AdminError && e.code === "revision_conflict") { void shared.onReload(); return "restart"; }
     return false;
-  }, false, (x) => x.sequence);
+  }, false, (x) => x.artifact || null);
   const listed = facts === null ? t.rows : older.rows;
   const failed = older.status === "failed";
   return (
     <>
-      <dl className="p04-facts p04-facts-5 p04-decision-facts">
-        <div><dt>{k.factWatermark(l)}</dt><dd><Num l={l} n={d.watermark} /></dd></div>
+      <dl className="p04-facts p04-facts-4 p04-decision-facts">
         <div><dt>{k.factLedger(l)}</dt><dd><Code l={l} value={d.ledger} say={k.ledger} /></dd></div>
         <div><dt>{k.factEpoch(l)}</dt><dd><Code l={l} value={d.epoch} say={k.connection} /></dd></div>
         <div><dt>{k.factDurable(l)}</dt><dd><Code l={l} value={d.durable_commit} say={k.connection} /></dd></div>
@@ -45,10 +45,9 @@ export function DecisionsView(shared: Shared) {
           <div className="live-table">
             <table className="p04-table p04-records-table">
               <caption className="visually-hidden">{k.recordsCaption(l)}</caption>
-              <colgroup><col className="p04-c10" /><col className="p04-c24" /><col className="p04-c18" /><col className="p04-c16" /><col className="p04-c16" /><col className="p04-c16" /></colgroup>
+              <colgroup><col className="p04-c28" /><col className="p04-c18" /><col className="p04-c18" /><col className="p04-c18" /><col className="p04-c18" /></colgroup>
               <thead>
                 <tr>
-                  <th scope="col" className="p04-num">{k.colSequence(l)}</th>
                   <th scope="col">{k.colItem(l)}</th>
                   <th scope="col">{k.colClass(l)}</th>
                   <th scope="col">{k.colRun(l)}</th>
@@ -61,9 +60,8 @@ export function DecisionsView(shared: Shared) {
                   const n = runNumber(x.run);
                   const found = x.artifact ? artifactOf(page, x.artifact) : undefined;
                   return (
-                    <tr key={x.sequence ?? "s" + i} id={x.sequence === null ? undefined : rowId("seq", String(x.sequence))}>
-                      <td className="p04-first p04-num"><Num l={l} n={x.sequence} /></td>
-                      <td data-label={k.colItem(l)}>
+                    <tr key={x.artifact || "s" + i} id={x.artifact ? rowId("deleted", x.artifact) : undefined}>
+                      <td className="p04-first" data-label={k.colItem(l)}>
                         {!x.artifact ? k.unknown(l) : found ? <a className="p04-link" href={href(l, "expiry", { class: found.group.class, artifact: x.artifact })}>{ltr(x.artifact)}</a> : ltr(x.artifact)}
                       </td>
                       <td data-label={k.colClass(l)}><Code l={l} value={x.class} say={k.className} /></td>
@@ -81,7 +79,6 @@ export function DecisionsView(shared: Shared) {
             </table>
           </div>
         )}
-        <p className="p04-small live-quiet">{k.skipNote(l)}</p>
         {facts !== null && older.more && (
           <div className="p04-held-more p04-records-more">
             {failed && <p role="alert">{k.recordsFailed(l)}</p>}

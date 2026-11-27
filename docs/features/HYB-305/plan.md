@@ -469,6 +469,8 @@ Verification: the whole server package passed (before the copy and document corr
 
 # Increment 4g, the deletion records of P04 (2026-11-25)
 
+Superseded in part by [HYB-397](../HYB-397/design.md) (2026-11-27): the reads no longer send the sequence or the watermark, the window is the workspace's own last 1,000 records, and the cursor is a signed artifact token.
+
 Facts (main b0be51b): the module keeps one deletion record (tombstone) for each deleted artifact, numbered in one sequence for the whole installation. A record is written when a worker reports a deletion; no worker is connected, so a running service has the seed's two. The retention read looks only at the last 1,000 records of the installation (the window), keeps those whose artifact the workspace may see, and listed the newest 50 of them with their count and `more`; the screen says that only the window is scanned. Up to 950 records of the workspace inside the window could not be reached.
 
 Built:

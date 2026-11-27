@@ -342,15 +342,15 @@ export const plurals = {
     ],
   },
   window: {
-    en: ["Only the last deletion record of the installation is scanned; {t} of them are in this workspace.", "Only the last {n} deletion records of the installation are scanned; {t} of them are in this workspace."],
-    ko: "설치의 최근 삭제 기록 {n}건만 조회하며, 그중 {t}건이 이 업무 공간의 기록입니다.",
+    en: ["Up to the last deletion record of this workspace is listed; it has {t}.", "Up to the last {n} deletion records of this workspace are listed; it has {t}."],
+    ko: "이 업무 공간의 최근 삭제 기록을 최대 {n}건까지 보여 줍니다. 현재 {t}건입니다.",
     ar: [
-      "لا يُفحص أي سجل حذف للتثبيت؛ ومنها {t} في مساحة العمل هذه.",
-      "يُفحص آخر سجل حذف للتثبيت فقط؛ ومنه {t} في مساحة العمل هذه.",
-      "يُفحص آخر سجلَّي حذف للتثبيت فقط؛ منهما {t} في مساحة العمل هذه.",
-      "تُفحص آخر {n} سجلات حذف للتثبيت فقط؛ منها {t} في مساحة العمل هذه.",
-      "يُفحص آخر {n} سجلًا للحذف في التثبيت فقط؛ منها {t} في مساحة العمل هذه.",
-      "يُفحص آخر {n} سجل حذف للتثبيت فقط؛ منها {t} في مساحة العمل هذه.",
+      "لا يُعرض أي سجل حذف لمساحة العمل هذه؛ عددها حاليًا {t}.",
+      "يُعرض آخر سجل حذف لمساحة العمل هذه فقط؛ عددها حاليًا {t}.",
+      "يُعرض آخر سجلَّي حذف لمساحة العمل هذه كحد أقصى؛ عددها حاليًا {t}.",
+      "تُعرض آخر {n} سجلات حذف لمساحة العمل هذه كحد أقصى؛ عددها حاليًا {t}.",
+      "يُعرض آخر {n} سجلًا للحذف لمساحة العمل هذه كحد أقصى؛ عددها حاليًا {t}.",
+      "يُعرض آخر {n} سجل حذف لمساحة العمل هذه كحد أقصى؛ عددها حاليًا {t}.",
     ],
   },
 } satisfies Record<string, Plural>;

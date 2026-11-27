@@ -118,9 +118,8 @@ export type DeletionSection = {
   propose_plan: string;
 };
 
-export type Tombstone = { sequence: number | null; artifact: string; class: string; run: RunRef; other_scope: boolean | null; at: string; decision: string };
+export type Tombstone = { artifact: string; class: string; run: RunRef; other_scope: boolean | null; at: string; decision: string };
 export type DecisionsSection = {
-  watermark: number | null;
   tombstones: { window: number | null; total: number | null; more: boolean | null; next: string | null; rows: Tombstone[] | null };
   ledger: string;
   epoch: string;
@@ -358,7 +357,6 @@ export function decisionsOf(v: unknown): DecisionsSection {
   const r = obj(v);
   const t = obj(r.tombstones);
   return {
-    watermark: count(r.watermark),
     tombstones: {
       window: count(t.window),
       total: count(t.total),
@@ -501,7 +499,7 @@ export function referencesPageOf(body: Raw): { rows: Reference[]; next: string; 
 }
 
 export function tombstoneOf(x: Raw): Tombstone {
-  return { sequence: count(x.sequence), artifact: str(x.artifact), class: str(x.class), run: runRefOf(x.run), other_scope: flag(x.other_scope), at: str(x.at), decision: str(x.decision) };
+  return { artifact: str(x.artifact), class: str(x.class), run: runRefOf(x.run), other_scope: flag(x.other_scope), at: str(x.at), decision: str(x.decision) };
 }
 
 export function tombstonesPageOf(body: Raw): { rows: Tombstone[]; next: string; total: number } | null {

@@ -78,7 +78,7 @@ test("hardened parsers: wrong types, unsafe and negative integers, missing array
   assert.equal(page.policies, null);
   assert.equal(page.holds.rows, null);
   assert.equal(page.proposals.rows, null);
-  assert.equal(page.decisions.watermark, null);
+  assert.equal("watermark" in page.decisions, false);
 });
 
 test("summaries take only the member of their kind, and impact_now distinguishes null from invalid", () => {
@@ -260,21 +260,21 @@ test("the deletion records' cursor and the records read are read strictly", asyn
   const { newestFirst } = await import("../shared/older-rows");
   const { AdminError, adminClient } = await import("./admin");
   for (const bad of [{}, { tombstones: [], next: "" }, { tombstones: "x", next: "", total: 0 }, { tombstones: [], next: 4, total: 0 }]) assert.equal(tombstonesPageOf(bad), null, JSON.stringify(bad));
-  const page = tombstonesPageOf({ tombstones: [{ sequence: 70, artifact: "a-70", class: "claim", run: null, other_scope: false }, null, "x"], next: "21", total: 120 });
-  assert.deepEqual([page?.rows.length, page?.rows[0].sequence, page?.rows[0].artifact, page?.next, page?.total], [1, 70, "a-70", "21", 120]);
-  const got = retentionOf({ state: "configured", decisions: { watermark: 9, tombstones: { window: 1000, total: 3, more: true, next: "7", rows: [{ sequence: 9, artifact: "a" }] } } });
-  assert.deepEqual([got.decisions.tombstones.next, got.decisions.tombstones.rows?.[0].sequence], ["7", 9]);
+  const page = tombstonesPageOf({ tombstones: [{ artifact: "a-70", class: "claim", run: null, other_scope: false }, null, "x"], next: "tok.sig", total: 120 });
+  assert.deepEqual([page?.rows.length, page?.rows[0].artifact, page?.next, page?.total, "sequence" in (page?.rows[0] ?? {})], [1, "a-70", "tok.sig", 120, false]);
+  const got = retentionOf({ state: "configured", decisions: { watermark: 9, tombstones: { window: 1000, total: 3, more: true, next: "tok.sig", rows: [{ sequence: 9, artifact: "a" }] } } });
+  assert.deepEqual([got.decisions.tombstones.next, got.decisions.tombstones.rows?.[0].artifact, "watermark" in got.decisions, "sequence" in (got.decisions.tombstones.rows?.[0] ?? {})], ["tok.sig", "a", false, false]);
   assert.equal(retentionOf({ state: "configured", decisions: { tombstones: { window: 1000, total: 0, more: false, rows: [] } } }).decisions.tombstones.next, null);
-  const s = (x: number) => ({ sequence: x });
-  assert.deepEqual(newestFirst([s(73), s(72), s(71)].reverse(), [s(71), s(70)], (x) => x.sequence).map((x) => x.sequence), [73, 72, 71, 70]);
+  const s = (x: string) => ({ artifact: x });
+  assert.deepEqual(newestFirst([s("d"), s("c"), s("b")].reverse(), [s("b"), s("a")], (x) => x.artifact).map((x) => x.artifact), ["d", "c", "b", "a"]);
   const calls: string[] = [];
   const f = (async (url: RequestInfo | URL) => {
     calls.push(String(url));
-    return new Response(JSON.stringify(calls.length === 1 ? { tombstones: [{ sequence: 70, artifact: "a-70" }], next: "", total: 120 } : { tombstones: [] }), { status: 200, headers: { "Content-Type": "application/json" } });
+    return new Response(JSON.stringify(calls.length === 1 ? { tombstones: [{ artifact: "a-70" }], next: "", total: 120 } : { tombstones: [] }), { status: 200, headers: { "Content-Type": "application/json" } });
   }) as typeof fetch;
   const api = adminClient("t", f);
-  assert.equal((await api.retentionTombstones("71")).rows[0].sequence, 70);
-  assert.equal(calls[0], "/api/v1/retention/tombstones?limit=50&after=71");
+  assert.equal((await api.retentionTombstones("tok.sig")).rows[0].artifact, "a-70");
+  assert.equal(calls[0], "/api/v1/retention/tombstones?limit=50&after=tok.sig");
   await assert.rejects(api.retentionTombstones("2"), (e: unknown) => e instanceof AdminError && e.failure === "invalid");
 });
 

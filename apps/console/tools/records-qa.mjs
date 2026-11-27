@@ -43,7 +43,7 @@ try {
   await open("en");
   page.off("response", seen);
   const real = served?.decisions?.tombstones?.rows ?? [];
-  notes.push(`served: ${real.length} records, total ${served?.decisions?.tombstones?.total}, next ${JSON.stringify(served?.decisions?.tombstones?.next)}, watermark ${served?.decisions?.watermark}`);
+  notes.push(`served: ${real.length} records, total ${served?.decisions?.tombstones?.total}, next ${JSON.stringify(served?.decisions?.tombstones?.next)}, watermark field present ${served?.decisions ? "watermark" in served.decisions : null}`);
   check("the real service lists the sample's records whole and says nothing further exists", real.length > 0 && served.decisions.tombstones.total === real.length && served.decisions.tombstones.next === "" && served.decisions.tombstones.more === false);
   check("with every record shown there is no count and no button", (await page.locator(".p04-records-count, .p04-records-more").count()) === 0 && (await rows().count()) === real.length);
   const further = await page.evaluate(async ([csrf]) => {
@@ -51,8 +51,9 @@ try {
     return { status: r.status, body: await r.json().catch(() => null) };
   }, [token]);
   check("the real service answers the records read", further.status === 200 && further.body.total === real.length && further.body.next === "" && further.body.order === "newest_first" && further.body.window === 1000 &&
-    further.body.tombstones.map((x) => x.sequence).join() === real.map((x) => x.sequence).join(), JSON.stringify(further.body).slice(0, 300));
-  const made = (n) => ({ ...real[0], sequence: n, artifact: `routed-item-${n}`, run: null, other_scope: false });
+    further.body.tombstones.map((x) => x.artifact).join() === real.map((x) => x.artifact).join() && !("watermark" in further.body) && further.body.tombstones.every((x) => !("sequence" in x)), JSON.stringify(further.body).slice(0, 300));
+  check("the main read sends no installation watermark and no sequence", served && !("watermark" in served.decisions) && real.every((x) => !("sequence" in x)));
+  const made = (n) => ({ ...real[0], artifact: `routed-item-${n}`, run: null, other_scope: false });
   const down = (from, to) => Array.from({ length: from - to + 1 }, (_, i) => made(from - i));
   for (const lang of ["en", "ko", "ar"]) {
     for (const width of [1440, 390]) {
@@ -63,15 +64,15 @@ try {
         const response = await route.fetch();
         const body = await response.json();
         body.revision = body.revision + (again ? "-again" + again : "");
-        body.decisions = { ...body.decisions, watermark: 2120, tombstones: { window: 1000, total: 120, more: true, next: "2071", rows: down(2120, 2071) } };
+        body.decisions = { ...body.decisions, tombstones: { window: 1000, total: 120, more: true, next: "tok-2071", rows: down(2120, 2071) } };
         await route.fulfill({ response, json: body });
       });
       await page.route((url) => ends(url.toString(), "retention/tombstones"), async (route) => {
         const q = new URL(route.request().url()).searchParams;
         asked.push(q.get("after"));
-        if (q.get("after") === "2021" && fail-- > 0) return route.fulfill({ status: 503, json: { code: "dependency_unavailable", retry: true, next_action: "retry", request_id: "qa" } });
-        const body = q.get("after") === "2071" ? { tombstones: down(2070, 2021), next: "2021" } : { tombstones: down(2020, 2001), next: "" };
-        await route.fulfill({ status: 200, json: { revision: "r", server_time: "2026-11-16T09:00:00Z", order: "newest_first", q: "", watermark: 2120, window: 1000, matching: 120, total: 120, ...body } });
+        if (q.get("after") === "tok-2021" && fail-- > 0) return route.fulfill({ status: 503, json: { code: "dependency_unavailable", retry: true, next_action: "retry", request_id: "qa" } });
+        const body = q.get("after") === "tok-2071" ? { tombstones: down(2070, 2021), next: "tok-2021" } : { tombstones: down(2020, 2001), next: "" };
+        await route.fulfill({ status: 200, json: { revision: "r", server_time: "2026-11-16T09:00:00Z", order: "newest_first", q: "", window: 1000, matching: 120, total: 120, ...body } });
       });
       await open(lang);
       await page.locator(".p04-records-count").waitFor();
@@ -81,7 +82,7 @@ try {
       await more.focus();
       await page.keyboard.press("Enter");
       await page.waitForFunction(() => document.querySelectorAll("table.p04-records-table tbody tr").length === 100);
-      check(`${at} the next fifty records follow`, asked[0] === "2071" && (await page.locator(".p04-records-count").innerText()).trim() === copy[lang].shown(100, 120));
+      check(`${at} the next fifty records follow`, asked[0] === "tok-2071" && (await page.locator(".p04-records-count").innerText()).trim() === copy[lang].shown(100, 120));
       await page.keyboard.press("Enter");
       await page.locator(".p04-records-more [role=alert]").waitFor();
       const alert = await page.locator(".p04-records-more").innerText();
@@ -92,6 +93,15 @@ try {
       check(`${at} at the end all are listed, the button is gone and focus is on the count`, (await page.locator(".p04-records-more").count()) === 0 && (await page.locator(".p04-records-count").innerText()).trim() === copy[lang].shown(120, 120) && await page.locator(".p04-records-count").evaluate((el) => el === document.activeElement));
       const ids = await rows().evaluateAll((els) => els.map((el) => el.id));
       check(`${at} the records are newest first and none is listed twice`, new Set(ids).size === 120 && ids[0].endsWith("2120") && ids[119].endsWith("2001"), ids.slice(0, 2).join());
+      if (lang === "en" && width === 1440) {
+        await page.route((url) => ends(url.toString(), "retention/tombstones"), (route) => route.fulfill({ status: 409, json: { code: "revision_conflict", retry: false, next_action: "reload", request_id: "qa", fields: ["after"] } }));
+        again = 1;
+        await open(lang);
+        await page.locator(".p04-records-count").waitFor();
+        await page.locator(".p04-records-more-button").click();
+        await page.locator(".p04-records-reset").waitFor();
+        check(`${at} a position that left the window starts the list again from the newest records`, (await rows().count()) === 50 && (await page.locator(".p04-records-more [role=alert]").count()) === 0);
+      }
       const m = await page.evaluate(() => ({ page: document.documentElement.scrollWidth, view: document.documentElement.clientWidth }));
       check(`${at} the page is not wider than the viewport`, m.page <= m.view + 1, JSON.stringify(m));
       if (width === 1440) {

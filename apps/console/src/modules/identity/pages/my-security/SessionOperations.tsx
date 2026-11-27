@@ -8,7 +8,9 @@ import { e, whenSeconds } from "./end-copy";
 import { m } from "./live-copy";
 import { sq } from "./query-copy";
 import { useScopedRead, type ScopedValue } from "./scoped-read";
+import { ListPager } from "../../../../shared/list/ListParts";
 import "./end.css";
+import "../../../../shared/list/list-pattern.css";
 
 export function operationFailure(error: unknown): "unavailable" | "unread" {
   return error instanceof AdminError && (error.code === "unsupported_command" || error.code === "operation_mismatch") ? "unavailable" : "unread";
@@ -67,8 +69,8 @@ function OperationRows({ l,api,op,generation,view,onEnd,locked,onSignedOut }: {
     {failure !== null && <div role="alert"><p>{failure instanceof AdminError && failure.code === "revision_conflict" ? sq.expired(l) : m.loadFailed(l)}</p><button type="button" className="live-secondary" onClick={() => load()}>{sq.first(l)}</button></div>}
     {page && <><p className="live-meta">{sq.shown(l,page.rows.length)} · {sq.viewCount(l,page.count)}</p>
       <ul className="mysec-result-rows">{page.rows.map(row => view === "results" ? <ResultRow key={row.handle} l={l} row={row as SelfEndRow} /> : <li key={row.handle}><bdi dir="ltr" className="live-mono">{row.handle}</bdi> · <time dateTime={row.signed_in}>{whenSeconds(l,row.signed_in)}</time>{" "}<button type="button" className="live-secondary" disabled={locked} onClick={() => onEnd(row.handle)}>{m.end(l)}</button></li>)}</ul>
-      <div className="live-buttons"><button type="button" className="live-secondary" disabled={busy || trail.length === 0} onClick={() => load(trail[trail.length-1],trail.slice(0,-1))}>{sq.previous(l)}</button>
-        <button type="button" className="live-secondary" disabled={busy || !page.next} onClick={() => load(page.next,[...trail,after].slice(-32))}>{sq.next(l)}</button></div></>}
+      <ListPager l={l} title={view === "results" ? sq.results(l) : sq.notIncluded(l)} first={!after} hasNext={!!page.next} rows={page.rows.length} previousUnavailable={trail.length === 0}
+        onFirst={() => load()} onPrevious={() => load(trail[trail.length-1],trail.slice(0,-1))} onNext={() => load(page.next,[...trail,after].slice(-32))} /></>}
   </div>;
 }
 
@@ -96,6 +98,8 @@ export default function SessionOperations({ l,api,refreshKey,onEnd,locked,onSign
 }) {
   const serial = useRef(0);
   const pollUntil = useRef(0);
+  const title = useRef<HTMLHeadingElement>(null);
+  const focusTitle = useRef(false);
   const [stopped,setStopped] = useState(false);
   const readKey = useMemo(() => ({ api,refreshKey }),[api,refreshKey]);
   const guard = useScopedRead(readKey);
@@ -114,7 +118,8 @@ export default function SessionOperations({ l,api,refreshKey,onEnd,locked,onSign
     api.sessionOperations(cursor ? { after:cursor } : {}).then(got => {
       if (n !== serial.current || !valid()) return;
       setPage(got); setAfter(cursor); setTrail(history); setBusy(false);
-    }).catch(error => { if (n !== serial.current || !valid()) return; setBusy(false); setFailure(error); if (error instanceof AdminError && error.failure === "unauthenticated") onSignedOut(); });
+      if (focusTitle.current) { focusTitle.current = false;requestAnimationFrame(() => title.current?.focus()); }
+    }).catch(error => { if (n !== serial.current || !valid()) return; focusTitle.current = false; setBusy(false); setFailure(error); if (error instanceof AdminError && error.failure === "unauthenticated") onSignedOut(); });
   };
   useEffect(() => { load(); return () => { serial.current++; }; },[guard]);
   useEffect(() => {
@@ -124,11 +129,12 @@ export default function SessionOperations({ l,api,refreshKey,onEnd,locked,onSign
     return () => clearTimeout(timer);
   },[page,busy,after,failure]);
   return <section className="mysec-ends" aria-labelledby="mysec-ends-title" aria-busy={busy}>
-    <div className="live-toolbar"><div><h3 id="mysec-ends-title">{e.endsTitle(l)}</h3>{page && <><p className="live-meta">{sq.totalOps(l,page.accepted_count)}</p><p className="mysec-checked">{e.checkedAt(l,whenSeconds(l,page.reference_at))}</p></>}</div><button type="button" className="live-secondary" aria-disabled={busy || undefined} onClick={() => { if (!busy) load(); }}>{e.checkAgain(l)}</button></div>
+    <div className="live-toolbar"><div><h3 id="mysec-ends-title" tabIndex={-1} ref={title}>{e.endsTitle(l)}</h3>{page && <><p className="live-meta">{sq.totalOps(l,page.accepted_count)}</p><p className="mysec-checked">{e.checkedAt(l,whenSeconds(l,page.reference_at))}</p></>}</div><button type="button" className="live-secondary" aria-disabled={busy || undefined} onClick={() => { if (!busy) load(); }}>{e.checkAgain(l)}</button></div>
     {busy && <p role="status">{e.reading(l)}</p>}{failure !== null && <div role="alert"><p>{failure instanceof AdminError && failure.code === "revision_conflict" ? sq.expired(l) : m.loadFailed(l)}</p><button type="button" className="live-secondary" onClick={() => load()}>{sq.first(l)}</button></div>}
     {stopped && page && <p role="status">{e.stillRunning(l,whenSeconds(l,page.reference_at))}</p>}
     {page && <><ol className="mysec-ops">{page.rows.map(op => <OperationCard key={op.operation} l={l} api={api} op={op} generation={page.generation} onEnd={onEnd} locked={locked} onSignedOut={onSignedOut} />)}</ol>
-      <div className="live-buttons"><button type="button" className="live-secondary" disabled={busy || trail.length === 0} onClick={() => load(trail[trail.length-1],trail.slice(0,-1))}>{sq.previous(l)}</button><button type="button" className="live-secondary" disabled={busy || !page.next} onClick={() => load(page.next,[...trail,after].slice(-32))}>{sq.next(l)}</button></div></>}
+      <ListPager l={l} title={e.endsTitle(l)} first={!after} hasNext={!!page.next} rows={page.rows.length} previousUnavailable={trail.length === 0}
+        onFirst={() => { focusTitle.current = true;load(); }} onPrevious={() => { focusTitle.current = true;load(trail[trail.length-1],trail.slice(0,-1)); }} onNext={() => { focusTitle.current = true;load(page.next,[...trail,after].slice(-32)); }} /></>}
   </section>;
 }
 

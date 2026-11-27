@@ -82,6 +82,7 @@ function RecoveredServices({
   const [generation, setGeneration] = useState(0),
     [reveal, setReveal] = useState<RevealTarget | null>(null),
     [revoke, setRevoke] = useState<RevokeTarget | null>(null);
+  const opener = useRef<HTMLElement | null>(null);
   const credentials = view === "credentials";
   const reset = () =>
     onParams(
@@ -92,6 +93,7 @@ function RecoveredServices({
   const show = (service: string) => {
     const issued = recovery.issues.open(session.user, service);
     if (!issued) return;
+    remember();
     setReveal({ ...issued, service, estimated: true });
     void api.serviceCredential(issued.credential, session.workspace).then(
       (detail) => {
@@ -122,7 +124,25 @@ function RecoveredServices({
         </button>
       </section>
     );
+  const remember = () => {
+    const active = document.activeElement;
+    if (!(active instanceof HTMLElement) || active === document.body || active.closest(".live-panel")) return;
+    opener.current = active;
+  };
+  const back = (completed: boolean, credential = "") => {
+    const target = opener.current;
+    opener.current = null;
+    requestAnimationFrame(() => {
+      if (!completed && target?.isConnected && target.offsetParent !== null) return target.focus();
+      const row = completed || !credential ? null : [...document.querySelectorAll<HTMLTableRowElement>("section[aria-labelledby='svc-cred-title'] tbody tr")]
+        .find((tr) => tr.textContent?.includes(credential));
+      const control = row?.querySelector<HTMLElement>("button, a[href]");
+      if (control) return control.focus();
+      document.getElementById(credentials ? "svc-cred-title" : "svc-list-title")?.focus();
+    });
+  };
   const onRevoke = (id: string, service: string, reason = "") => {
+    remember();
     setReveal(null);
     setRevoke({ id, service, reason });
   };
@@ -160,8 +180,8 @@ function RecoveredServices({
           }}
           revoke={onRevoke}
         />
-        {!(reveal || revoke) &&
-          (credentials ? (
+        <div className="live-sections" hidden={!!(reveal || revoke)}>
+          {credentials ? (
             <CredentialWorkspace
               key={"credentials"}
               {...common}
@@ -177,7 +197,8 @@ function RecoveredServices({
               params={params}
               reset={reset}
             />
-          ))}
+          )}
+        </div>
       </div>
       {(reveal || revoke) && (
         <aside className="live-panel">
@@ -197,8 +218,12 @@ function RecoveredServices({
                 recovery.issues.unmark(session.user, reveal.credential);
                 setReveal(null);
                 refresh();
+                back(true);
               }}
-              onLeave={() => setReveal(null)}
+              onLeave={() => {
+                setReveal(null);
+                back(false, reveal.credential);
+              }}
               onRevoke={(notStored) =>
                 onRevoke(
                   reveal.credential,
@@ -218,11 +243,15 @@ function RecoveredServices({
               target={revoke}
               generation={generation}
               refresh={refresh}
-              close={() => setRevoke(null)}
+              close={() => {
+                setRevoke(null);
+                back(false, revoke.id);
+              }}
               done={() => {
                 recovery.issues.revoked(session.user, revoke.id);
                 setRevoke(null);
                 refresh();
+                back(true);
               }}
             />
           )}
@@ -590,7 +619,7 @@ function CredentialWorkspace({
 }: WorkspaceProps & {
   user: string;
   show: (service: string) => void;
-  revoke: (id: string, service: string) => void;
+  revoke: (id: string, service: string, reason?: string) => void;
 }) {
   const nav = navigation(params, workspace, "credentials");
   const query = nav.valid ? nav.query : { workspace, limit: 25 };
@@ -802,7 +831,13 @@ function CredentialWorkspace({
         recovery={recovery}
         workspace={workspace}
         generation={generation}
-        select={(row) => revoke(row.id, row.service)}
+        select={(row) =>
+          revoke(
+            row.id,
+            row.service,
+            row.secret_pickup === "never_collected" ? v.revokeNeverReason(l) : "",
+          )
+        }
       />
     </section>
   );

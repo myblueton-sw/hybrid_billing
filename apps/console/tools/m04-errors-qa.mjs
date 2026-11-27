@@ -1344,6 +1344,7 @@ try {
   );
   assert.deepEqual(errors, []);
 } catch (error) {
+  console.log("STACK " + String(error?.stack ?? "").replaceAll(password, "[redacted]").split("\n").slice(0, 6).join(" | "));
   console.log(
     "FAIL " + String(error.message).replaceAll(password, "[redacted]"),
   );

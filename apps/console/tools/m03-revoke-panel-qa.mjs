@@ -78,6 +78,37 @@ try {
     await page.mouse.move(0, 0);
     const box = await page.evaluate(() => { const h = document.querySelector("#access-panel h2").getBoundingClientRect(), c = document.querySelector("#access-panel .access-panel-close button").getBoundingClientRect(), p = document.querySelector("#access-panel").getBoundingClientRect(), r = document.documentElement.dir === "rtl"; const range = document.createRange(); range.selectNodeContents(document.querySelector("#access-panel h2")); const text = [...range.getClientRects()]; const clear = text.every((t) => r ? t.left >= c.right - 1 : t.right <= c.left + 1); return { clear, top: Math.abs(c.top - h.top), panel: Math.round(p.width) }; });
     check(`${lang} ${width}: Close sits on the heading's first line without touching its text, and the panel is about a third wide`, box.clear && box.top <= 4 && box.panel >= 360 && box.panel <= 444, JSON.stringify(box));
+    const cards = await page.evaluate(() => {
+      const rows = [...document.querySelectorAll(".access-permissions tbody tr")].slice(0, 4);
+      const unlabeled = [], overlap = [];
+      for (const tr of rows) {
+        const cells = [...tr.querySelectorAll("td")].filter((td) => td.getClientRects().length);
+        for (const td of cells) {
+          if (td.dataset.label && !td.classList.contains("live-user")) {
+            const content = getComputedStyle(td, "::before").content;
+            if (!content || content === "none" || !content.includes(td.dataset.label)) unlabeled.push(td.dataset.label);
+          }
+        }
+        const boxes = [];
+        for (const td of cells) {
+          const walker = document.createTreeWalker(td, NodeFilter.SHOW_TEXT);
+          for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+            if (!n.textContent.trim() || n.parentElement.closest(".visually-hidden")) continue;
+            const range = document.createRange(); range.selectNodeContents(n);
+            for (const r of range.getClientRects()) boxes.push({ top: r.top, bottom: r.bottom, left: r.left, right: r.right });
+          }
+        }
+        for (let i = 0; i < boxes.length; i++) for (let j = i + 1; j < boxes.length; j++) {
+          const a = boxes[i], b = boxes[j];
+          const v = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top), h = Math.min(a.right, b.right) - Math.max(a.left, b.left);
+          if (v > 2 && h > 2 && Math.abs(a.top - b.top) > 2) overlap.push(Math.round(v));
+        }
+      }
+      const first = document.querySelector(".access-permissions tbody tr");
+      const holder = first?.querySelector("td.live-user");
+      return { cards: !!first && getComputedStyle(first).display === "block", rows: rows.length, unlabeled, overlap: overlap.slice(0, 5), holderLabel: holder ? getComputedStyle(holder, "::before").content : "" };
+    });
+    check(`${lang} ${width}: with the panel open the list's ${width === 1280 ? "cards label every value, the holder is an unlabelled title," : "rows"} and no two lines overlap`, width === 1280 ? cards.cards && cards.rows > 0 && cards.unlabeled.length === 0 && cards.overlap.length === 0 && cards.holderLabel === "none" : cards.rows > 0 && cards.overlap.length === 0 && (!cards.cards || cards.unlabeled.length === 0), JSON.stringify(cards));
     if (args.shots) await page.screenshot({ path: `${args.shots}/m03-panel-${lang}-${width}.png` });
   }
   await page.setViewportSize({ width: 1440, height: 1000 });

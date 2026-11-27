@@ -215,12 +215,35 @@
     inline-size: auto;
   }
   .remaining-security .access-permissions tr {
-    padding-block: 12px;
+    padding-block: 16px;
     border-block-end: 1px solid var(--hb-line-row);
   }
   .remaining-security .access-permissions td {
-    padding: 2px 0;
+    padding: 4px 0;
     border: 0;
+    block-size: auto;
+  }
+  .remaining-security .access-permissions td.live-user::before {
+    content: none;
+  }
+  .remaining-security .access-permissions td[data-label]:not(.live-user)::before {
+    content: attr(data-label) ": ";
+    display: block;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 20px;
+    color: var(--text-muted);
+  }
+  .remaining-security .access-permissions td > span {
+    margin-block-start: 2px;
+  }
+  .remaining-security .access-permissions .live-sub {
+    line-height: 20px;
+  }
+  .remaining-security .access-permissions td.live-user {
+    font-size: 16px;
+    font-weight: 600;
+    padding-block-end: 8px;
   }
   .remaining-security .access-permissions td.acc-parent {
     display: none;

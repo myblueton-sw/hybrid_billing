@@ -1,10 +1,7 @@
-.mysec-query-form { border-block: 1px solid var(--border-control); padding-block: 16px; margin-block: 24px; }
-.mysec-query-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); gap: 16px; }
-.mysec-query-fields label { display: flex; flex-direction: column; gap: 8px; min-inline-size: 0; }
-.mysec-query-fields input, .mysec-query-fields select { inline-size: 100%; min-inline-size: 0; min-block-size: 40px; padding: 8px; border: 1px solid var(--border-control); background: var(--surface-page); color: var(--text-body); font: inherit; }
+.mysec-query-form { margin-block: 24px 16px; }
+.mysec-query-form .list-filter-grid input { padding: 8px; border: 1px solid var(--border-control); background: var(--surface-page); color: var(--text-body); font: inherit; }
+.mysec-query-layout .live-sections > section { container-type: inline-size; }
 .mysec-current { padding-block: 16px; border-block: 1px solid var(--border-control); margin-block: 16px; }
-.mysec-applied { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; padding: 0; }
-.mysec-applied button { overflow-wrap: anywhere; }
 .remaining-security .mysec-confirm { display: flex; flex-direction: row; gap: 8px; align-items: flex-start; margin-block: 24px; }
 .mysec-result-rows { padding-inline-start: 20px; }
 .mysec-result-rows > li { padding-block: 12px; border-block-end: 1px solid var(--border-control); }
@@ -15,3 +12,6 @@
 @media (max-width: 1023px) { .mysec-query-layout { grid-template-columns: minmax(0, 1fr); } }
 
 .remaining-security .mysec-confirm input { inline-size: 20px; block-size: 20px; flex: 0 0 auto; margin: 0; }
+.list-filters #mysec-time-hint { margin-block-start: 8px; max-inline-size: 60ch; }
+#mysec-time-hint bdi { white-space: nowrap; }
+.mysec-query-layout .list-applied + .list-summary { margin-block-start: 12px; }

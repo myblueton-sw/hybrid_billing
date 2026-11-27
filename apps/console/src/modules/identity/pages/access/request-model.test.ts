@@ -146,3 +146,13 @@ test("the settings source words use the glossary term for installation default i
   assert.equal(settingSource("ko", { source: "default" } as never), "설치 기본값");
   assert.equal(settingSource("en", { source: "default" } as never), "Installation default");
 });
+
+test("list positions and sizes read from the address are kept only when valid", async () => {
+  const { addressCursor, addressSize } = await import("./address-model");
+  assert.equal(addressCursor("c.2"), "c.2");
+  assert.equal(addressCursor(null), "");
+  assert.equal(addressCursor("c".repeat(4097)), "");
+  assert.equal(addressSize("10", 25), 10);
+  assert.equal(addressSize("100", 25), 100);
+  for (const bad of [null, "0", "07", "101", "1e2", "-5", ""]) assert.equal(addressSize(bad, 25), 25);
+});

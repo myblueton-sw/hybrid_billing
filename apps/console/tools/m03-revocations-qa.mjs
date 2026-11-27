@@ -90,6 +90,18 @@ try {
     await page.waitForFunction((s) => document.querySelectorAll(`${s} .access-record`).length === 2, section);
     check(`${at}: the second page has the last two, the exact total, Next disabled, and focus on the reference time`, (lang === "ar" || (await page.locator(`${section} [data-revocations]`).innerText()).trim() === copy[lang].shown(12)) && await page.locator(`${section} .list-pager-nav button`).nth(2).isDisabled() && await page.locator(`${section} .list-pager-nav button`).nth(1).isEnabled() && await page.evaluate(() => document.activeElement?.classList.contains("list-summary") && !!document.activeElement.closest(".access-revocation-section")) && asked[asked.length - 1] === "?limit=10&after=r.2", asked[asked.length - 1]);
     if (args.shots && lang === "en") await page.locator(section).screenshot({ path: `${args.shots}/m03-revocations-page2-${lang}-${width}.png` });
+    const revA = () => page.evaluate(() => new URLSearchParams(location.hash.split("?")[1]).get("rev_a"));
+    check(`${at}: the second page's position is in the address`, !!(await revA()));
+    await page.goBack();
+    await page.waitForFunction((s) => document.querySelectorAll(`${s} .access-record`).length === 10, section);
+    check(`${at}: Back returns to the first page`, (await revA()) === null);
+    await page.goForward();
+    await page.waitForFunction((s) => document.querySelectorAll(`${s} .access-record`).length === 2, section);
+    check(`${at}: Forward returns to the second page`, !!(await revA()));
+    await page.reload();
+    await page.locator("#access-revocations").waitFor();
+    await page.waitForFunction((s) => document.querySelectorAll(`${s} .access-record`).length === 2, section);
+    check(`${at}: reload keeps the second page`, !!(await revA()));
     await page.locator(`${section} .list-pager-nav button`).nth(0).click();
     await page.waitForFunction((s) => document.querySelectorAll(`${s} .access-record`).length === 10, section);
     check(`${at}: First returns to the first page`, asked[asked.length - 1] === "?limit=10");

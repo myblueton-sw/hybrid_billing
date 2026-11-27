@@ -14,7 +14,7 @@ import { accessText } from "./live-model";
 import { q } from "./request-copy";
 import { keepAttempt, requestState, shortDigest } from "./request-model";
 import { qcopy } from "../service-accounts/query-copy";
-import { ListFailure, Paging, Reference, usePagedList } from "./paged";
+import { ListFailure, Paging, Reference, addressCursor, addressSize, useCursorReset, usePagedList, type AddressChange } from "./paged";
 import { SettingsDisclosure } from "./Settings";
 import { breakable, withWho } from "./who";
 
@@ -161,13 +161,17 @@ function Rows({ l, rows, selected, onAct }: { l: Locale; rows: ListedRequest[]; 
   );
 }
 
-export function RequestSection({ l, api, generation, pageLimit, startedAt, settings, selected, notice, onAct, onSignOut, onRefresh }: {
+export function RequestSection({ l, api, generation, pageLimit, startedAt, settings, selected, notice, onAct, onSignOut, onRefresh, params, onParams }: {
   l: Locale; api: AdminClient; generation: number; pageLimit: number | null; startedAt: string; settings: AccessSetting[]; selected: string; notice: string;
-  onAct: (action: Decision, r: ListedRequest) => void; onSignOut: () => void; onRefresh: () => void;
+  onAct: (action: Decision, r: ListedRequest) => void; onSignOut: () => void; onRefresh: () => void; params: URLSearchParams; onParams: AddressChange;
 }) {
-  const [endedSize, setEndedSize] = useState(25);
-  const pending = usePagedList((after) => api.accessRequests({ state: "pending", ...sized(50, pageLimit), ...(after ? { after } : {}) }), "pending/" + String(pageLimit), generation);
-  const ended = usePagedList((after) => api.accessRequests({ state: "ended", ...sized(endedSize, pageLimit), ...(after ? { after } : {}) }), "ended/" + String(pageLimit) + "/" + endedSize, generation);
+  const endedSize = addressSize(params.get("req_el"), 25);
+  const [openEnded, setOpenEnded] = useState(() => !!addressCursor(params.get("req_ea")));
+  useCursorReset(generation, ["req_wa", "req_ea"], onParams);
+  const pending = usePagedList((after) => api.accessRequests({ state: "pending", ...sized(50, pageLimit), ...(after ? { after } : {}) }), "pending/" + String(pageLimit), generation,
+    { after: addressCursor(params.get("req_wa")), go: (next) => onParams({ req_wa: next || null }, true) });
+  const ended = usePagedList((after) => api.accessRequests({ state: "ended", ...sized(endedSize, pageLimit), ...(after ? { after } : {}) }), "ended/" + String(pageLimit) + "/" + endedSize, generation,
+    { after: addressCursor(params.get("req_ea")), go: (next) => onParams({ req_ea: next || null }, true) });
   const waiting = pending.read.state === "ready" ? pending.read.page : null;
   const past = ended.read.state === "ready" ? ended.read.page : null;
   const summary = ended.read.state === "error" ? q.endedFailed(l) : !past ? q.endedLoading(l)
@@ -190,13 +194,13 @@ export function RequestSection({ l, api, generation, pageLimit, startedAt, setti
       <Paging l={l} label={q.requestsTitle(l)} list={pending} />
       <p className="live-note">{q.notKept(l, when(l, startedAt))}</p>
       {!hidden && (
-        <details className="live-ended access-ended-requests">
+        <details className="live-ended access-ended-requests" open={openEnded || undefined} onToggle={(e) => setOpenEnded(e.currentTarget.open)}>
           <summary>{summary}</summary>
           {ended.read.state === "loading" && <p role="status" className="live-meta">{a.loading(l)}</p>}
           <ListFailure l={l} title={q.endedFailedTitle(l)} list={ended} onSignOut={onSignOut} onRefresh={onRefresh} />
           {past && <Reference l={l} page={past} list={ended} />}
           {past && (past.rows.length === 0 ? <p className="live-empty">{qcopy(l, past.next ? "incomplete" : "empty")}</p> : <Rows l={l} rows={past.rows} selected="" />)}
-          <Paging l={l} label={summary} list={ended} size={{ id: "access-ended-size", requested: endedSize, limit: pageLimit, onChange: setEndedSize }} />
+          <Paging l={l} label={summary} list={ended} size={{ id: "access-ended-size", requested: endedSize, limit: pageLimit, onChange: (n) => onParams({ req_el: n === 25 ? null : String(n), req_ea: null }, true) }} />
         </details>
       )}
       <SettingsDisclosure l={l} settings={settings} />

@@ -17,6 +17,18 @@ export type PagedList<P> = {
 };
 
 export type AddressCursor = { after: string; go: (after: string) => void };
+export type AddressChange = (extra: Record<string, string | null>, push?: boolean) => void;
+
+export { addressCursor, addressSize } from "./address-model";
+
+export function useCursorReset(generation: number, names: string[], onParams: AddressChange) {
+  const seen = useRef(generation);
+  useEffect(() => {
+    if (seen.current === generation) return;
+    seen.current = generation;
+    onParams(Object.fromEntries(names.map((name) => [name, null])));
+  }, [generation]); // eslint-disable-line react-hooks/exhaustive-deps
+}
 
 export function usePagedList<P extends Listed>(fetch: (after: string) => Promise<P>, key: string, generation: number, address?: AddressCursor): PagedList<P> {
   const [at, setAt] = useState({ generation, key, after: "" });

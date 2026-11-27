@@ -496,7 +496,7 @@ async function scenariosIn(errors) {
     await listed.getByRole("button", { name: "Revoke", exact: true }).click();
     await revokeHeading(p).waitFor();
     const prefilled = await panel(p).locator("#live-reason").inputValue();
-    note("reload: the revoke reason is prefilled", `no longer exists by design: the awaiting-collection list opens revoke without a reason (Live.tsx:805 select={(row) => revoke(row.id, row.service)}); prefill is kept only for the reveal and unstored-secret reminders (Live.tsx:1133, 1169); observed "${prefilled}"`);
+    check("reload: the revoke reason is prefilled with \"Secret not returned\"", prefilled === "Secret not returned", prefilled);
     if (!prefilled) await panel(p).locator("#live-reason").fill("Secret never collected");
     await panel(p).locator("form button[type=submit]").click();
     await revokeHeading(p).waitFor({ state: "detached" });

@@ -2,8 +2,12 @@
 type: Plan
 title: Server search, filters and cursor paging for O02, O03 and P01 to P05
 description: What the seven screens read today, which of their lists can grow, the common shape proposed for paged reads and the order of the increments.
-status: draft
+status: stable
 ---
+
+# Final status
+
+Every increment of this plan was built (1a to 5e). HYB-305 closed on 2026-11-27 by the owner's decision, with the list rules it did not reach carried by follow-up tickets; see the [closing audit](closing-audit.md).
 
 # Outcome and ownership
 

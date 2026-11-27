@@ -116,7 +116,7 @@ export default function RemainingSecurity(props: Props) {
       >
         <LiveMySecurity
           params={props.params}
-          onParams={(extra) => toParams(extra,true)}
+          onParams={(extra, push = true) => toParams(extra, push)}
           locale={props.locale}
           view={props.view}
           session={service.session}

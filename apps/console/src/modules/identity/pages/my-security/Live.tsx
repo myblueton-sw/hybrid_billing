@@ -171,7 +171,7 @@ function Unavailable({ title, body, extra, action }: { title: string; body: stri
 }
 
 export default function LiveMySecurity({ locale: l, view, session, onSignOut, onView, params = new URLSearchParams(), onParams = () => {} }: {
-  locale: Locale; view: string; session: Session; onSignOut: () => void; onView: (view: string) => void; params?: URLSearchParams; onParams?: (extra: Record<string,string | null>) => void;
+  locale: Locale; view: string; session: Session; onSignOut: () => void; onView: (view: string) => void; params?: URLSearchParams; onParams?: (extra: Record<string,string | null>,push?: boolean) => void;
 }) {
   const api = useAdminClient();
   const wide = useWide();

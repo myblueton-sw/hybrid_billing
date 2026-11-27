@@ -7,6 +7,20 @@ var serviceQuerySettings = []AccessSetting{
 	{"credential_warning_days", "credential-warning-days", "days", 14, 1, 90, func(s *AccessSettings) *int { return &s.CredentialWarningDays }},
 }
 
+var listQuerySettingNames = []string{"service_query_page_size", "service_query_scan", "service_query_lifetime_seconds"}
+
+func (s *Server) querySettingRows() []settingRow {
+	out := []settingRow{}
+	for _, name := range listQuerySettingNames {
+		for _, row := range s.rowsOf(serviceQuerySettings) {
+			if row.Name == name {
+				out = append(out, row)
+			}
+		}
+	}
+	return out
+}
+
 func ServiceQuerySettingList() []AccessSetting {
 	return append([]AccessSetting(nil), serviceQuerySettings...)
 }

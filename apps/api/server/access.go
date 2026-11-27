@@ -45,6 +45,7 @@ type accessPage struct {
 	You        string       `json:"you"`
 	StartedAt  string       `json:"started_at"`
 	Settings   []settingRow `json:"settings"`
+	Query      []settingRow `json:"query_settings"`
 	Ledger     ledgerRow    `json:"ledger"`
 }
 
@@ -142,7 +143,7 @@ func (s *Server) listAccess(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	catalog, more := s.ceiling()
-	page := accessPage{Revision: s.Revision(), Catalog: catalog, Incomplete: more, Now: stamp(s.clock()), You: answer.User(), StartedAt: stamp(s.startedAt), Settings: s.settingRows(), Ledger: s.ledgerRow()}
+	page := accessPage{Revision: s.Revision(), Catalog: catalog, Incomplete: more, Now: stamp(s.clock()), You: answer.User(), StartedAt: stamp(s.startedAt), Settings: s.settingRows(), Query: s.querySettingRows(), Ledger: s.ledgerRow()}
 	writeJSON(w, http.StatusOK, request, page)
 }
 

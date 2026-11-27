@@ -519,7 +519,7 @@ func TestTheWholeAccessReadCarriesNoPopulations(t *testing.T) {
 		keys = append(keys, key)
 	}
 	sort.Strings(keys)
-	if strings.Join(keys, " ") != "catalog catalog_incomplete ledger now revision settings started_at you" || got.body["catalog_incomplete"] != false {
+	if strings.Join(keys, " ") != "catalog catalog_incomplete ledger now query_settings revision settings started_at you" || got.body["catalog_incomplete"] != false {
 		t.Errorf("the whole read's fields: %v", keys)
 	}
 	former := f.accessRead(root, "")

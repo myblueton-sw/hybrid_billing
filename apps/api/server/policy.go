@@ -118,6 +118,7 @@ type policyPage struct {
 	Holders         holdersRow     `json:"holders"`
 	Waiting         string         `json:"waiting_activation"`
 	EarlierRunKept  bool           `json:"earlier_run_kept"`
+	Query           []settingRow   `json:"query_settings"`
 }
 
 func revisionOf(r authpolicy.Revision) revisionRow {
@@ -203,6 +204,7 @@ func (s *Server) policyPage(found session, answer identity.Answer) policyPage {
 	}
 	summary := s.trust.Summary(s.bootWorkspace)
 	page.Waiting, page.EarlierRunKept = summary.Unknown, summary.EarlierRun
+	page.Query = s.querySettingRows()
 	return page
 }
 

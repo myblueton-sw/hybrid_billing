@@ -92,3 +92,14 @@ test("M02 lists: the new sentences exist in three languages", () => {
     assert.ok(/[가-힣]/.test(ko) && /[؀-ۿ]/.test(ar));
   }
 });
+
+test("the trust-change address keeps valid filters, sizes and cursors and drops anything else", async () => {
+  const { trustAddress, filterParams } = await import("./trust-list-model");
+  const kept = trustAddress(new URLSearchParams({ tc_q: " D-2 ", tc_state: "validated", tc_ol: "10", tc_cl: "100", tc_oa: "c.2", tc_ca: "c.3" }));
+  assert.deepEqual(kept, { filter: { q: "D-2", state: "validated" }, open: 10, closed: 100, openAfter: "c.2", closedAfter: "c.3" });
+  const dropped = trustAddress(new URLSearchParams({ tc_q: "x".repeat(65), tc_state: "unknown", tc_ol: "0", tc_cl: "101", tc_oa: "c".repeat(4097), tc_ca: "" }));
+  assert.deepEqual(dropped, { filter: { q: "", state: "" }, open: 50, closed: 25, openAfter: "", closedAfter: "" });
+  assert.deepEqual(trustAddress(new URLSearchParams({ tc_ol: "07" })).open, 50);
+  assert.deepEqual(trustAddress(new URLSearchParams({ tc_state: "closed" })).filter.state, "closed");
+  assert.deepEqual(filterParams({ q: "D-2", state: "" }), { tc_q: "D-2", tc_state: null, tc_oa: null, tc_ca: null });
+});

@@ -68,8 +68,9 @@ function Providers({ l, onView }: { l: Locale; onView: (view: string) => void })
   );
 }
 
-export default function LivePolicy({ locale: l, view, session, onSignOut, onView, onUsers }: {
+export default function LivePolicy({ locale: l, view, session, onSignOut, onView, onUsers, params = new URLSearchParams(), onParams = () => {} }: {
   locale: Locale; view: string; session: Session; onSignOut: () => void; onView: (view: string) => void; onUsers: () => void;
+  params?: URLSearchParams; onParams?: (extra: Record<string, string | null>, push?: boolean) => void;
 }) {
   const api = useAdminClient();
   const wide = useWide();
@@ -215,7 +216,7 @@ export default function LivePolicy({ locale: l, view, session, onSignOut, onView
             <section className="m02-changes" aria-labelledby="m02-changes">
               <ChangesHead l={l} page={page} onPropose={() => { setSelected(""); setForm({ revise: null, initial: null }); setFocusTo(".m02-form h2"); }} />
               <div className="m02-split" data-mode={wide ? "split" : "step"} data-open={panelOpen ? "true" : "false"}>
-                <TrustLists l={l} api={api} generation={generation} pageLimit={pageLimitOf(page.query_settings)} onRefresh={() => void load()} selected={selected} reduced={wide && panelOpen} onOpen={open} onSignOut={onSignOut} />
+                <TrustLists l={l} api={api} params={params} onParams={onParams} generation={generation} pageLimit={pageLimitOf(page.query_settings)} onRefresh={() => void load()} selected={selected} reduced={wide && panelOpen} onOpen={open} onSignOut={onSignOut} />
                 {wide && panel && <aside className="m02-detail" tabIndex={0} aria-busy={detail.stale || undefined} aria-label={form ? ty.formTitle(l) : panelLabel}>{panel}</aside>}
               </div>
             </section>

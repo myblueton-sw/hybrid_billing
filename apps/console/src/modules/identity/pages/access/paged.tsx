@@ -16,10 +16,12 @@ export type PagedList<P> = {
   reload: () => void; toFirst: () => void; toPrevious: () => void; toNext: (next: string) => void;
 };
 
-export function usePagedList<P extends Listed>(fetch: (after: string) => Promise<P>, key: string, generation: number): PagedList<P> {
+export type AddressCursor = { after: string; go: (after: string) => void };
+
+export function usePagedList<P extends Listed>(fetch: (after: string) => Promise<P>, key: string, generation: number, address?: AddressCursor): PagedList<P> {
   const [at, setAt] = useState({ generation, key, after: "" });
   const [local, setLocal] = useState(0);
-  const after = at.generation === generation && at.key === key ? at.after : "";
+  const after = address ? address.after : at.generation === generation && at.key === key ? at.after : "";
   const token = useMemo(() => ({}), [key, generation, after, local]);
   const [result, setResult] = useState<{ token: object; read: Read<P> } | null>(null);
   const [trail] = useState(cursorTrail);
@@ -38,7 +40,16 @@ export function usePagedList<P extends Listed>(fetch: (after: string) => Promise
   useEffect(() => {
     if (read.state === "ready" && moved.current) { moved.current = false; reference.current?.focus(); }
   }, [read]);
-  const go = (next: string) => { moved.current = true; setAt({ generation, key, after: next }); };
+  const asked = useRef(after);
+  useEffect(() => {
+    if (address && address.after !== asked.current) { trail.clear(); asked.current = address.after; }
+  }, [address?.after]); // eslint-disable-line react-hooks/exhaustive-deps
+  const go = (next: string) => {
+    if (next === after) return;
+    moved.current = true;
+    asked.current = next;
+    if (address) address.go(next); else setAt({ generation, key, after: next });
+  };
   return {
     read, reference, first: after === "",
     reload: () => setLocal((n) => n + 1),

@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { AppliedFilters, type Chip } from "../../../../shared/list/ListParts";
 import { lc } from "../../../../shared/list/list-copy";
 import type { Locale } from "../../../../shared/types";
@@ -13,7 +13,7 @@ import { when } from "./live-model";
 import { ty } from "./trust-copy";
 import { tl } from "./trust-list-copy";
 import {
-  byStatePriority, closedPageSize, searchFits, evidenceLeftToDetail, filtered, listedBlocked, listedNext, noFilter, openPageSize, sectionState, wholeOnOnePage, type ListFilter,
+  byStatePriority, filterParams, searchFits, trustAddress, evidenceLeftToDetail, filtered, listedBlocked, listedNext, noFilter, openPageSize, closedPageSize, sectionState, wholeOnOnePage, type ListFilter,
 } from "./trust-list-model";
 import { versionOf } from "./trust-model";
 import { actor, ltr } from "./TrustChanges";
@@ -90,15 +90,15 @@ function Section({ l, group, list, filter, selected, reduced, onOpen, onSignOut,
   );
 }
 
-function PagedSection({ l, api, group, state, filter, generation, pageLimit, selected, reduced, onOpen, onSignOut, onRefresh }: {
+function PagedSection({ l, api, group, state, filter, generation, pageLimit, selected, reduced, onOpen, onSignOut, onRefresh, wanted, after, onAddress }: {
   l: Locale; api: AdminClient; group: "open" | "closed"; state: TrustFilter; filter: ListFilter; generation: number; pageLimit: number | null; selected: string; reduced: boolean;
-  onOpen: (id: string, number: number) => void; onSignOut: () => void; onRefresh: () => void;
+  onOpen: (id: string, number: number) => void; onSignOut: () => void; onRefresh: () => void; wanted: number; after: string; onAddress: Change;
 }) {
-  const [wanted, setWanted] = useState(group === "open" ? openPageSize : closedPageSize);
-  const list = usePagedList((after) => api.trustChanges({ state, ...sized(wanted, pageLimit), ...(filter.q ? { q: filter.q } : {}), ...(after ? { after } : {}) }),
-    group + "/" + state + "/" + filter.q + "/" + String(pageLimit) + "/" + wanted, generation);
+  const cursor = group === "open" ? "tc_oa" : "tc_ca";
+  const list = usePagedList((from) => api.trustChanges({ state, ...sized(wanted, pageLimit), ...(filter.q ? { q: filter.q } : {}), ...(from ? { after: from } : {}) }),
+    group + "/" + state + "/" + filter.q + "/" + String(pageLimit) + "/" + wanted, generation, { after, go: (next) => onAddress({ [cursor]: next || null }, true) });
   return <Section l={l} group={group} list={list} filter={filter} selected={selected} reduced={reduced} onOpen={onOpen} onSignOut={onSignOut} onRefresh={onRefresh}
-    size={{ id: "m02-size-" + group, requested: wanted, limit: pageLimit, onChange: setWanted }} />;
+    size={{ id: "m02-size-" + group, requested: wanted, limit: pageLimit, onChange: (n) => onAddress({ [group === "open" ? "tc_ol" : "tc_cl"]: n === (group === "open" ? openPageSize : closedPageSize) ? null : String(n), [cursor]: null }, true) }} />;
 }
 
 const filterFocus = () => {
@@ -150,23 +150,32 @@ function Filters({ l, applied, onApply }: { l: Locale; applied: ListFilter; onAp
   );
 }
 
-export function TrustLists({ l, api, generation, pageLimit, selected, reduced, onOpen, onSignOut, onRefresh }: {
+type Change = (extra: Record<string, string | null>, push?: boolean) => void;
+
+export function TrustLists({ l, api, generation, pageLimit, selected, reduced, onOpen, onSignOut, onRefresh, params, onParams }: {
   l: Locale; api: AdminClient; generation: number; pageLimit: number | null; selected: string; reduced: boolean; onOpen: (id: string, number: number) => void; onSignOut: () => void;
-  onRefresh: () => void;
+  onRefresh: () => void; params: URLSearchParams; onParams: Change;
 }) {
-  const [filter, setFilter] = useState<ListFilter>(noFilter);
+  const address = trustAddress(params);
+  const filter = useMemo<ListFilter>(() => ({ q: address.filter.q, state: address.filter.state }), [address.filter.q, address.filter.state]);
   const [applied, setApplied] = useState(0);
   const open = sectionState(filter, "open");
   const closed = sectionState(filter, "closed");
-  const apply = (next: ListFilter) => { setFilter(next); setApplied((n) => n + 1); };
-  const shared = { l, api, filter, generation: generation * 1000 + applied, pageLimit, selected, reduced, onOpen, onSignOut, onRefresh };
+  const apply = (next: ListFilter) => { onParams(filterParams(next), true); setApplied((n) => n + 1); };
+  const seen = useRef(generation);
+  useEffect(() => {
+    if (seen.current === generation) return;
+    seen.current = generation;
+    onParams({ tc_oa: null, tc_ca: null });
+  }, [generation]); // eslint-disable-line react-hooks/exhaustive-deps
+  const shared = { l, api, filter, generation: generation * 1000 + applied, pageLimit, selected, reduced, onOpen, onSignOut, onRefresh, onAddress: onParams };
   return (
     <div className="m02-lists">
       <Filters l={l} applied={filter} onApply={apply} />
       <AppliedFilters l={l} id="m02-applied" chips={chipsOf(l, filter)} onRemove={(key) => apply({ ...filter, [key]: "" })} onClear={() => apply(noFilter)}
         fallback={filterFocus} />
-      {open && <PagedSection key="open" group="open" state={open} {...shared} />}
-      {closed && <PagedSection key="closed" group="closed" state={closed} {...shared} />}
+      {open && <PagedSection key="open" group="open" state={open} wanted={address.open} after={address.openAfter} {...shared} />}
+      {closed && <PagedSection key="closed" group="closed" state={closed} wanted={address.closed} after={address.closedAfter} {...shared} />}
     </div>
   );
 }

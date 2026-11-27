@@ -4,7 +4,7 @@ import { counted } from "../../../../shared/plural";
 import type { AdminClient } from "../../../../service/admin";
 import { sized } from "../../../../service/query-settings";
 import { trustGroups, type ListedTrustChange, type TrustChangePage, type TrustFilter } from "../../../../service/trust-changes";
-import { ListFailure, Paging, Reference, usePagedList, type PagedList } from "../access/paged";
+import { ListFailure, Paging, Reference, usePagedList, type PagedList, type PageSize } from "../access/paged";
 import { qcopy } from "../service-accounts/query-copy";
 import { p } from "./live-copy";
 import { when } from "./live-model";
@@ -63,9 +63,9 @@ export function ChangeRows({ l, rows, title, selected, reduced, onOpen }: {
   );
 }
 
-function Section({ l, group, list, filter, selected, reduced, onOpen, onSignOut, onRefresh }: {
+function Section({ l, group, list, filter, selected, reduced, onOpen, onSignOut, onRefresh, size }: {
   l: Locale; group: "open" | "closed"; list: PagedList<TrustChangePage>; filter: ListFilter; selected: string; reduced: boolean; onOpen: (id: string, number: number) => void; onSignOut: () => void;
-  onRefresh: () => void;
+  onRefresh: () => void; size: PageSize;
 }) {
   const open = group === "open";
   const page = list.read.state === "ready" ? list.read.page : null;
@@ -77,13 +77,13 @@ function Section({ l, group, list, filter, selected, reduced, onOpen, onSignOut,
       <h3 id={"m02-" + group + "-list"} data-count={page ? page.count.value : undefined}>{page ? counted(l, Number(page.count.value), open ? ty.openCount() : ty.closedCount()) : title}</h3>
       {list.read.state === "loading" && <p role="status" className="live-meta">{p.loading(l)}</p>}
       <ListFailure l={l} title={open ? tl.openFailed(l) : tl.closedFailed(l)} list={list} onSignOut={onSignOut} onRefresh={onRefresh} />
+      {page && <Reference l={l} page={page} list={list} />}
       {page && open && !whole && <p className="live-meta m02-order-note">{tl.spansPages(l)}</p>}
+      {page && open && evidenceLeftToDetail(rows) && <p className="live-note m02-evidence-note">{tl.evidenceOnOpen(l)}</p>}
       {page && (rows.length === 0
         ? <p className="live-empty">{filtered(filter) ? (open ? tl.noOpenMatch(l) : tl.noClosedMatch(l)) : (open ? ty.noOpen(l) : ty.noClosed(l))}</p>
         : <ChangeRows l={l} rows={rows} title={title} selected={selected} reduced={reduced} onOpen={onOpen} />)}
-      {page && open && evidenceLeftToDetail(rows) && <p className="live-note m02-evidence-note">{tl.evidenceOnOpen(l)}</p>}
-      {page && <Reference l={l} page={page} list={list} />}
-      <Paging l={l} label={title} list={list} />
+      <Paging l={l} label={title} list={list} size={size} />
     </section>
   );
 }
@@ -92,10 +92,11 @@ function PagedSection({ l, api, group, state, filter, generation, pageLimit, sel
   l: Locale; api: AdminClient; group: "open" | "closed"; state: TrustFilter; filter: ListFilter; generation: number; pageLimit: number | null; selected: string; reduced: boolean;
   onOpen: (id: string, number: number) => void; onSignOut: () => void; onRefresh: () => void;
 }) {
-  const wanted = group === "open" ? openPageSize : closedPageSize;
+  const [wanted, setWanted] = useState(group === "open" ? openPageSize : closedPageSize);
   const list = usePagedList((after) => api.trustChanges({ state, ...sized(wanted, pageLimit), ...(filter.q ? { q: filter.q } : {}), ...(after ? { after } : {}) }),
-    group + "/" + state + "/" + filter.q + "/" + String(pageLimit), generation);
-  return <Section l={l} group={group} list={list} filter={filter} selected={selected} reduced={reduced} onOpen={onOpen} onSignOut={onSignOut} onRefresh={onRefresh} />;
+    group + "/" + state + "/" + filter.q + "/" + String(pageLimit) + "/" + wanted, generation);
+  return <Section l={l} group={group} list={list} filter={filter} selected={selected} reduced={reduced} onOpen={onOpen} onSignOut={onSignOut} onRefresh={onRefresh}
+    size={{ id: "m02-size-" + group, requested: wanted, limit: pageLimit, onChange: setWanted }} />;
 }
 
 function Filters({ l, applied, onApply }: { l: Locale; applied: ListFilter; onApply: (next: ListFilter) => void }) {

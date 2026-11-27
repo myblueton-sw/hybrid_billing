@@ -165,8 +165,9 @@ export function RequestSection({ l, api, generation, pageLimit, startedAt, setti
   l: Locale; api: AdminClient; generation: number; pageLimit: number | null; startedAt: string; settings: AccessSetting[]; selected: string; notice: string;
   onAct: (action: Decision, r: ListedRequest) => void; onSignOut: () => void; onRefresh: () => void;
 }) {
+  const [endedSize, setEndedSize] = useState(25);
   const pending = usePagedList((after) => api.accessRequests({ state: "pending", ...sized(50, pageLimit), ...(after ? { after } : {}) }), "pending/" + String(pageLimit), generation);
-  const ended = usePagedList((after) => api.accessRequests({ state: "ended", ...sized(25, pageLimit), ...(after ? { after } : {}) }), "ended/" + String(pageLimit), generation);
+  const ended = usePagedList((after) => api.accessRequests({ state: "ended", ...sized(endedSize, pageLimit), ...(after ? { after } : {}) }), "ended/" + String(pageLimit) + "/" + endedSize, generation);
   const waiting = pending.read.state === "ready" ? pending.read.page : null;
   const past = ended.read.state === "ready" ? ended.read.page : null;
   const summary = ended.read.state === "error" ? q.endedFailed(l) : !past ? q.endedLoading(l)
@@ -182,10 +183,10 @@ export function RequestSection({ l, api, generation, pageLimit, startedAt, setti
       <p className="live-impact">{q.requestsLead(l)}</p>
       {pending.read.state === "loading" && <p role="status" className="live-meta">{a.loading(l)}</p>}
       <ListFailure l={l} title={q.requestsFailed(l)} list={pending} onSignOut={onSignOut} onRefresh={onRefresh} />
+      {waiting && <Reference l={l} page={waiting} list={pending} />}
       {waiting && (waiting.rows.length === 0
         ? <p className="live-empty">{waiting.next ? qcopy(l, "incomplete") : q.noRequests(l)}</p>
         : <Rows l={l} rows={waiting.rows} selected={selected} onAct={onAct} />)}
-      {waiting && <Reference l={l} page={waiting} list={pending} />}
       <Paging l={l} label={q.requestsTitle(l)} list={pending} />
       <p className="live-note">{q.notKept(l, when(l, startedAt))}</p>
       {!hidden && (
@@ -195,7 +196,7 @@ export function RequestSection({ l, api, generation, pageLimit, startedAt, setti
           <ListFailure l={l} title={q.endedFailedTitle(l)} list={ended} onSignOut={onSignOut} onRefresh={onRefresh} />
           {past && <Reference l={l} page={past} list={ended} />}
           {past && (past.rows.length === 0 ? <p className="live-empty">{qcopy(l, past.next ? "incomplete" : "empty")}</p> : <Rows l={l} rows={past.rows} selected="" />)}
-          <Paging l={l} label={summary} list={ended} />
+          <Paging l={l} label={summary} list={ended} size={{ id: "access-ended-size", requested: endedSize, limit: pageLimit, onChange: setEndedSize }} />
         </details>
       )}
       <SettingsDisclosure l={l} settings={settings} />

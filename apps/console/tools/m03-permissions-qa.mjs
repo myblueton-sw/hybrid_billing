@@ -52,7 +52,7 @@ try {
     await page.goto("about:blank");
     await page.goto(`${base}/?service=api&lang=${lang}&qa=${++navigation}#/access?${new URLSearchParams({ lang, view: "grants", ...extra })}`);
     await page.locator("#access-list").waitFor();
-    await page.locator(".list-summary, .access-list-failure, .access-list-body [role=alert]").first().waitFor();
+    await page.locator(".access-list-body .list-summary, .access-list-failure, .access-list-body [role=alert]").first().waitFor();
   };
   const asked = [];
   page.on("request", (r) => { if (isList(r.url())) asked.push(new URL(r.url()).search); });
@@ -62,7 +62,7 @@ try {
   const real = await page.locator(".access-permissions tbody tr").evaluateAll((rows) => rows.map((r) => ({ id: r.dataset.permission, cells: [...r.children].map((c) => c.innerText.trim().replace(/\s+/g, " ").slice(0, 60)) })));
   const sorted = real.map((r) => r.id);
   check("the real service's list shows its grants in the server's order under the one heading", real.length >= 3 && sorted.every((id) => id.startsWith("grant/")) && [...sorted].sort().join() === sorted.join() && (await page.locator("#access-list").innerText()).trim() === copy.en.title && (await page.locator("#access-people, #access-delegations").count()) === 0, JSON.stringify(sorted));
-  check("the count line gives an exact count equal to the rows and the list's reference time", (await page.locator(".list-summary").innerText()).includes(`${copy.en.count}: ${real.length}`) && (await page.locator(".list-summary time").count()) === 1);
+  check("the count line gives an exact count equal to the rows and the list's reference time", (await page.locator(".access-list-body .list-summary").innerText()).includes(`${copy.en.count}: ${real.length}`) && (await page.locator(".access-list-body .list-summary time").count()) === 1);
   const consoleRow = real.find((r) => r.cells[0].startsWith(copy.en.console)), own = real.find((r) => r.cells[7] === copy.en.yours);
   check("a console-client grant reads Console and Set by the installation; one's own grant reads Your grant", !!consoleRow && consoleRow.cells[7] === copy.en.set && !!own, JSON.stringify([consoleRow?.cells, own?.cells]));
   check("asked once for the first page with the fixed page size and no filter", asked.filter((s) => s === "?limit=50").length >= 1 && asked.every((s) => s === "?limit=50"), asked.join(" "));
@@ -72,14 +72,14 @@ try {
   check("typing in the filters sends nothing", asked.length === before);
   await page.locator("#acc-q").press("Enter");
   await page.waitForFunction(() => new URLSearchParams(location.hash.split("?")[1]).get("acc_q") === "reader");
-  await page.locator(".list-summary").waitFor();
+  await page.locator(".access-list-body .list-summary").waitFor();
   await page.waitForTimeout(300);
   const filtered = await page.locator(".access-permissions tbody tr").evaluateAll((rows) => rows.map((r) => r.dataset.permission));
   check("Enter applies the filters: the address carries them, the service is asked with them and answers only matching rows", asked[asked.length - 1] === "?q=reader&source=grant&limit=50" && filtered.length > 0 && filtered.every((id) => id.includes("reader")) && filtered.length < real.length, asked[asked.length - 1] + " " + filtered.join());
   check("after applying, focus is on the count line", await page.evaluate(() => document.activeElement?.classList.contains("list-summary")));
   await page.locator(".access-reset").click();
   await page.waitForFunction(() => !new URLSearchParams(location.hash.split("?")[1]).has("acc_q"));
-  await page.locator(".list-summary").waitFor();
+  await page.locator(".access-list-body .list-summary").waitFor();
   await page.waitForTimeout(300);
   check("Reset clears the filters and reads the first page again", (await page.locator(".access-permissions tbody tr").count()) === real.length && (await page.locator("#acc-q").inputValue()) === "");
   const target = real.find((r) => r.cells[7].startsWith("Request revocation"));
@@ -111,7 +111,7 @@ try {
     await open(lang);
     const cells = await page.locator(".access-permissions tbody tr").evaluateAll((rows) => Object.fromEntries(rows.map((r) => [r.dataset.permission, [...r.children].map((c) => c.innerText.trim().replace(/\s+/g, " "))])));
     const row = (id) => cells[id] ?? [];
-    check(`${at}: ten rows of both sources, a lower-bound count and Next enabled`, Object.keys(cells).length === 10 && (await page.locator(".list-summary").innerText()).includes(`${copy[lang].lower}: 10`) && await page.locator(".access-list-body .list-pager-nav button").nth(2).isEnabled() && await page.locator(".access-list-body .list-pager-nav button").nth(0).isDisabled() && await page.locator(".access-list-body .list-pager-nav button").nth(1).isDisabled());
+    check(`${at}: ten rows of both sources, a lower-bound count and Next enabled`, Object.keys(cells).length === 10 && (await page.locator(".access-list-body .list-summary").innerText()).includes(`${copy[lang].lower}: 10`) && await page.locator(".access-list-body .list-pager-nav button").nth(2).isEnabled() && await page.locator(".access-list-body .list-pager-nav button").nth(0).isDisabled() && await page.locator(".access-list-body .list-pager-nav button").nth(1).isDisabled());
     check(`${at}: a grant and a delegation name their source; a delegation names who delegated and its parent`, row("grant/b-person")[3].startsWith(copy[lang].grant) && row("delegation/h-first")[3].startsWith(copy[lang].delegation) && row("delegation/i-second")[0].includes("member@example.invalid") && row("delegation/i-second").join(" ").includes("h-first"), JSON.stringify(row("delegation/i-second")).slice(0, 300));
     check(`${at}: the console grant, a restricted scope and a holder the directory does not know`, row("grant/a-console")[0].startsWith(copy[lang].console) && row("grant/a-console")[7] === copy[lang].set && row("grant/b-person")[2].includes("customer-with-a-long-identifier-0001") && row("grant/b-person")[2].includes("contract-7") && row("grant/b-person")[2].includes("24322-24324") && row("grant/g-inapplicable")[0].startsWith("left-user"), JSON.stringify([row("grant/a-console"), row("grant/b-person")[2]]).slice(0, 300));
     const acts = await page.locator(".access-permissions tbody tr").evaluateAll((rows) => Object.fromEntries(rows.map((r) => [r.dataset.permission, [!!r.querySelector("[data-grant]"), !!r.querySelector("[data-delegation]"), !!r.querySelector("[data-requested]")]])));
@@ -130,7 +130,7 @@ try {
     check(`${at}: the table fits its container and nothing in a cell spills over its neighbours`, fit.table <= fit.box + 1 && fit.over.length === 0 && fit.out.length === 0, JSON.stringify(fit));
     const lines = await page.locator('[data-permission="grant/b-person"] td[data-state]').evaluate((td) => [...td.children].filter((e) => e.getClientRects().length).map((e) => e.textContent.trim()));
     if (fit.folded && width !== 390) check(`${at}: the folded effective cell gives the reason, then From, and does not repeat the end date`, lines.length === 3 && lines.filter((t) => /Dec|12|ديسمبر/.test(t)).length === 1, JSON.stringify(lines));
-    const countLines = await page.locator(".list-summary p:not(.visually-hidden)").allInnerTexts();
+    const countLines = await page.locator(".access-list-body .list-summary p:not(.visually-hidden)").allInnerTexts();
     check(`${at}: the count and the reference time are two lines`, countLines.length === 2 && countLines[0].trim().endsWith("10"), JSON.stringify(countLines));
     if (args.shots) { await page.locator(".access-list-body").screenshot({ path: `${args.shots}/m03-list-${lang}-${width}.png` }); }
     await page.locator(".access-list-body .list-pager-nav button").nth(2).focus();
@@ -155,7 +155,7 @@ try {
     await page.locator("#acc-state").selectOption("active");
     await page.locator(".access-apply").click();
     await page.waitForFunction(() => document.querySelectorAll(".access-permissions tbody tr").length === 1);
-    check(`${at}: the source filter lists delegations only with an exact count`, (await page.locator(".list-summary").innerText()).includes(`${copy[lang].count}: 1`) && (await page.locator(".access-permissions tbody tr").getAttribute("data-permission")) === "delegation/h-first" && asked[asked.length - 1] === "?q=h&source=delegation&state=active&limit=50" && await page.evaluate(() => document.activeElement?.classList.contains("list-summary")));
+    check(`${at}: the source filter lists delegations only with an exact count`, (await page.locator(".access-list-body .list-summary").innerText()).includes(`${copy[lang].count}: 1`) && (await page.locator(".access-permissions tbody tr").getAttribute("data-permission")) === "delegation/h-first" && asked[asked.length - 1] === "?q=h&source=delegation&state=active&limit=50" && await page.evaluate(() => document.activeElement?.classList.contains("list-summary")));
     if (args.shots) await page.locator(".access-list-body").screenshot({ path: `${args.shots}/m03-list-filtered-${lang}-${width}.png` });
     if (width === 390) check(`${at}: the collapsed filters say three are applied and stay open`, (await page.locator(".access-filters-toggle").innerText()).includes("3") && (await page.locator(".access-filters-toggle").getAttribute("aria-expanded")) === "true" && await page.locator("#acc-source").isVisible());
     mode = "fail";

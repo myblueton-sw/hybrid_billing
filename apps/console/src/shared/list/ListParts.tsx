@@ -7,14 +7,14 @@ import { lowered, nextFocusAfterRemoval, pageSizeOptions } from "./list-model";
 
 export type Chip = { key: string; label: string; value: string; mono?: boolean };
 
-export function ListSummary({ l, count, exact, reference, summaryRef }: {
-  l: Locale; count: string; exact: boolean; reference: ReactNode; summaryRef?: RefObject<HTMLDivElement | null>;
+export function ListSummary({ l, count, exact, reference, summaryRef, countInHeading = false }: {
+  l: Locale; count: string; exact: boolean; reference: ReactNode; summaryRef?: RefObject<HTMLDivElement | null>; countInHeading?: boolean;
 }) {
   const line = `${(exact ? lc.exact(l) : lc.lower(l))}: ${count}`;
   return (
     <>
       <div className="list-summary" tabIndex={-1} ref={summaryRef} data-count={count} data-certainty={exact ? "exact" : "lower_bound"}>
-        <p>{line}</p>
+        {!countInHeading && <p>{line}</p>}
         <p>{lc.reference(l)}: {reference}</p>
         <p className="visually-hidden" role="status" aria-live="polite">{line}</p>
       </div>

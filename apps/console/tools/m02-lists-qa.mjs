@@ -67,6 +67,7 @@ try {
     await page.locator("#m02-changes").waitFor();
     await settled("open"); await settled("closed");
   };
+  const eventually = async (f) => { for (let i = 0; i < 60; i++) { if (await f()) return true; await page.waitForTimeout(50); } return false; };
   const heading = async (g) => (await page.locator(`${sec(g)} h3`).first().innerText()).trim();
   const ids = (g) => page.locator(`${sec(g)} .m02-open`).evaluateAll((b) => b.map((x) => x.dataset.change));
 
@@ -75,7 +76,7 @@ try {
   const realAsked = [...new Set(asked)].sort();
   check("the real service is asked for the open group with a limit of 50 and the closed group with 25", realAsked.join(" ") === "?state=closed&limit=25 ?state=open&limit=50", realAsked.join(" "));
   check("with no changes the real sections count none and say so", (await heading("open")) === "Open (0)" && (await heading("closed")) === "Closed (0)" && (await page.locator(`${sec("open")} .live-empty`).innerText()).trim() === copy.en.noOpen && (await page.locator(`${sec("closed")} .live-empty`).innerText()).trim() === copy.en.noClosed);
-  check("the real sections show a reference time, no paging and no notes", (await page.locator(".m02-lists .access-reference").count()) === 2 && (await page.locator(".m02-lists .access-paging").count()) === 0 && (await page.locator(".m02-order-note, .m02-evidence-note").count()) === 0);
+  check("the real sections show a reference time, no paging and no notes", (await page.locator(".m02-lists .list-summary").count()) === 2 && (await page.locator(".m02-lists .list-pager-nav").count()) === 0 && (await page.locator(".m02-order-note, .m02-evidence-note").count()) === 0);
   if (await page.locator(".m02-propose").count()) {
     await page.locator(".m02-propose").click();
     await page.locator("#m02-age").fill("600");
@@ -105,7 +106,8 @@ try {
         if (mode === "closed-fails") return route.fulfill(refusal(503, "dependency_unavailable"));
         if (qs.get("after") === "c.2") return mode === "moved" ? route.fulfill(refusal(409, "revision_conflict")) : route.fulfill({ status: 200, json: pageBody(qs, closedAll.slice(25).filter(admits), { count: { value: "27", certainty: "exact" } }) });
         const rows = closedAll.filter(admits);
-        return route.fulfill({ status: 200, json: pageBody(qs, rows.slice(0, 25), rows.length > 25 ? { next: "c.2", count: { value: String(rows.length), certainty: "exact" } } : {}) });
+        const n = Number(qs.get("limit") ?? 25);
+        return route.fulfill({ status: 200, json: pageBody(qs, rows.slice(0, n), rows.length > n ? { next: "c.2", count: { value: String(rows.length), certainty: "exact" } } : {}) });
       }
       const rows = openRows.filter(admits);
       if (mode === "open-spans" && !qs.get("after")) return route.fulfill({ status: 200, json: pageBody(qs, Array.from({ length: 50 }, (_, i) => change(400 - i, i % 2 ? "draft" : "validated")), { next: "o.2", count: { value: "104", certainty: "exact" } }) });
@@ -115,8 +117,8 @@ try {
     await page.mouse.move(2, 2);
     check(`${at}: the headings carry each list's exact count`, (await heading("open")) === copy[lang].open(4) && (await heading("closed")) === copy[lang].closed(27), `${await heading("open")} / ${await heading("closed")}`);
     check(`${at}: an open group on one page is sorted by state, then newest`, (await ids("open")).join(" ") === "trust-0a1b2c3d-29 trust-0a1b2c3d-30 trust-0a1b2c3d-31 trust-0a1b2c3d-28", (await ids("open")).join(" "));
-    check(`${at}: the closed section keeps the service's order, twenty-five to a page, with paging`, (await ids("closed")).length === 25 && (await ids("closed"))[0] === "trust-0a1b2c3d-27" && (await page.locator(`${sec("closed")} .access-paging button`).count()) === 3 && (await page.locator(`${sec("open")} .access-paging`).count()) === 0);
-    check(`${at}: the evidence note stands under the open table only, and no order note`, (await page.locator(`${sec("open")} .m02-evidence-note`).innerText()).trim() === copy[lang].evidence && (await page.locator(`${sec("closed")} .m02-evidence-note`).count()) === 0 && (await page.locator(".m02-order-note").count()) === 0);
+    check(`${at}: the closed section keeps the service's order, twenty-five to a page, with paging`, (await ids("closed")).length === 25 && (await ids("closed"))[0] === "trust-0a1b2c3d-27" && (await page.locator(`${sec("closed")} .list-pager-nav button`).count()) === 3 && (await page.locator(`${sec("open")} .list-pager-nav`).count()) === 0);
+    check(`${at}: the evidence note stands above the open table only, and no order note`, (await page.locator(`${sec("open")} .m02-evidence-note`).innerText()).trim() === copy[lang].evidence && (await page.locator(`${sec("closed")} .m02-evidence-note`).count()) === 0 && (await page.locator(".m02-order-note").count()) === 0);
     check(`${at}: a blocked draft is marked and no row says the evidence changed`, (await page.locator(`${sec("open")} tr[data-state="draft"] .m02-state-word.live-strong`).count()) === 1 && (await page.locator(`${sec("open")} tr[data-state="validated"] .live-strong`).count()) === 0 && !(await page.locator(".m02-lists").innerText()).includes(copy[lang].stale));
     const shown = await inspectView(page);
     check(`${at}: nothing overflows, is cut off or loses contrast`, shown.overflow <= 1 && shown.clipped.length === 0 && shown.cut.length === 0 && shown.low.length === 0, JSON.stringify({ o: shown.overflow, c: shown.clipped.slice(0, 3), cut: shown.cut.slice(0, 3), low: shown.low.slice(0, 3) }));
@@ -131,10 +133,19 @@ try {
     const labelTops = await page.locator(".m02-filters label").evaluateAll((ls) => ls.map((x) => Math.round(x.getBoundingClientRect().top)));
     check(`${at}: the two filter labels start on one line when side by side`, width < 800 || Math.abs(labelTops[0] - labelTops[1]) <= 2, labelTops.join(" "));
 
-    await page.locator(`${sec("closed")} .access-paging button`).nth(2).click();
+    asked = [];
+    await page.locator("#m02-size-closed").selectOption("10");
+    await eventually(async () => asked.some((q) => q.includes("state=closed") && q.includes("limit=10")));
+    await page.waitForFunction((s) => document.querySelectorAll(`${s} .m02-open`).length > 0, sec("closed"));
+    check(`${at}: ten rows per page on the closed list asks for ten, starts at the first page and keeps focus on the choice`, asked.some((q) => q.includes("state=closed") && q.includes("limit=10") && !q.includes("after")) && (await eventually(() => page.evaluate(() => document.activeElement?.id === "m02-size-closed"))), asked.join(" "));
+    asked = [];
+    await page.locator("#m02-size-closed").selectOption("25");
+    await eventually(async () => asked.some((q) => q.includes("state=closed") && q.includes("limit=25")));
+    await page.waitForFunction((s) => document.querySelectorAll(`${s} .m02-open`).length === 25, sec("closed"));
+    await page.locator(`${sec("closed")} .list-pager-nav button`).nth(2).click();
     await page.waitForFunction((s) => document.querySelectorAll(`${s} .m02-open`).length === 2, sec("closed"));
-    check(`${at}: the second closed page has the last two with the same count, the earlier run's row, and focus on the reference time`, (await heading("closed")) === copy[lang].closed(27) && (await ids("closed")).join(" ") === "trust-0a1b2c3d-2 trust-11111111-1" && (await page.evaluate((s) => document.activeElement === document.querySelector(`${s} .access-reference`), sec("closed"))) && (await page.locator(`${sec("closed")} .m02-open`).last().evaluate((b) => b.closest("td").querySelectorAll(".m02-sub").length)) >= 1 && (await ids("open")).length === 4);
-    await page.locator(`${sec("closed")} .access-paging button`).nth(0).click();
+    check(`${at}: the second closed page has the last two with the same count, the earlier run's row, and focus on the reference time`, (await heading("closed")) === copy[lang].closed(27) && (await ids("closed")).join(" ") === "trust-0a1b2c3d-2 trust-11111111-1" && (await page.evaluate((s) => document.activeElement === document.querySelector(`${s} .list-summary`), sec("closed"))) && (await page.locator(`${sec("closed")} .m02-open`).last().evaluate((b) => b.closest("td").querySelectorAll(".m02-sub").length)) >= 1 && (await ids("open")).length === 4);
+    await page.locator(`${sec("closed")} .list-pager-nav button`).nth(0).click();
     await page.waitForFunction((s) => document.querySelectorAll(`${s} .m02-open`).length === 25, sec("closed"));
 
     asked = [];
@@ -174,7 +185,7 @@ try {
       await page.waitForFunction((s) => document.querySelectorAll(`${s} .m02-open`).length === 25, sec("closed"));
     }
     mode = "moved";
-    await page.locator(`${sec("closed")} .access-paging button`).nth(2).click();
+    await page.locator(`${sec("closed")} .list-pager-nav button`).nth(2).click();
     await page.locator(`${sec("closed")} .access-list-failure`).waitFor();
     const failure = await page.locator(`${sec("closed")} .access-list-failure`).evaluate((f) => ({ title: f.querySelector("h3").innerText.trim(), body: f.querySelector("p").innerText.trim(), buttons: [...f.querySelectorAll("button")].map((b) => b.innerText.trim()) }));
     check(`${at}: a continuation that no longer fits says the query changed and offers First, and the open list stays`, failure.title === copy[lang].closedFailed && failure.body.startsWith(copy[lang].changed) && failure.buttons.includes(copy[lang].first) && (await ids("open")).length === 4, JSON.stringify(failure));
@@ -188,7 +199,7 @@ try {
     check(`${at}: a failed closed list says so, shows no count, and leaves the open list and the current rules`, (await page.locator(`${sec("closed")} .access-list-failure h3`).innerText()).trim() === copy[lang].closedFailed && (await page.locator(`${sec("closed")} h3[data-count]`).count()) === 0 && (await ids("open")).length === 4 && (await page.locator("#m02-current").count()) === 1);
     mode = "open-spans";
     await open(lang);
-    check(`${at}: an open group over pages keeps the service's order and says so`, (await ids("open")).slice(0, 3).join(" ") === "trust-0a1b2c3d-400 trust-0a1b2c3d-399 trust-0a1b2c3d-398" && (await page.locator(`${sec("open")} .m02-order-note`).innerText()).trim() === copy[lang].spans && (await heading("open")) === copy[lang].open(104) && (await page.locator(`${sec("open")} .access-paging button`).count()) === 3);
+    check(`${at}: an open group over pages keeps the service's order and says so`, (await ids("open")).slice(0, 3).join(" ") === "trust-0a1b2c3d-400 trust-0a1b2c3d-399 trust-0a1b2c3d-398" && (await page.locator(`${sec("open")} .m02-order-note`).innerText()).trim() === copy[lang].spans && (await heading("open")) === copy[lang].open(104) && (await page.locator(`${sec("open")} .list-pager-nav button`).count()) === 3);
     if (args.shots && width !== 1280) await page.locator(sec("open")).screenshot({ path: `${args.shots}/m02-lists-spans-${lang}-${width}.png` });
     await page.unrouteAll({ behavior: "wait" });
   }

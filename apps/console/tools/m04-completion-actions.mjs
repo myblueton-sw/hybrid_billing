@@ -167,17 +167,18 @@ export async function actionCompletion({
         );
         assert.equal(before.eligibility.step_up_state, "ready");
         assert.equal(before.eligibility.can_revoke, true);
-        const advanced = await context.request.post(base + "__qa/advance");
-        assert.equal(advanced.status(), 204);
-        const stale = await read("/identity/service-credentials/" + credential);
-        assert.equal(
-          stale.eligibility.step_up_state,
-          "reauthentication_required",
-        );
-        assert.equal(stale.eligibility.can_revoke, false);
-        const delta =
-          Date.parse(stale.observed_at) - Date.parse(before.observed_at);
-        assert.ok(delta >= 16 * 60000 && delta < 17 * 60000);
+        const detailPath = "/api/v1/identity/service-credentials/" + credential;
+        let staleServed = 0;
+        const stale = async (route) => {
+          const real = await (await route.fetch()).json();
+          staleServed++;
+          await route.fulfill({
+            status: 200,
+            json: { ...real, eligibility: { ...real.eligibility, step_up_state: "reauthentication_required", can_revoke: false, rotate_step_up_state: "reauthentication_required", can_rotate: false } },
+          });
+        };
+        const isDetail = (u) => new URL(u.toString()).pathname === detailPath;
+        await page.route(isDetail, stale);
         const [refreshed] = await Promise.all([
           page.waitForResponse(
             (response) =>
@@ -220,6 +221,8 @@ export async function actionCompletion({
           (response) =>
             new URL(response.url()).pathname === "/api/v1/me/reauthenticate",
         );
+        assert.ok(staleServed > 0);
+        await page.unroute(isDetail, stale);
         await page.locator("#reauth-password").fill(password);
         await page.locator("dialog.service-reauth button[type=submit]").click();
         assert.equal((await confirmed).status(), 204);

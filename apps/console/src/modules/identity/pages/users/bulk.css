@@ -60,6 +60,11 @@ html[dir="rtl"] dialog.m01-confirm bdi.m01-part:not([dir="ltr"]) {
 [data-security-screen="M01"] .live-sub bdi {
   white-space: nowrap;
 }
+@media (max-width: 400px) {
+  [data-security-screen="M01"] .m01-stamp bdi {
+    white-space: normal;
+  }
+}
 [data-security-screen="M01"] .m01-opener {
   display: block;
 }

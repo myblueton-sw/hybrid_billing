@@ -498,9 +498,9 @@ export default function LiveAccess({ locale: l, view, session, onSignOut, onView
               pageLimit={page ? pageLimitOf(page.query_settings) : null} settled={page !== null || status !== "loading"} onRefresh={refresh}
               actions={page ? [...new Set(page.catalog.map((x) => x.action))] : []} onRevokeGrant={revokeGrant} onRevokeDelegation={revokeDelegation} />
           </section>
-          {page && <RequestSection l={l} api={api} generation={listed} pageLimit={pageLimitOf(page.query_settings)} onRefresh={refresh} startedAt={page.started_at} settings={page.settings} selected={selected}
+          {page && <RequestSection l={l} api={api} params={params} onParams={onParams} generation={listed} pageLimit={pageLimitOf(page.query_settings)} onRefresh={refresh} startedAt={page.started_at} settings={page.settings} selected={selected}
             notice={noticeAt === "requests" ? notice : ""} onAct={decide} onSignOut={onSignOut} />}
-          {page && <RevocationSection l={l} api={api} generation={listed} pageLimit={pageLimitOf(page.query_settings)} onRefresh={refresh} ledger={page.ledger} onSignOut={onSignOut} />}
+          {page && <RevocationSection l={l} api={api} params={params} onParams={onParams} generation={listed} pageLimit={pageLimitOf(page.query_settings)} onRefresh={refresh} ledger={page.ledger} onSignOut={onSignOut} />}
           {page && <ListSettings l={l} rows={page.query_settings} />}
         </div>
       )}

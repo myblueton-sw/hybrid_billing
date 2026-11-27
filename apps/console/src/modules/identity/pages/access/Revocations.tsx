@@ -8,7 +8,7 @@ import { a, kindLabel } from "./live-copy";
 import { accessText } from "./live-model";
 import { v } from "./request-copy";
 import { breakable } from "./who";
-import { ListFailure, Paging, Reference, usePagedList } from "./paged";
+import { ListFailure, Paging, Reference, addressCursor, useCursorReset, usePagedList, type AddressChange } from "./paged";
 import { qcopy } from "../service-accounts/query-copy";
 import { cleanupGroups, failureWords, itemWords, jobWords, ledgerLines, settled, stateWords, type Groups } from "./request-model";
 
@@ -100,10 +100,13 @@ export function RevocationRecords({ l, rows }: { l: Locale; rows: ListedRevocati
   return <ol className="access-records">{rows.map((r) => <Record key={r.id} l={l} r={r} />)}</ol>;
 }
 
-export function RevocationSection({ l, api, generation, pageLimit, ledger, onSignOut, onRefresh }: {
+export function RevocationSection({ l, api, generation, pageLimit, ledger, onSignOut, onRefresh, params, onParams }: {
   l: Locale; api: AdminClient; generation: number; pageLimit: number | null; ledger: LedgerStatus; onSignOut: () => void; onRefresh: () => void;
+  params: URLSearchParams; onParams: AddressChange;
 }) {
-  const list = usePagedList((after) => api.accessRevocations({ ...sized(10, pageLimit), ...(after ? { after } : {}) }), "revocations/" + String(pageLimit), generation);
+  useCursorReset(generation, ["rev_a"], onParams);
+  const list = usePagedList((after) => api.accessRevocations({ ...sized(10, pageLimit), ...(after ? { after } : {}) }), "revocations/" + String(pageLimit), generation,
+    { after: addressCursor(params.get("rev_a")), go: (next) => onParams({ rev_a: next || null }, true) });
   const page = list.read.state === "ready" ? list.read.page : null;
   return (
     <section aria-labelledby="access-revocations" className="access-revocation-section">

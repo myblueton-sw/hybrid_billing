@@ -1,0 +1,57 @@
+---
+type: DesignPlan
+title: HYB-376 — page sizes that respect the installation's limit, and a page size choice on M02 and M03
+description: How the console learns the installation's page limit before it asks for a list page, and how M02 and M03 offer a page size, so that fixed sizes can no longer be refused.
+status: draft
+---
+
+# Scope and ownership
+
+[HYB-376](https://linear.app/myblueton/issue/HYB-376), machine:mac_mini, root. Written 2026-11-27 from main `8d673aa0`; nothing is built by this document. It follows from the [closing audit of HYB-304](../HYB-304/closing-audit.md) and serves two rules: the installation's defaults are configurable and shown with their source (HYB-304 plan, common contract item 5), and a list offers a page size (`docs/planning/v1.16/ui-design.md:419`).
+
+# Facts
+
+- One setting, `service_query_page_size` (default 50, range 1 to 100; `apps/api/server/servicequerysettings.go`), has two meanings:
+  - On the M02 and M03 lists it is a **maximum**. `limit` above it is refused with 422 `invalid_request` and `fields: ["limit"]`; without `limit` the list uses `min(25, page limit)` (`parseListQuery` in `accesslists.go`, used by the requests, revocations and trust-change lists through `openList`; `parsePermissionQuery` in `accessquery.go`; `parseSubjectQuery` in `accesssubjects.go`). Refusing rather than capping is the plan's rule (HYB-304 common contract item 2).
+  - On the M04 lists it is the **default**; the maximum is the constant 100 (`parseServiceQuery`, `servicequery_model.go`; the API description says `"maximum": 100, "default": <the setting>`). M05's `session_query_page_size` is a default in the same way.
+- So lowering the setting can refuse only M02 and M03 lists. M04's fixed sizes (25 and 10) cannot be refused by it. This ticket's first text and a comment on it said M04 was exposed; that was wrong and is corrected with this design.
+- The console's fixed sizes on the exposed lists: M02 trust changes 50 (open) and 25 (closed) (`authentication/trust-list-model.ts`); M03 permissions 50, requests 50 and 25, revocations 10, person picker 25 (`access/Permissions.tsx`, `Requests.tsx`, `Revocations.tsx`, `PersonPicker.tsx`). No other console caller of these reads exists.
+- Reproduced on 2026-11-27: under the default setting the real service refuses a size of 100 on the M02 list. By reading: with the setting below a list's fixed size that list fails, and the failure is worded "this query is no longer valid" (`readFailure`, `access/Permissions.tsx`, shared by `access/paged.tsx`), which points away from the cause.
+- A setting changes only when the service is started with another value. A screen meets a changed limit after a restart, or when requests reach instances started with different values.
+- What each screen knows about the setting today: the access read's `settings` are the seven access settings (`settingRows`, `settings.go`), shown under the title "Approval settings" with a name and unit table for those seven (`access/request-copy.ts`, `access/Settings.tsx`); the policy read has no settings; M04's list pages carry the four service query settings and the declaration settings.
+- Order of reads: on M02 the lists render only after the policy read answered. On M03 the requests, revocations, request form and pickers wait for the access read, but the **permissions list does not**: it is asked for on mount, in parallel with the access read, and stays usable if that read fails (`access/Live.tsx`, `usePermissions`).
+- M04 and M05 offer a page size as a numeric field. M03 and M02 offer none.
+
+# Design
+
+**A new additive field carries the list settings on the two entry reads.** `GET /identity/access` and `GET /identity/policy` each gain `query_settings`: exactly three rows, `service_query_page_size`, `service_query_scan` and `service_query_lifetime_seconds`, in the existing row shape (`name`, `value`, `unit`, `default`, `min`, `max`, `source`). The access read's `settings` list is left as it is, so the "Approval settings" disclosure does not change. Both additions are purely additive, add no permission, and tell an administrator numbers of the kind the access read already returns; the page limit is also discoverable from the lists' refusals. A session of another workspace, if one can exist, could read them without being able to ask the lists; the access read already gives that caller seven installation settings.
+
+**The console asks for at most the limit, and never guesses it.** Each list has a wanted size (today's fixed sizes). When the limit is known the size sent is the smaller of the wanted size and the limit. While it is not known — the M03 permissions list before the access read answered, or after that read failed — the list sends no `limit`, so the service uses `min(25, limit)` and cannot refuse. The size a page was read with is the page's echoed `query.limit`; where the screen states a page size it states that one, so a size that was lowered is not hidden.
+
+**M02 and M03 offer a page size.** Lists with paging get a page size choice whose options are bounded by the limit. The chosen size replaces the wanted size for that list and restarts it at its first page. Which lists get the choice (the person picker and the revocations list are short auxiliary lists), where the control sits, its options and its copy in three languages are the ui-designer's composition. Keeping the choice in the URL belongs to HYB-379.
+
+**M04 is unchanged.** Its sizes cannot be refused by the setting. Making the setting a maximum there, to give it one meaning, would change what the M04 reads accept; that is not part of this ticket and would be put to the owner.
+
+**When a list is refused for its size anyway** (the limit changed since the entry read): the failure says the page size is above the installation's limit, before the general "query changed" wording is considered, on the M02 lists as on the M03 ones. It offers to read again; that action reads the entry read first so the new limit applies, then the list. It is the administrator's action, never automatic, so there is no loop.
+
+**Showing the settings.** Both screens get a disclosure for the three rows, with names and units in three languages; the name for the first says it is the largest page size of these lists. The disclosure component and its copy move from `access/` to a shared place so that M02 does not import from another page. Title, placement and wording are the ui-designer's, under the terminology rules.
+
+# Increments
+
+1. **P1.** Server: `query_settings` on the access read and on the policy read. Tests: both reads' exact fields (`access_test.go`, `trustlists_test.go`), the three rows and their source under a start flag, and that the access read's `settings` still has its seven rows. Documents: the binding rows for both reads (`docs/ui/screen-binding-fields/identity.md`); the policy read has no API description (HYB-382), and the access read's description is checked and extended if it constrains the fields. Independent change review (additive public fields).
+2. **P2.** Console: parse the field on both reads; bound every exposed list's size by the limit; no `limit` while it is unknown; the refused-size wording and recovery. Tests with a lowered limit. A rendered check against the real service started with a lowered page size on both screens. The existing rendered checks assert exact request strings (`m02-lists-qa`, `m02-detail-qa`, `m03-permissions-qa`, `m03-person-picker-qa`, `m03-requests-qa`, `m03-revocations-qa`, `access-approval-qa`); they are rerun and adjusted where the requests change. Independent change review.
+3. **P3.** ui-designer composition; then the page size choice on M02 and M03, the shared settings disclosure on both, names and units in three languages; rendered checks; independent change review and ui-designer rendered review; terminology review of the new copy.
+
+# Risk
+
+- A lowered limit changes how many rows a page shows; M02's open group is sorted by state only when it fits one page, so a small limit makes the order note appear earlier. That is the composition's stated behaviour.
+- The limit is read once per entry read and can be stale; the refused-size recovery covers it.
+
+# Reviewed
+
+Independent design review (role-based AI reviewer separate from the writer, by reading, nothing built), 2026-11-27: approve with conditions. Three blocking findings, taken into this revision: the first draft said the setting is a maximum on M04, where it is the default, and would have forbidden sizes the service accepts; it said every list waits for its screen's entry read, which is false for the M03 permissions list; and "the three service query settings" was not a defined set (the list holds four) and would have appeared under "Approval settings" with untranslated names and units. The reviewer confirmed that no other console caller sends a fixed size to these reads, that the refusal names `limit` on all five exposed lists, and that additive read fields need no prior owner decision under the standing rule. A bounded re-review approved the revision and added two notes for P1: build the three rows from an explicit list (the service query settings list holds four), and confirm which read the existing seven-row test exercises before relying on it.
+
+# Unknown
+
+- Whether a session of another workspace can pass the entry reads' admission (not verified in HYB-304 either).
+- Whether an API description of the access read constrains its fields (checked in P1).

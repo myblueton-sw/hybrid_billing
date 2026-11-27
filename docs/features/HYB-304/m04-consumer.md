@@ -2,7 +2,7 @@
 type: ImplementationPlan
 title: HYB-304 complete bounded M04 consumer integration
 description: Defines the connected account, credential, picker, declaration and command consumers that replace the incompatible population-shaped screen before full M04 verification and merge.
-status: draft
+status: stable
 sources:
   - resource: ./m04-queries.md
   - resource: ./m04-console.md
@@ -10,6 +10,10 @@ sources:
   - resource: ./m04-declarations.md
   - resource: ../../ui/screens/M04/spec.md
 ---
+
+# Final status
+
+Checkpoint record. The work it names as remaining or not yet built was completed later in HYB-304, which closed on 2026-11-27 ([closing audit](closing-audit.md)).
 
 # Ownership and final integration boundary
 

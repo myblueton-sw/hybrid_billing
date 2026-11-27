@@ -9,6 +9,10 @@ sources:
   - resource: ./query-server-evidence.json
 ---
 
+# Final status
+
+The remaining M05 work listed below was completed later in HYB-304: the screen reads the bounded session, selection and operation routes and `/me` no longer carries the populations ([session UI integration](session-ui-integration.md), [M05 boundaries](m05-boundaries.md)). HYB-304 closed on 2026-11-27 ([closing audit](closing-audit.md)).
+
 # Scope implemented in the ticket branch
 
 Root, machine mac_mini. This is the server foundation of HYB-304 increment A, not completion of M05 or M02–M05. Current UI still uses the old unbounded `/me` payload; this change alone does not satisfy UI-04. No PR merge or ticket Done is claimed.

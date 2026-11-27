@@ -2,11 +2,15 @@
 type: ImplementationPlan
 title: HYB-304 proven query invariants and remaining coverage
 description: Records independent reachability review and three narrowly approved behavior-preserving simplifications without waiving package coverage.
-status: draft
+status: stable
 sources:
   - resource: ./m05-boundaries.md
   - resource: ./m04-boundaries.md
 ---
+
+# Final status
+
+Checkpoint record. The work it names as remaining or not yet built was completed later in HYB-304, which closed on 2026-11-27 ([closing audit](closing-audit.md)).
 
 # Scope and reviewed decision
 

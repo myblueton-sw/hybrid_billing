@@ -2,7 +2,7 @@
 type: ImplementationPlan
 title: HYB-304 M04 authoritative metadata and bounded account queries
 description: Defines the ordered M04 producer and query work after the merged M05 increment without substituting existing owner fields for missing planning metadata.
-status: draft
+status: stable
 sources:
   - resource: ./plan.md
   - resource: ../../ui/screens/M04/spec.md
@@ -10,6 +10,10 @@ sources:
   - resource: ../HYB-333/verification.md
   - resource: ../../planning/v1.16/retention-access.md
 ---
+
+# Final status
+
+Checkpoint record. The work it names as remaining or not yet built was completed later in HYB-304, which closed on 2026-11-27 ([closing audit](closing-audit.md)).
 
 # Baseline and ownership
 

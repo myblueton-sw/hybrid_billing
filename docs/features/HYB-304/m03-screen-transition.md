@@ -2,8 +2,12 @@
 type: DesignPlan
 title: M03 screen — what replaces each read of the whole page
 description: Every place the M03 grants view still reads a population from the whole access read, what replaces it, and the additive facts the bounded reads still lack.
-status: draft
+status: stable
 ---
+
+# Final status
+
+Checkpoint record. The work it names as remaining or not yet built was completed later in HYB-304, which closed on 2026-11-27 ([closing audit](closing-audit.md)).
 
 # Scope and ownership
 

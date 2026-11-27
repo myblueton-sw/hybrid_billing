@@ -2,10 +2,14 @@
 type: ImplementationPlan
 title: HYB-304 service reference and authority contracts
 description: Verifies contract-party eligibility, controlled lifecycle drift, tenant-bound scope validation, bounded legacy enumeration and pickup authentication freshness.
-status: draft
+status: stable
 sources:
   - resource: ./m04-record-lifecycle.md
 ---
+
+# Final status
+
+Checkpoint record. The work it names as remaining or not yet built was completed later in HYB-304, which closed on 2026-11-27 ([closing audit](closing-audit.md)).
 
 # Ownership and reviewed scope
 

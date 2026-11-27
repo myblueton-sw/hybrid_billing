@@ -2,12 +2,16 @@
 type: ValidationRecord
 title: HYB-304 session query and termination boundary verification
 description: Records bounded session query, closed termination-body, frozen preview and quota tests plus removal of superseded internal code.
-status: draft
+status: stable
 sources:
   - resource: ./session-ui-integration.md
   - resource: ./m04-boundaries.md
   - resource: ./session-boundary-evidence.json
 ---
+
+# Final status
+
+HYB-304 closed on 2026-11-27 ([closing audit](closing-audit.md)). The 100 percent server coverage gate named here was accepted by the owner on 2026-11-26, as recorded in [main integration](main-integration.md).
 
 # Scope and ownership
 

@@ -2,7 +2,7 @@
 type: DesignPlan
 title: M03 access change requests on paged reads — composition
 description: The ui-designer's composition for the requests section of the M03 grants view once it reads pending and ended requests a page at a time, recorded before implementation.
-status: draft
+status: stable
 ---
 
 # Scope and ownership

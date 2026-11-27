@@ -2,13 +2,17 @@
 type: ImplementationRecord
 title: HYB-304 frozen selection and bounded result checkpoint
 description: Records implemented server/client foundations, actual verification and the remaining M05 consumer migration.
-status: draft
+status: stable
 sources:
   - resource: ./selection-integration.md
   - resource: ./selection-review.md
   - resource: ./session-ui-integration.md
   - resource: ./selection-server-evidence.json
 ---
+
+# Final status
+
+The remaining M05 consumer migration listed below was completed later in HYB-304 ([session UI integration](session-ui-integration.md)). HYB-304 closed on 2026-11-27 ([closing audit](closing-audit.md)).
 
 # Frozen checkpoint
 

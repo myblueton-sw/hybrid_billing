@@ -2,11 +2,15 @@
 type: Review
 title: HYB-304 remaining server coverage and merge criterion decision
 description: Classifies unexercised defensive statements and records the unresolved whole-package coverage criterion without removing protections or claiming reachability proofs.
-status: draft
+status: stable
 sources:
   - resource: ./m04-create-clock-contracts.md
   - resource: ./m04-completion.md
 ---
+
+# Final status
+
+Decided: on 2026-11-26 the owner accepted the remaining 28 uncovered weighted statements instead of the 100 percent gate ([main integration](main-integration.md)). HYB-304 closed on 2026-11-27 ([closing audit](closing-audit.md)).
 
 # Facts and independent assessment
 

@@ -2,7 +2,7 @@
 type: ValidationRecord
 title: HYB-304 service query boundary and reachability verification
 description: Records additional cursor, numeric, catalog and authentication lifetime tests without changing the package coverage target or fabricating reachable production failures.
-status: draft
+status: stable
 sources:
   - resource: ./m04-consumer.md
   - resource: ./interaction-evidence.json

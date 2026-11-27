@@ -2,13 +2,17 @@
 type: ImplementationRecord
 title: HYB-304 bounded account and session UI integration progress
 description: Records the working bounded M05 candidate and its verified paths without closing remaining M05 or parent requirements.
-status: draft
+status: stable
 sources:
   - resource: ./session-ui-integration.md
   - resource: ./selection-progress.md
   - resource: ./ui-evidence.json
   - resource: ../../ui/screen-binding-fields/identity.md
 ---
+
+# Final status
+
+Checkpoint record. The work it names as remaining or not yet built was completed later in HYB-304, which closed on 2026-11-27 ([closing audit](closing-audit.md)).
 
 # Implemented candidate
 

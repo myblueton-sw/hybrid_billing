@@ -2,7 +2,7 @@
 type: ImplementationPlan
 title: HYB-304 unsent state and revocation rationale recovery
 description: Defines a bounded authenticated action draft to prevent actual canonical refresh from erasing an unsubmitted rationale.
-status: draft
+status: stable
 sources:
   - resource: ./m04-issue-draft.md
 ---

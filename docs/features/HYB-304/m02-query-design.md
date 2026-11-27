@@ -2,7 +2,7 @@
 type: DesignPlan
 title: M02 authentication policy — bounded reads of trust changes
 description: What the M02 screen reads today, which of the specification's filters have a source, and how the list of trust changes becomes a bounded, filtered and paged read.
-status: draft
+status: stable
 ---
 
 # Scope and ownership

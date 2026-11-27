@@ -2,7 +2,7 @@
 type: ImplementationPlan
 title: HYB-304 bounded M04 reads and authoritative selection
 description: Defines bounded account, credential and metadata queries that consume the implemented declaration producer while preserving current authority and secret-recovery truth.
-status: draft
+status: stable
 sources:
   - resource: ./m04-integration.md
   - resource: ./m04-declarations.md
@@ -10,6 +10,10 @@ sources:
   - resource: ../../ui/screens/M04/spec.md
   - resource: ../HYB-333/verification.md
 ---
+
+# Final status
+
+Checkpoint record. The work it names as remaining or not yet built was completed later in HYB-304, which closed on 2026-11-27 ([closing audit](closing-audit.md)).
 
 # Baseline, ownership and delivery boundary
 

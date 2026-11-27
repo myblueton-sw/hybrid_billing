@@ -2,12 +2,16 @@
 type: ImplementationPlan
 title: HYB-304 M04 session-owned credential recovery
 description: Defines render-pure session ownership, exact credential observations and pending-only single-flight collection before the bounded screen migration.
-status: draft
+status: stable
 sources:
   - resource: ./m04-console.md
   - resource: ./console-client-evidence.json
   - resource: ../HYB-333/verification.md
 ---
+
+# Final status
+
+Checkpoint record. The work it names as remaining or not yet built was completed later in HYB-304, which closed on 2026-11-27 ([closing audit](closing-audit.md)).
 
 # Ownership and prerequisites
 

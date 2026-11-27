@@ -7,6 +7,10 @@ sources:
   - resource: ./plan.md
 ---
 
+# Final status
+
+Checkpoint record. The work it names as remaining or not yet built was completed later in HYB-304, which closed on 2026-11-27 ([closing audit](closing-audit.md)).
+
 # Executed baseline
 
 Base main0f9d9a27d6202734e79d8f86ef6e65dfdfc5a752; root, machine mac_mini. The first increment's independent design review passed after two corrective rounds. This record does not claim source implementation or actual-change review completion.

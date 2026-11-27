@@ -2,8 +2,12 @@
 type: DesignPlan
 title: M03 grants and delegations as one list — composition
 description: The ui-designer's composition for the one permissions list of the M03 grants view, with its columns, filters, paging, headings and focus, recorded before implementation.
-status: draft
+status: stable
 ---
+
+# Final status
+
+Checkpoint record. The work it names as remaining or not yet built was completed later in HYB-304, which closed on 2026-11-27 ([closing audit](closing-audit.md)).
 
 # Scope and ownership
 

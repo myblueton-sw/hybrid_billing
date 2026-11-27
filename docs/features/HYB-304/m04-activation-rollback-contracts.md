@@ -2,10 +2,14 @@
 type: VerificationReport
 title: HYB-304 first administrator activation with incomplete integration rollback
 description: Defines actual HTTP activation verification for retained grants, withheld integration rights and bootstrap completion after a rollback failure.
-status: draft
+status: stable
 sources:
   - resource: ./m04-command-dependency-contracts.md
 ---
+
+# Final status
+
+Checkpoint record. The work it names as remaining or not yet built was completed later in HYB-304, which closed on 2026-11-27 ([closing audit](closing-audit.md)).
 
 # Reviewed scope and ownership
 

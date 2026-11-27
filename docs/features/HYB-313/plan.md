@@ -2,8 +2,12 @@
 type: ImplementationPlan
 title: Phase 2–5 accessibility verification
 description: Rendered keyboard, contrast, reflow and colour-independent checks with corrective implementation and independent visual review.
-status: draft
+status: stable
 ---
+
+# Final status
+
+Closed on 2026-11-27 ([findings](findings.md), "Current status" and "Residual verification"). The separate native 200 % test this plan asked for was replaced by measured 640/720 px layouts and the page-zoom inference recorded there; native zoom is carried by HYB-399.
 
 # Scope and ownership
 

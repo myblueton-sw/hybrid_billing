@@ -47,10 +47,15 @@ export function passwordProblem(l: Locale, password: string, login: string): str
   return "";
 }
 
+export const listCursors = ["tc_oa", "tc_ca", "acc_after", "req_wa", "req_ea", "rev_a", "svc_a_after", "svc_c_after", "safter", "op_a"];
+
+export const signInDropped = ["svc_a_selected", "svc_c_selected", "svc_c_issue", "svc_c_rotate"];
+
 export function afterSignIn(hash: string, l: Locale): string {
   const [path, query = ""] = hash.replace(/^#/, "").split("?");
   const target = path.startsWith("/") ? path : "/home";
   const q = new URLSearchParams(query);
+  for (const name of [...listCursors, ...signInDropped]) q.delete(name);
   q.set("lang", l);
   return "#" + target + "?" + q.toString();
 }

@@ -63,7 +63,7 @@ export async function declarationCompletion({
           JSON.stringify(
             [
               ...heading.parentElement.querySelectorAll(
-                ":scope > dl.live-facts > div:first-child dd",
+                ":scope > .svc-list-body > dl.live-facts > div:first-child dd",
               ),
             ].map((node) => node.textContent),
           ) === JSON.stringify(versions)
@@ -83,7 +83,7 @@ export async function declarationCompletion({
         JSON.stringify(
           [
             ...heading.parentElement.querySelectorAll(
-              ":scope > dl.live-facts > div:first-child dd",
+              ":scope > .svc-list-body > dl.live-facts > div:first-child dd",
             ),
           ].map((n) => n.textContent),
         ) === JSON.stringify(versions)
@@ -180,7 +180,7 @@ export async function declarationCompletion({
             .getByText(terms[locale].unavailable, { exact: true })
             .waitFor();
           assert.equal(
-            await history.locator(":scope > dl.live-facts").count(),
+            await history.locator(":scope > .svc-list-body > dl.live-facts").count(),
             0,
           );
           await capture(locale, width, "history-version-unavailable");

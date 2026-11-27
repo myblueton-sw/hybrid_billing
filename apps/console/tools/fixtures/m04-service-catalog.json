@@ -1,0 +1,1132 @@
+{
+ "audiences": [
+  {
+   "workspace": "sample-workspace",
+   "id": "test-service-api",
+   "resource": "https://service.example.invalid/api",
+   "scopes": [
+    {
+     "id": "read",
+     "action": "view",
+     "kind": "focus_data",
+     "fields": [
+      "rows"
+     ],
+     "customer": {
+      "any": true
+     },
+     "legal_entity": {
+      "any": true
+     },
+     "contract": {
+      "any": true
+     },
+     "period": {
+      "any": true
+     }
+    },
+    {
+     "id": "read-01",
+     "action": "view",
+     "kind": "focus_data",
+     "fields": [
+      "rows"
+     ],
+     "customer": {
+      "any": true
+     },
+     "legal_entity": {
+      "any": true
+     },
+     "contract": {
+      "any": true
+     },
+     "period": {
+      "any": true
+     }
+    },
+    {
+     "id": "read-02",
+     "action": "view",
+     "kind": "focus_data",
+     "fields": [
+      "rows"
+     ],
+     "customer": {
+      "any": true
+     },
+     "legal_entity": {
+      "any": true
+     },
+     "contract": {
+      "any": true
+     },
+     "period": {
+      "any": true
+     }
+    },
+    {
+     "id": "read-03",
+     "action": "view",
+     "kind": "focus_data",
+     "fields": [
+      "rows"
+     ],
+     "customer": {
+      "any": true
+     },
+     "legal_entity": {
+      "any": true
+     },
+     "contract": {
+      "any": true
+     },
+     "period": {
+      "any": true
+     }
+    },
+    {
+     "id": "read-04",
+     "action": "view",
+     "kind": "focus_data",
+     "fields": [
+      "rows"
+     ],
+     "customer": {
+      "any": true
+     },
+     "legal_entity": {
+      "any": true
+     },
+     "contract": {
+      "any": true
+     },
+     "period": {
+      "any": true
+     }
+    },
+    {
+     "id": "read-05",
+     "action": "view",
+     "kind": "focus_data",
+     "fields": [
+      "rows"
+     ],
+     "customer": {
+      "any": true
+     },
+     "legal_entity": {
+      "any": true
+     },
+     "contract": {
+      "any": true
+     },
+     "period": {
+      "any": true
+     }
+    },
+    {
+     "id": "read-06",
+     "action": "view",
+     "kind": "focus_data",
+     "fields": [
+      "rows"
+     ],
+     "customer": {
+      "any": true
+     },
+     "legal_entity": {
+      "any": true
+     },
+     "contract": {
+      "any": true
+     },
+     "period": {
+      "any": true
+     }
+    },
+    {
+     "id": "read-07",
+     "action": "view",
+     "kind": "focus_data",
+     "fields": [
+      "rows"
+     ],
+     "customer": {
+      "any": true
+     },
+     "legal_entity": {
+      "any": true
+     },
+     "contract": {
+      "any": true
+     },
+     "period": {
+      "any": true
+     }
+    },
+    {
+     "id": "read-08",
+     "action": "view",
+     "kind": "focus_data",
+     "fields": [
+      "rows"
+     ],
+     "customer": {
+      "any": true
+     },
+     "legal_entity": {
+      "any": true
+     },
+     "contract": {
+      "any": true
+     },
+     "period": {
+      "any": true
+     }
+    },
+    {
+     "id": "read-09",
+     "action": "view",
+     "kind": "focus_data",
+     "fields": [
+      "rows"
+     ],
+     "customer": {
+      "any": true
+     },
+     "legal_entity": {
+      "any": true
+     },
+     "contract": {
+      "any": true
+     },
+     "period": {
+      "any": true
+     }
+    },
+    {
+     "id": "read-10",
+     "action": "view",
+     "kind": "focus_data",
+     "fields": [
+      "rows"
+     ],
+     "customer": {
+      "any": true
+     },
+     "legal_entity": {
+      "any": true
+     },
+     "contract": {
+      "any": true
+     },
+     "period": {
+      "any": true
+     }
+    },
+    {
+     "id": "read-11",
+     "action": "view",
+     "kind": "focus_data",
+     "fields": [
+      "rows"
+     ],
+     "customer": {
+      "any": true
+     },
+     "legal_entity": {
+      "any": true
+     },
+     "contract": {
+      "any": true
+     },
+     "period": {
+      "any": true
+     }
+    },
+    {
+     "id": "read-12",
+     "action": "view",
+     "kind": "focus_data",
+     "fields": [
+      "rows"
+     ],
+     "customer": {
+      "any": true
+     },
+     "legal_entity": {
+      "any": true
+     },
+     "contract": {
+      "any": true
+     },
+     "period": {
+      "any": true
+     }
+    }
+   ]
+  },
+  {
+   "workspace": "sample-workspace",
+   "id": "test-z-api-01",
+   "resource": "https://service.example.invalid/z01",
+   "scopes": [
+    {
+     "id": "read",
+     "action": "view",
+     "kind": "focus_data",
+     "fields": [
+      "rows"
+     ],
+     "customer": {
+      "any": true
+     },
+     "legal_entity": {
+      "any": true
+     },
+     "contract": {
+      "any": true
+     },
+     "period": {
+      "any": true
+     }
+    }
+   ]
+  },
+  {
+   "workspace": "sample-workspace",
+   "id": "test-z-api-02",
+   "resource": "https://service.example.invalid/z02",
+   "scopes": [
+    {
+     "id": "read",
+     "action": "view",
+     "kind": "focus_data",
+     "fields": [
+      "rows"
+     ],
+     "customer": {
+      "any": true
+     },
+     "legal_entity": {
+      "any": true
+     },
+     "contract": {
+      "any": true
+     },
+     "period": {
+      "any": true
+     }
+    }
+   ]
+  },
+  {
+   "workspace": "sample-workspace",
+   "id": "test-z-api-03",
+   "resource": "https://service.example.invalid/z03",
+   "scopes": [
+    {
+     "id": "read",
+     "action": "view",
+     "kind": "focus_data",
+     "fields": [
+      "rows"
+     ],
+     "customer": {
+      "any": true
+     },
+     "legal_entity": {
+      "any": true
+     },
+     "contract": {
+      "any": true
+     },
+     "period": {
+      "any": true
+     }
+    }
+   ]
+  },
+  {
+   "workspace": "sample-workspace",
+   "id": "test-z-api-04",
+   "resource": "https://service.example.invalid/z04",
+   "scopes": [
+    {
+     "id": "read",
+     "action": "view",
+     "kind": "focus_data",
+     "fields": [
+      "rows"
+     ],
+     "customer": {
+      "any": true
+     },
+     "legal_entity": {
+      "any": true
+     },
+     "contract": {
+      "any": true
+     },
+     "period": {
+      "any": true
+     }
+    }
+   ]
+  },
+  {
+   "workspace": "sample-workspace",
+   "id": "test-z-api-05",
+   "resource": "https://service.example.invalid/z05",
+   "scopes": [
+    {
+     "id": "read",
+     "action": "view",
+     "kind": "focus_data",
+     "fields": [
+      "rows"
+     ],
+     "customer": {
+      "any": true
+     },
+     "legal_entity": {
+      "any": true
+     },
+     "contract": {
+      "any": true
+     },
+     "period": {
+      "any": true
+     }
+    }
+   ]
+  },
+  {
+   "workspace": "sample-workspace",
+   "id": "test-z-api-06",
+   "resource": "https://service.example.invalid/z06",
+   "scopes": [
+    {
+     "id": "read",
+     "action": "view",
+     "kind": "focus_data",
+     "fields": [
+      "rows"
+     ],
+     "customer": {
+      "any": true
+     },
+     "legal_entity": {
+      "any": true
+     },
+     "contract": {
+      "any": true
+     },
+     "period": {
+      "any": true
+     }
+    }
+   ]
+  },
+  {
+   "workspace": "sample-workspace",
+   "id": "test-z-api-07",
+   "resource": "https://service.example.invalid/z07",
+   "scopes": [
+    {
+     "id": "read",
+     "action": "view",
+     "kind": "focus_data",
+     "fields": [
+      "rows"
+     ],
+     "customer": {
+      "any": true
+     },
+     "legal_entity": {
+      "any": true
+     },
+     "contract": {
+      "any": true
+     },
+     "period": {
+      "any": true
+     }
+    }
+   ]
+  },
+  {
+   "workspace": "sample-workspace",
+   "id": "test-z-api-08",
+   "resource": "https://service.example.invalid/z08",
+   "scopes": [
+    {
+     "id": "read",
+     "action": "view",
+     "kind": "focus_data",
+     "fields": [
+      "rows"
+     ],
+     "customer": {
+      "any": true
+     },
+     "legal_entity": {
+      "any": true
+     },
+     "contract": {
+      "any": true
+     },
+     "period": {
+      "any": true
+     }
+    }
+   ]
+  },
+  {
+   "workspace": "sample-workspace",
+   "id": "test-z-api-09",
+   "resource": "https://service.example.invalid/z09",
+   "scopes": [
+    {
+     "id": "read",
+     "action": "view",
+     "kind": "focus_data",
+     "fields": [
+      "rows"
+     ],
+     "customer": {
+      "any": true
+     },
+     "legal_entity": {
+      "any": true
+     },
+     "contract": {
+      "any": true
+     },
+     "period": {
+      "any": true
+     }
+    }
+   ]
+  },
+  {
+   "workspace": "sample-workspace",
+   "id": "test-z-api-10",
+   "resource": "https://service.example.invalid/z10",
+   "scopes": [
+    {
+     "id": "read",
+     "action": "view",
+     "kind": "focus_data",
+     "fields": [
+      "rows"
+     ],
+     "customer": {
+      "any": true
+     },
+     "legal_entity": {
+      "any": true
+     },
+     "contract": {
+      "any": true
+     },
+     "period": {
+      "any": true
+     }
+    }
+   ]
+  },
+  {
+   "workspace": "sample-workspace",
+   "id": "test-z-api-11",
+   "resource": "https://service.example.invalid/z11",
+   "scopes": [
+    {
+     "id": "read",
+     "action": "view",
+     "kind": "focus_data",
+     "fields": [
+      "rows"
+     ],
+     "customer": {
+      "any": true
+     },
+     "legal_entity": {
+      "any": true
+     },
+     "contract": {
+      "any": true
+     },
+     "period": {
+      "any": true
+     }
+    }
+   ]
+  },
+  {
+   "workspace": "workspace",
+   "id": "test-service-api",
+   "resource": "https://service.example.invalid/api",
+   "scopes": [
+    {
+     "id": "read",
+     "action": "view",
+     "kind": "focus_data",
+     "fields": [
+      "rows"
+     ],
+     "customer": {
+      "any": true
+     },
+     "legal_entity": {
+      "any": true
+     },
+     "contract": {
+      "any": true
+     },
+     "period": {
+      "any": true
+     }
+    },
+    {
+     "id": "read-01",
+     "action": "view",
+     "kind": "focus_data",
+     "fields": [
+      "rows"
+     ],
+     "customer": {
+      "any": true
+     },
+     "legal_entity": {
+      "any": true
+     },
+     "contract": {
+      "any": true
+     },
+     "period": {
+      "any": true
+     }
+    },
+    {
+     "id": "read-02",
+     "action": "view",
+     "kind": "focus_data",
+     "fields": [
+      "rows"
+     ],
+     "customer": {
+      "any": true
+     },
+     "legal_entity": {
+      "any": true
+     },
+     "contract": {
+      "any": true
+     },
+     "period": {
+      "any": true
+     }
+    },
+    {
+     "id": "read-03",
+     "action": "view",
+     "kind": "focus_data",
+     "fields": [
+      "rows"
+     ],
+     "customer": {
+      "any": true
+     },
+     "legal_entity": {
+      "any": true
+     },
+     "contract": {
+      "any": true
+     },
+     "period": {
+      "any": true
+     }
+    },
+    {
+     "id": "read-04",
+     "action": "view",
+     "kind": "focus_data",
+     "fields": [
+      "rows"
+     ],
+     "customer": {
+      "any": true
+     },
+     "legal_entity": {
+      "any": true
+     },
+     "contract": {
+      "any": true
+     },
+     "period": {
+      "any": true
+     }
+    },
+    {
+     "id": "read-05",
+     "action": "view",
+     "kind": "focus_data",
+     "fields": [
+      "rows"
+     ],
+     "customer": {
+      "any": true
+     },
+     "legal_entity": {
+      "any": true
+     },
+     "contract": {
+      "any": true
+     },
+     "period": {
+      "any": true
+     }
+    },
+    {
+     "id": "read-06",
+     "action": "view",
+     "kind": "focus_data",
+     "fields": [
+      "rows"
+     ],
+     "customer": {
+      "any": true
+     },
+     "legal_entity": {
+      "any": true
+     },
+     "contract": {
+      "any": true
+     },
+     "period": {
+      "any": true
+     }
+    },
+    {
+     "id": "read-07",
+     "action": "view",
+     "kind": "focus_data",
+     "fields": [
+      "rows"
+     ],
+     "customer": {
+      "any": true
+     },
+     "legal_entity": {
+      "any": true
+     },
+     "contract": {
+      "any": true
+     },
+     "period": {
+      "any": true
+     }
+    },
+    {
+     "id": "read-08",
+     "action": "view",
+     "kind": "focus_data",
+     "fields": [
+      "rows"
+     ],
+     "customer": {
+      "any": true
+     },
+     "legal_entity": {
+      "any": true
+     },
+     "contract": {
+      "any": true
+     },
+     "period": {
+      "any": true
+     }
+    },
+    {
+     "id": "read-09",
+     "action": "view",
+     "kind": "focus_data",
+     "fields": [
+      "rows"
+     ],
+     "customer": {
+      "any": true
+     },
+     "legal_entity": {
+      "any": true
+     },
+     "contract": {
+      "any": true
+     },
+     "period": {
+      "any": true
+     }
+    },
+    {
+     "id": "read-10",
+     "action": "view",
+     "kind": "focus_data",
+     "fields": [
+      "rows"
+     ],
+     "customer": {
+      "any": true
+     },
+     "legal_entity": {
+      "any": true
+     },
+     "contract": {
+      "any": true
+     },
+     "period": {
+      "any": true
+     }
+    },
+    {
+     "id": "read-11",
+     "action": "view",
+     "kind": "focus_data",
+     "fields": [
+      "rows"
+     ],
+     "customer": {
+      "any": true
+     },
+     "legal_entity": {
+      "any": true
+     },
+     "contract": {
+      "any": true
+     },
+     "period": {
+      "any": true
+     }
+    },
+    {
+     "id": "read-12",
+     "action": "view",
+     "kind": "focus_data",
+     "fields": [
+      "rows"
+     ],
+     "customer": {
+      "any": true
+     },
+     "legal_entity": {
+      "any": true
+     },
+     "contract": {
+      "any": true
+     },
+     "period": {
+      "any": true
+     }
+    }
+   ]
+  },
+  {
+   "workspace": "workspace",
+   "id": "test-z-api-01",
+   "resource": "https://service.example.invalid/z01",
+   "scopes": [
+    {
+     "id": "read",
+     "action": "view",
+     "kind": "focus_data",
+     "fields": [
+      "rows"
+     ],
+     "customer": {
+      "any": true
+     },
+     "legal_entity": {
+      "any": true
+     },
+     "contract": {
+      "any": true
+     },
+     "period": {
+      "any": true
+     }
+    }
+   ]
+  },
+  {
+   "workspace": "workspace",
+   "id": "test-z-api-02",
+   "resource": "https://service.example.invalid/z02",
+   "scopes": [
+    {
+     "id": "read",
+     "action": "view",
+     "kind": "focus_data",
+     "fields": [
+      "rows"
+     ],
+     "customer": {
+      "any": true
+     },
+     "legal_entity": {
+      "any": true
+     },
+     "contract": {
+      "any": true
+     },
+     "period": {
+      "any": true
+     }
+    }
+   ]
+  },
+  {
+   "workspace": "workspace",
+   "id": "test-z-api-03",
+   "resource": "https://service.example.invalid/z03",
+   "scopes": [
+    {
+     "id": "read",
+     "action": "view",
+     "kind": "focus_data",
+     "fields": [
+      "rows"
+     ],
+     "customer": {
+      "any": true
+     },
+     "legal_entity": {
+      "any": true
+     },
+     "contract": {
+      "any": true
+     },
+     "period": {
+      "any": true
+     }
+    }
+   ]
+  },
+  {
+   "workspace": "workspace",
+   "id": "test-z-api-04",
+   "resource": "https://service.example.invalid/z04",
+   "scopes": [
+    {
+     "id": "read",
+     "action": "view",
+     "kind": "focus_data",
+     "fields": [
+      "rows"
+     ],
+     "customer": {
+      "any": true
+     },
+     "legal_entity": {
+      "any": true
+     },
+     "contract": {
+      "any": true
+     },
+     "period": {
+      "any": true
+     }
+    }
+   ]
+  },
+  {
+   "workspace": "workspace",
+   "id": "test-z-api-05",
+   "resource": "https://service.example.invalid/z05",
+   "scopes": [
+    {
+     "id": "read",
+     "action": "view",
+     "kind": "focus_data",
+     "fields": [
+      "rows"
+     ],
+     "customer": {
+      "any": true
+     },
+     "legal_entity": {
+      "any": true
+     },
+     "contract": {
+      "any": true
+     },
+     "period": {
+      "any": true
+     }
+    }
+   ]
+  },
+  {
+   "workspace": "workspace",
+   "id": "test-z-api-06",
+   "resource": "https://service.example.invalid/z06",
+   "scopes": [
+    {
+     "id": "read",
+     "action": "view",
+     "kind": "focus_data",
+     "fields": [
+      "rows"
+     ],
+     "customer": {
+      "any": true
+     },
+     "legal_entity": {
+      "any": true
+     },
+     "contract": {
+      "any": true
+     },
+     "period": {
+      "any": true
+     }
+    }
+   ]
+  },
+  {
+   "workspace": "workspace",
+   "id": "test-z-api-07",
+   "resource": "https://service.example.invalid/z07",
+   "scopes": [
+    {
+     "id": "read",
+     "action": "view",
+     "kind": "focus_data",
+     "fields": [
+      "rows"
+     ],
+     "customer": {
+      "any": true
+     },
+     "legal_entity": {
+      "any": true
+     },
+     "contract": {
+      "any": true
+     },
+     "period": {
+      "any": true
+     }
+    }
+   ]
+  },
+  {
+   "workspace": "workspace",
+   "id": "test-z-api-08",
+   "resource": "https://service.example.invalid/z08",
+   "scopes": [
+    {
+     "id": "read",
+     "action": "view",
+     "kind": "focus_data",
+     "fields": [
+      "rows"
+     ],
+     "customer": {
+      "any": true
+     },
+     "legal_entity": {
+      "any": true
+     },
+     "contract": {
+      "any": true
+     },
+     "period": {
+      "any": true
+     }
+    }
+   ]
+  },
+  {
+   "workspace": "workspace",
+   "id": "test-z-api-09",
+   "resource": "https://service.example.invalid/z09",
+   "scopes": [
+    {
+     "id": "read",
+     "action": "view",
+     "kind": "focus_data",
+     "fields": [
+      "rows"
+     ],
+     "customer": {
+      "any": true
+     },
+     "legal_entity": {
+      "any": true
+     },
+     "contract": {
+      "any": true
+     },
+     "period": {
+      "any": true
+     }
+    }
+   ]
+  },
+  {
+   "workspace": "workspace",
+   "id": "test-z-api-10",
+   "resource": "https://service.example.invalid/z10",
+   "scopes": [
+    {
+     "id": "read",
+     "action": "view",
+     "kind": "focus_data",
+     "fields": [
+      "rows"
+     ],
+     "customer": {
+      "any": true
+     },
+     "legal_entity": {
+      "any": true
+     },
+     "contract": {
+      "any": true
+     },
+     "period": {
+      "any": true
+     }
+    }
+   ]
+  },
+  {
+   "workspace": "workspace",
+   "id": "test-z-api-11",
+   "resource": "https://service.example.invalid/z11",
+   "scopes": [
+    {
+     "id": "read",
+     "action": "view",
+     "kind": "focus_data",
+     "fields": [
+      "rows"
+     ],
+     "customer": {
+      "any": true
+     },
+     "legal_entity": {
+      "any": true
+     },
+     "contract": {
+      "any": true
+     },
+     "period": {
+      "any": true
+     }
+    }
+   ]
+  }
+ ]
+}

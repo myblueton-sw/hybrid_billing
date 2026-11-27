@@ -97,7 +97,7 @@ export async function navigationCompletion({
         );
         if (!heading) return false;
         const rows = [
-          ...heading.parentElement.querySelectorAll(":scope > ul > li"),
+          ...heading.parentElement.querySelectorAll(":scope > .svc-list-body > ul > li"),
         ];
         return (
           rows.length === ids.length &&
@@ -155,7 +155,7 @@ export async function navigationCompletion({
       );
       const nav = page
         .locator(
-          'section[aria-labelledby="svc-cred-title"] > .live-sections > nav',
+          'section[aria-labelledby="svc-cred-title"] .svc-list-body .list-pager-nav',
         )
         .first();
       const next = await responseClick(
@@ -288,7 +288,7 @@ export async function navigationCompletion({
       const first = await params();
       const nav = page
         .locator(
-          'section[aria-labelledby="svc-cred-title"] > .live-sections > nav',
+          'section[aria-labelledby="svc-cred-title"] .svc-list-body .list-pager-nav',
         )
         .first();
       const next = await responseClick(

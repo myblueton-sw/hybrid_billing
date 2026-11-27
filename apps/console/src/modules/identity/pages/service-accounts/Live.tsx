@@ -29,7 +29,7 @@ import {
   navigation,
   queryKey,
 } from "./query-model";
-import { Facts, Moment, PageInfo, Picker, ReadBoundary, bdi } from "./query-ui";
+import { Facts, Moment, PagePager, PageSummary, Picker, ReadBoundary, bdi, usePageFocus } from "./query-ui";
 import { QueryFilters, filterValue } from "./QueryFilters";
 import { DeclarationForm } from "./DeclarationForm";
 import { AccountDetailView } from "./AccountDetail";
@@ -41,6 +41,8 @@ import { RotateControl } from "./RotateControl";
 import { issueExec } from "./issue-send";
 import { r } from "./rotate-copy";
 import "../users/live.css";
+import "../../../../shared/list/list-pattern.css";
+import "./service-accounts.css";
 export { Reveal } from "./Reveal";
 
 export type LiveProps = {
@@ -285,6 +287,7 @@ function AccountWorkspace({
     nav.valid && !!selected,
   );
   const key = queryKey(query);
+  const focus = usePageFocus(read.result.state, read.result.state === "ready" ? read.result.value : null);
   useLayoutEffect(() => {
     if (!restore || selected || create) return;
     const screen = document.querySelector('[data-security-screen="M04"]');
@@ -418,8 +421,8 @@ function AccountWorkspace({
       </div>
       <div className="live-users" data-wide={wide && panel ? "true" : "false"}>
         <div className="live-list live-sections" hidden={!!panel && !wide}>
+          <div className="svc-list-stack">
           <QueryFilters
-            key={key}
             l={l}
             area="accounts"
             query={query}
@@ -436,7 +439,7 @@ function AccountWorkspace({
             }}
           >
             {(page) => (
-              <>
+              <div className="svc-list-body">
                 <Facts
                   items={[
                     [
@@ -447,30 +450,48 @@ function AccountWorkspace({
                     ],
                   ]}
                 />
+                <PageSummary l={l} page={page} summaryRef={focus.summary} />
+                {page.rows.length > 0 && (
                 <AccountTable
                   l={l}
                   rows={page.rows}
                   selected={selected}
                   select={select}
-                />
-                <PageInfo
+                />)}
+                <PagePager
                   l={l}
+                  title={v.listTitle(l)}
                   page={page}
-                  first={() => {
+                  first={!query.after}
+                  onFirst={() => {
+                    focus.want.current = "summary";
                     trail.clear();
                     onParams({ svc_a_after: null }, true);
                   }}
-                  previous={() =>
-                    onParams({ svc_a_after: trail.previous(key) || null }, true)
-                  }
-                  next={() => {
-                    if (trail.next(key, query.after ?? "", page.next))
-                      onParams({ svc_a_after: page.next }, true);
+                  onPrevious={() => {
+                    focus.want.current = "summary";
+                    onParams({ svc_a_after: trail.previous(key) || null }, true);
+                  }}
+                  onNext={() => {
+                                        if (trail.next(key, query.after ?? "", page.next)) {
+                      focus.want.current = "summary";
+ onParams({ svc_a_after: page.next }, true);
+ }
+                  }}
+                  size={{
+                    id: "svc-a-size",
+                    requested: query.limit ?? page.query.limit,
+                    onChange: (n) => {
+                      focus.want.current = "svc-a-size";
+                      trail.clear();
+                      onParams({ svc_a_limit: String(n), svc_a_after: null }, true);
+                    },
                   }}
                 />
-              </>
+              </div>
             )}
           </ReadBoundary>
+          </div>
         </div>
         {panel && (
           <aside className="live-panel">
@@ -596,6 +617,7 @@ function CredentialWorkspace({
     nav.valid && !!issue,
   );
   const key = queryKey(query);
+  const focus = usePageFocus(read.result.state, read.result.state === "ready" ? read.result.value : null);
   if (!nav.valid)
     return (
       <section>
@@ -619,14 +641,14 @@ function CredentialWorkspace({
           {w.reload(l)}
         </button>
       </div>
+      <p className="live-meta">{t(l, "noGrant")}</p>
+      <div className="svc-list-stack">
       <QueryFilters
-        key={key}
         l={l}
         area="credentials"
         query={query}
         onParams={onParams}
       />
-      <p>{t(l, "noGrant")}</p>
       <ReadBoundary
         l={l}
         read={read.result}
@@ -638,31 +660,49 @@ function CredentialWorkspace({
         }}
       >
         {(page) => (
-          <>
+          <div className="svc-list-body">
+            <PageSummary l={l} page={page} summaryRef={focus.summary} />
+            {page.rows.length > 0 && (
             <CredentialTable
               l={l}
               rows={page.rows}
               selected={selected}
               select={(id) => onParams({ svc_c_selected: id, svc_c_rotate: null }, true)}
-            />
-            <PageInfo
+            />)}
+            <PagePager
               l={l}
+              title={v.credTitle(l)}
               page={page}
-              first={() => {
+              first={!query.after}
+              onFirst={() => {
+                focus.want.current = "summary";
                 trail.clear();
                 onParams({ svc_c_after: null }, true);
               }}
-              previous={() =>
-                onParams({ svc_c_after: trail.previous(key) || null }, true)
-              }
-              next={() => {
-                if (trail.next(key, query.after ?? "", page.next))
-                  onParams({ svc_c_after: page.next }, true);
+              onPrevious={() => {
+                focus.want.current = "summary";
+                onParams({ svc_c_after: trail.previous(key) || null }, true);
+              }}
+              onNext={() => {
+                                if (trail.next(key, query.after ?? "", page.next)) {
+                  focus.want.current = "summary";
+ onParams({ svc_c_after: page.next }, true);
+ }
+              }}
+              size={{
+                id: "svc-c-size",
+                requested: query.limit ?? page.query.limit,
+                onChange: (n) => {
+                  focus.want.current = "svc-c-size";
+                  trail.clear();
+                  onParams({ svc_c_limit: String(n), svc_c_after: null }, true);
+                },
               }}
             />
-          </>
+          </div>
         )}
       </ReadBoundary>
+      </div>
       {selected && (
         <ReadBoundary l={l} read={known.result} reload={known.reload}>
           {(detail) => (
@@ -863,6 +903,7 @@ function PendingCollection({
         after,
       }),
   );
+  const focus = usePageFocus(read.result.state, read.result.state === "ready" ? read.result.value : null);
   return (
     <section className="live-sections">
       <h3>{t(l, "pending")}</h3>
@@ -878,8 +919,9 @@ function PendingCollection({
         }}
       >
         {(page) => (
-          <>
-            <ul>
+          <div className="svc-list-body">
+            <PageSummary l={l} page={page} summaryRef={focus.summary} />
+            {page.rows.length > 0 && <ul>
               {page.rows.map((row) => (
                 <li key={row.id}>
                   {bdi(row.id)} · {bdi(row.service)}{" "}
@@ -905,21 +947,28 @@ function PendingCollection({
                   </button>
                 </li>
               ))}
-            </ul>
-            <PageInfo
+            </ul>}
+            <PagePager
               l={l}
+              title={t(l, "pending")}
               page={page}
-              first={() => {
+              first={!after}
+              onFirst={() => {
+                focus.want.current = "summary";
                 trail.clear();
                 setAfter("");
               }}
-              previous={() => setAfter(trail.previous(workspace))}
-              next={() => {
+              onPrevious={() => {
+                focus.want.current = "summary";
+                setAfter(trail.previous(workspace));
+              }}
+              onNext={() => {
+                focus.want.current = "summary";
                 if (trail.next(workspace, after, page.next))
                   setAfter(page.next);
               }}
             />
-          </>
+          </div>
         )}
       </ReadBoundary>
     </section>

@@ -6,7 +6,9 @@ import type { Recovery } from "./recovery-context";
 import { useScopedRead } from "./scoped-read";
 import {
   Facts,
-  PageInfo,
+  PagePager,
+  PageSummary,
+  usePageFocus,
   ReadBoundary,
   bdi,
   usePanelHeading, Moment } from "./query-ui";
@@ -46,6 +48,7 @@ export function DeclarationHistory({
         version: applied,
       }),
   );
+  const focus = usePageFocus(read.result.state, read.result.state === "ready" ? read.result.value : null);
   return (
     <section className="live-sections">
       <h3>{t(l, "history")}</h3>
@@ -82,7 +85,8 @@ export function DeclarationHistory({
         }}
       >
         {(page) => (
-          <>
+          <div className="svc-list-body">
+            <PageSummary l={l} page={page} summaryRef={focus.summary} />
             {page.availability !== "recorded" && (
               <p>
                 {t(
@@ -113,19 +117,26 @@ export function DeclarationHistory({
                 ]}
               />
             ))}
-            <PageInfo
+            <PagePager
               l={l}
+              title={t(l, "history")}
               page={page}
-              first={() => {
+              first={!after}
+              onFirst={() => {
+                focus.want.current = "summary";
                 setAfter("");
                 trail.clear();
               }}
-              previous={() => setAfter(trail.previous(applied))}
-              next={() => {
+              onPrevious={() => {
+                focus.want.current = "summary";
+                setAfter(trail.previous(applied));
+              }}
+              onNext={() => {
+                focus.want.current = "summary";
                 if (trail.next(applied, after, page.next)) setAfter(page.next);
               }}
             />
-          </>
+          </div>
         )}
       </ReadBoundary>
     </section>

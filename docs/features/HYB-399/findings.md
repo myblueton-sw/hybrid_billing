@@ -222,3 +222,12 @@ Fields named in the answer are marked and described on M01 create user, M03 acce
 Findings moved to HYB-407:
 - M02 trust proposal and M01 suspend user show the summary title "Check the following" with nothing under it when no named field is on the form. P01, O01 and O02 show a fallback sentence in that case.
 - M05 password change treats a field refusal as an unknown outcome ("Your password may have changed").
+
+# K. Dialogs whose opener disappears (2026-11-28)
+
+`tools/dialogs-qa.mjs --orphan 1` opens each dialog from the keyboard, then hides the control that opened it before pressing Escape. It checks that focus lands on a visible element in the page, not the body.
+
+- **Before.** M05 "End other sessions" already passed. The shared screen review (`ReviewPanel`, measured on M03) left focus on the body in English 1440, Arabic 1440 and English 390, failing 3 of 31 checks.
+- **Fix.** When the opener is gone or not rendered, `ReviewPanel` now moves focus to the page title (`main h1`, given `tabindex="-1"` if it has none). When the opener is present, it still returns focus to the opener.
+- **After.** The orphan run passes 31 of 31. The normal run also passes 31 of 31, with focus returning to the opener.
+- **Tests.** Console tests: 1,512 pass, 0 fail.

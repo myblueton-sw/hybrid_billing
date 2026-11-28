@@ -86,3 +86,36 @@ Not measured here:
 In both runs the page was not wider than the viewport, nothing was cut off horizontally or vertically, and text contrast held.
 
 Zoom: browser zoom of 200% on a 1280-wide window lays out the page as a 640-wide viewport, and 400% as 320. Both widths are measured above and in HYB-313. Text-only zoom, where only the font size grows, is not measured, because headless Chromium offers no text-only zoom. The text-spacing run is the closest stress.
+
+# F. States after a refused request on M01–M05, O01–O03 and P01 (2026-11-28)
+
+These screens have no shared confirmation step, so `tools/other-outcomes-qa.mjs` explores them generically. On each view, for each distinct enabled button in `main`, it reloads the view and presses the button from the keyboard. It skips pager, filter and navigation buttons, and sign-out. It then repeats up to six rounds of: fill the empty visible fields (text, number, date, email, password, the first option of a select, the first radio of a group, and checkboxes inside a form, but not in lists); then press the newly shown submit or primary button, or another new button that is not cancel, close, reload or go-to. It stops when a request is sent. Every non-read request is answered with a routed 422 `prerequisite_failed`, so nothing reaches the service.
+
+For each request reached, it checks that:
+- only the final press sent requests;
+- focus is on a visible element inside the page, not the body;
+- the refusal is stated in a live region or alert that is new since the press. The region must either hold focus, or be the nearest new one above the focused title. Example: a dialog or detail heading that takes focus while the alert sits below it;
+- the refusal does not say the request "may have been applied";
+- the page does not overflow, cut off (horizontally or vertically) or lose text contrast.
+
+| Run | Requests reached | Checks | Buttons that sent no request |
+| --- | --- | --- | --- |
+| English 1440 | 36 | 183, none failed | 157 |
+| Arabic 320 | 41 | 208, none failed | 152 |
+
+Reached in English:
+- M01: create user and suspend user;
+- M03: request revocation;
+- M05: change password and end other sessions;
+- O02: relationship proposal;
+- O03: issuance setup reads opened from the contract rows;
+- P01: plan proposal, approval and withdrawal.
+
+Most buttons that sent no request open details, reload, search, page, confirm the screen review or go to another screen. None of these sends a command.
+
+Not reached, because each needs valid domain input the explorer cannot produce: M02 "Propose trust change", M03 "Request access", M04 "Create service account" and O01 "New view group draft". They are moved to HYB-401 for per-form harnesses.
+
+Method notes:
+- In the development server, React runs effects twice, so a dialog that prepares on open may send the same request twice. Requests are counted once per distinct path.
+- O03 sends two reads when a contract is opened, so up to three distinct requests per press are accepted.
+- Only the refused answer is run here. Conflict, unavailable and unknown on these forms are left to HYB-401 and the per-screen checks.

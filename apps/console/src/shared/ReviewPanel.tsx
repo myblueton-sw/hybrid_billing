@@ -100,7 +100,12 @@ export default function ReviewPanel({
     generation.current++;
     dialog.current?.close();
     setAck(false);
-    trigger.current?.focus();
+    const back = trigger.current;
+    if (back?.isConnected && back.getClientRects().length) return back.focus();
+    const title = document.querySelector<HTMLElement>("main h1");
+    if (!title) return;
+    if (!title.hasAttribute("tabindex")) title.setAttribute("tabindex", "-1");
+    title.focus();
   }
   async function save() {
     if (!ack || busy || pin !== live.current) return;

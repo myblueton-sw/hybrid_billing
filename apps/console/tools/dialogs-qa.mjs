@@ -43,12 +43,15 @@ async function dialogCase(name, prepare, opener) {
   inside = true;
   for (let i = 0; i < stops + 2; i++) { await page.keyboard.press("Shift+Tab"); if (!(await contained())) { inside = false; break; } }
   check(`${name}: Shift+Tab never reaches page content outside the dialog`, inside, await page.evaluate(() => document.activeElement?.tagName + " " + (document.activeElement?.textContent ?? "").trim().slice(0, 40)));
+  if (args.orphan) await page.evaluate(() => { const o = document.querySelector("[data-qa-opener]"); if (o) { o.style.display = "none"; o.removeAttribute("data-qa-opener"); o.setAttribute("data-qa-gone", ""); } });
   await page.keyboard.press("Escape");
   await frames();
   const closed = (await page.locator("dialog[open]").count()) === 0;
   check(`${name}: Escape closes it`, closed);
+  if (args.orphan) await page.waitForTimeout(400);
   const back = await page.evaluate(() => { const a = document.activeElement; const r = a?.getBoundingClientRect(); return { opener: !!a?.hasAttribute?.("data-qa-opener"), tag: a?.tagName, text: (a?.textContent ?? "").trim().slice(0, 40), visible: !!r && r.width > 0 }; });
-  check(`${name}: focus returns to the control that opened it`, closed && back.opener && back.visible, JSON.stringify(back));
+  if (args.orphan) check(`${name}: with its opener gone, focus lands on a visible element in the page, not the body`, closed && back.tag !== "BODY" && back.tag !== undefined && back.visible, JSON.stringify(back));
+  else check(`${name}: focus returns to the control that opened it`, closed && back.opener && back.visible, JSON.stringify(back));
   void marker; void opener;
 }
 

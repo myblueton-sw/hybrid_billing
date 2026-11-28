@@ -247,3 +247,51 @@ Findings moved to HYB-407:
 Limits:
 - Backgrounds with images or transparency are skipped, as in the other contrast checks.
 - Only text contrast is measured; non-text boundaries under hover are not.
+
+# M. Success states with a routed success (2026-11-28)
+
+`--answer done` (`other-outcomes-qa`) and `--outcome done` (`form-states-qa`) answer each command with `200 {status: succeeded, business_state: applied, result_revision}`. The answer carries no result fields. Nothing is executed.
+
+| Run | Checks |
+| --- | --- |
+| Explorer, English 1440 | 147 (10 failed, all O02) |
+| Recipes, English 1440 and Arabic 320 | 36, none failed |
+| P02–P05, English 1440 | P04 stop failed |
+
+Measured and correct: focus stayed on a visible element and a completion statement appeared.
+
+| Screen and command | Statement |
+| --- | --- |
+| M01 create user | "User created…" |
+| M01 suspend user | "Account suspended" |
+| M02 trust proposal | "Change … proposed as a draft" |
+| M03 revocation request | "Revocation requested…" |
+| M03 access request | "Request sent…" |
+| M05 password | "Password changed" |
+| P01 approval | "Proposal 6 approved…" |
+| P01 withdrawal | "Proposal 7 withdrawn" |
+| P02 | "… is now: Applied" |
+
+Not measured: these commands need result fields that a real success carries, such as a proposal number, a draft or account ID, or a setup context. Without them the screens fall back, correctly, to an unknown result or to a failed re-read:
+- O01: "recorded, but this draft could not be read again"
+- O03: invalid setup response
+- M04: "Command outcome unknown"
+- P04 and P05: "unknown result"
+- O02: focus on main with nothing stated
+- P01 plan proposal: "proposal Unknown"
+
+These are moved to HYB-408, to be measured against the disposable sample service with non-financial, non-owner-review commands only.
+
+# Closing state of the checklist
+
+| Item | Where it was measured |
+| --- | --- |
+| Post-submission states | Busy (H), refused, conflict, unavailable, unknown (D, F, G, HYB-401) and field errors (J). Success is in M, with the rest in HYB-408 |
+| Confirmation-step recovery | I |
+| Dialogs, including the opener-removed fallback | B and K |
+| Focus outlines in opened states, and hover | A and L |
+| Colour vision | C |
+| Zoom, text spacing and vertical clipping | E and G |
+| P06/P07 | Moved to HYB-409 |
+
+Defects found along the way were fixed in HYB-400 and HYB-402 to HYB-407, and in K. Owner screen acceptance, native-language review, assistive-technology testing with people, and browsers other than Chromium on macOS remain outside this ticket.

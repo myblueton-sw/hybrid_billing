@@ -10,7 +10,7 @@ const browser = await chromium.launch({ headless: true, ...(args.chromium ? { ex
 const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: Number(args.scale ?? 1) });
 const page = await context.newPage();
 const results = [], errors = [], notes = [];
-let navigation = 0;
+let navigation = 0, hovered = 0;
 const check = (name, ok, detail = "") => { results.push(`${ok ? "PASS" : "FAIL"} ${name}${!ok && detail ? " " + String(detail).replace(/\s+/g, " ").slice(0, 400) : ""}`); if (!ok) process.exitCode = 1; };
 page.on("pageerror", (e) => errors.push(e.message));
 const password = randomBytes(20).toString("base64url");
@@ -62,6 +62,47 @@ try {
       const state = await page.evaluate(() => ({ alerts: [...document.querySelectorAll("main [role=alert], main .live-error")].filter((e) => e.getClientRects().length && e.textContent.trim()).map((e) => e.textContent.trim().slice(0, 80)), signedIn: !!document.querySelector(".service-session"), words: (document.querySelector("main")?.innerText ?? "").trim().split(/\s+/).length }));
       check(`${at}: the view finished loading, signed in, with no error panel`, settled && state.signedIn && state.alerts.length === 0, JSON.stringify({ settled, ...state }));
       if (args.scale) check(`${at}: the page is laid out at device pixel ratio ${args.scale}`, (await page.evaluate(() => window.devicePixelRatio)) === Number(args.scale));
+      if (args.hover) {
+        if (args.plant) await page.evaluate(() => { const st = document.createElement("style"); st.textContent = ".qa-hp:hover{color:#c8c8c8 !important;background:#fff !important}"; document.head.append(st); const b = document.createElement("button"); b.type = "button"; b.className = "qa-hp"; b.textContent = "planted hover"; document.querySelector("main")?.prepend(b); });
+        const marked = await page.evaluate(() => {
+          const seen = new Set(); let n = 0;
+          for (const e of document.querySelectorAll("main button, main a[href], main summary, main [role=tab]")) {
+            const r = e.getBoundingClientRect();
+            if (!r.width || !r.height || e.closest("[hidden], [inert], .visually-hidden") || e.matches(":disabled")) continue;
+            const key = String(e.className) + "|" + e.tagName + "|" + (e.closest("table, ul, ol") ? "row" : e.textContent.trim().slice(0, 20));
+            if (seen.has(key)) continue;
+            seen.add(key); e.setAttribute("data-qa-h", String(n++));
+            if (n >= 60) break;
+          }
+          return n;
+        });
+        const weak = [];
+        for (let i = 0; i < marked; i++) {
+          const el = page.locator(`[data-qa-h="${i}"]`);
+          try { await el.scrollIntoViewIfNeeded({ timeout: 2000 }); await el.hover({ timeout: 2000, force: true }); } catch { continue; }
+          await page.waitForTimeout(220);
+          const got = await el.evaluate((e) => {
+            const rgb = (v) => { const p = v.match(/[\d.]+/g)?.map(Number); return /^rgba?\(/.test(v) && p?.length >= 3 ? [p[0], p[1], p[2], p[3] ?? 1] : null; };
+            const over = (a, b) => [0, 1, 2].map((i) => a[i] * a[3] + b[i] * (1 - a[3]));
+            const lum = (c) => c.map((v) => { v /= 255; return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }).reduce((s, v, i) => s + v * [0.2126, 0.7152, 0.0722][i], 0);
+            const ratio = (a, b) => (Math.max(lum(a), lum(b)) + 0.05) / (Math.min(lum(a), lum(b)) + 0.05);
+            if (!e.matches(":hover")) return null;
+            const leaf = [...e.querySelectorAll("*")].find((n) => [...n.childNodes].some((t) => t.nodeType === 3 && t.textContent.trim())) ?? e;
+            const c = getComputedStyle(leaf); let bg = [255, 255, 255];
+            const chain = []; for (let n = leaf; n; n = n.parentElement) chain.unshift(n);
+            for (const n of chain) { const s = getComputedStyle(n); if (s.backgroundImage !== "none" || Number(s.opacity) !== 1) return null; const p = rgb(s.backgroundColor); if (p) bg = over(p, bg); }
+            const fg = rgb(c.color); if (!fg) return null;
+            const size = parseFloat(c.fontSize), large = size >= 24 || (Number(c.fontWeight) >= 700 && size >= 18.66);
+            const r = ratio(over(fg, bg), bg);
+            return { ratio: Math.round(r * 100) / 100, need: large ? 3 : 4.5, el: e.tagName.toLowerCase() + "." + String(e.className).split(" ")[0], text: e.textContent.trim().slice(0, 24) };
+          });
+          if (got && got.ratio < got.need) weak.push(got);
+        }
+        await page.mouse.move(0, 0);
+        hovered += marked;
+        if (args.plant) check(`${at}: the planted low-contrast hover is detected`, weak.some((w) => w.el.includes("qa-hp")), JSON.stringify(weak.slice(0, 2)));
+        else check(`${at}: text keeps 4.5:1 (3:1 large) while each control is hovered (${marked} controls)`, weak.length === 0, JSON.stringify(weak.slice(0, 3)));
+      }
       const found = await inspect();
       const controls = (await measurePresentation(page)).results?.filter((r) => r.candidate).map((r) => ({ el: r.element.tag + "." + r.element.className.split(" ")[0], kind: r.kind, ratio: Math.round(r.ratio * 100) / 100, need: r.threshold })) ?? [];
       records.push({ screen: screen.id, view: tab.key, lang, width, settled, ...state, ...found, controls });
@@ -83,5 +124,6 @@ try {
   await browser.close();
   for (const r of results) if (!args.quiet || r.startsWith("FAIL")) console.log(r);
   for (const n of notes) console.log("NOTE " + n);
+  if (args.hover) console.log(`HOVERED ${hovered}`);
   console.log(`RESULT ${results.filter((r) => r.startsWith("PASS")).length} passed ${results.filter((r) => r.startsWith("FAIL")).length} failed`);
 }

@@ -231,3 +231,19 @@ Findings moved to HYB-407:
 - **Fix.** When the opener is gone or not rendered, `ReviewPanel` now moves focus to the page title (`main h1`, given `tabindex="-1"` if it has none). When the opener is present, it still returns focus to the opener.
 - **After.** The orphan run passes 31 of 31. The normal run also passes 31 of 31, with focus returning to the opener.
 - **Tests.** Console tests: 1,512 pass, 0 fail.
+
+# L. Hover states (2026-11-28)
+
+`tools/views-qa.mjs --hover 1` measures text contrast while each control is hovered.
+- **Which controls.** On each of the 62 views it takes up to 60 distinct controls in `main` (buttons, links, summaries and tabs; one per class and text, one per list row kind). It scrolls each into view and hovers it with the mouse.
+- **How it measures.** After 220 ms for transitions, it measures the text against the composited background, with the same 4.5:1 and 3:1 thresholds.
+- **Proof that it detects.** `--plant 1` adds a button whose hover colour is too faint.
+
+| Run | Controls hovered | Checks |
+| --- | --- | --- |
+| English 1440 and Arabic 320 | 1,527 | 1,118, none failed |
+| Planted defect | 828 | Detected on all 62 views |
+
+Limits:
+- Backgrounds with images or transparency are skipped, as in the other contrast checks.
+- Only text contrast is measured; non-text boundaries under hover are not.

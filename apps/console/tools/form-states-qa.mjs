@@ -65,7 +65,7 @@ try {
   await page.locator(".service-session").waitFor();
   const posts = [];
   const answered = [];
-  const wording = { nothing: ["Nothing changed", "لم يتغيّر شيء"], pending: ["may have been applied", "ربما طُبّق"], again: ["confirm again", "أكّد مرة أخرى"] };
+  const wording = { nothing: ["Nothing changed", "لم يتغيّر شيء", "바뀐 것은 없습니다", "변경된 내용이 없습니다"], pending: ["may have been applied", "ربما طُبّق", "반영되었을 수 있습니다", "적용되었을 수 있습니다"], again: ["confirm again", "أكّد مرة أخرى", "다시 확인"] };
   const reply = { refused: [422, "prerequisite_failed", "correct_request"], conflict: [409, "revision_conflict", "reload"], unavailable: [503, "dependency_unavailable", "retry"] };
   await page.route((url) => url.pathname.includes("/api/"), (route) => {
     if (route.request().method() === "GET") return route.continue();

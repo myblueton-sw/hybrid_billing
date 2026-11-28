@@ -136,7 +136,7 @@ export function planHref(plan: string, lang: string): string {
   return "#/organization-changes?" + q.toString();
 }
 
-export type Refusal = "field" | "limit" | "stage" | "conflict" | "missing" | "dependency" | "denied" | "signin" | "failed";
+export type Refusal = "field" | "limit" | "stage" | "conflict" | "missing" | "dependency" | "denied" | "signin" | "unknown" | "failed";
 export function refusalOf(failure: string, code: string): Refusal {
   if (code === "unsupported_command") return "missing";
   if (failure === "conflict") return "conflict";
@@ -146,6 +146,7 @@ export function refusalOf(failure: string, code: string): Refusal {
   if (failure === "denied" && code === "permission_denied") return "denied";
   if (failure === "unauthenticated") return "signin";
   if (failure === "busy") return "dependency";
+  if (failure === "" || failure === "unavailable" || failure === "partial") return "unknown";
   return "failed";
 }
 

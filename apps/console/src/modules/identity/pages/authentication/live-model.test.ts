@@ -4,6 +4,7 @@ import { AdminError, policyPageOf, type PolicyPage } from "../../../../service/a
 import { duration, effectiveStep, methodsText, policyFailure, policyStep, stale, stepMinutes, stepText, wholeMinutes, when } from "./live-model";
 import { c } from "../../../../service/copy";
 import { p } from "./live-copy";
+import { w } from "../users/live-copy";
 
 const rev = { methods: ["password"], mfa: "none", max_age_seconds: 3600, step_up: [{ action: "policy.change", max_age_seconds: 600, mfa: false }] };
 const page = (change: Partial<PolicyPage>): PolicyPage => ({
@@ -63,7 +64,11 @@ test("dates and failures", () => {
   assert.equal(new Set(bodies).size, kinds.length);
   assert.equal(policyFailure("en", new AdminError("stale")).body, policyFailure("en", new AdminError("conflict")).body);
   assert.equal(policyFailure("en", new AdminError("invalid")).body, "");
-  assert.equal(policyFailure("en", new Error("x")).title, p.saveFailed("en"));
+  for (const l of ["en", "ko", "ar"] as const) {
+    assert.equal(policyFailure(l, new Error("x")).title, w.unknownTitle(l));
+    assert.equal(policyFailure(l, new AdminError("unavailable")).title, w.unknownTitle(l));
+    assert.equal(policyFailure(l, new AdminError("busy")).title, p.saveFailed(l));
+  }
   for (const l of ["en", "ko", "ar"] as const) {
     assert.equal(policyFailure(l, new AdminError("reauth")).body, c.reauthRefused(l));
     assert.equal(policyFailure(l, new AdminError("reauth_cancelled")).body, c.reauthNotDone(l));

@@ -11,13 +11,13 @@ import { c } from "../../../../service/copy";
 import { Summary, type Problems } from "../../../../service/Service";
 import { FailureBox, Reason, reasonProblem, settles, useWide } from "../users/Live";
 import { w } from "../users/live-copy";
-import { failureText } from "../users/live-model";
 import { when } from "../authentication/live-model";
 import { a, accessPhrase, actionLabel, fieldLabel, kindLabel } from "./live-copy";
 import { accessText, capabilityKey, grantCapabilities, selectedCapability, maxDays, reasonText, wholeDays } from "./live-model";
 import { q, v } from "./request-copy";
 import { additionsPaused, keepAttempt } from "./request-model";
-import { DecidePanel, describeRequest, RequestSection, type Decision } from "./Requests";
+import { DecidePanel, RequestSection, type Decision } from "./Requests";
+import { describeFor, describeRequest } from "./failure-model";
 import { RevocationSection } from "./Revocations";
 import { PermissionList, effectiveLines } from "./Permissions";
 import { p } from "./permission-copy";
@@ -32,20 +32,6 @@ import "./access.css";
 type Target = { kind: "grant"; id: string; who: string; access: string; customer: string; status: string } | { kind: "delegation"; id: string; who: string; access: string; until: string };
 type Mode = { kind: "form" } | { kind: "revoke"; target: Target } | { kind: "decide"; action: Decision; row: ListedRequest };
 
-function describeFor(kind: "grant" | "revoke" | "load") {
-  return (l: Locale, e: unknown) => {
-    if (kind === "grant") return describeRequest(l, e);
-    if (e instanceof AdminError && kind !== "load") {
-      if (e.failure === "refused") return { title: a.refusedTitle(l), body: a.refusedRevoke(l) };
-      if (e.failure === "stage") return { title: a.refusedTitle(l), body: a.stageBody(l) };
-      if (e.failure === "invalid") return { title: a.refusedTitle(l), body: a.invalidBody(l) };
-      if (e.failure === "denied" && kind === "revoke") return { title: a.refusedTitle(l), body: a.goneBody(l) };
-      if (e.failure === "conflict" || e.failure === "stale") return { title: w.saveFailed(l), body: a.conflictBody(l) };
-    }
-    if (e instanceof AdminError && (e.failure === "unavailable" || e.failure === "busy")) return { title: w.saveFailed(l), body: a.unavailableBody(l) };
-    return failureText(l, e);
-  };
-}
 
 function GrantForm({ l, api, page, self, onDone, onCancel, onReload, onRefresh, stepping }: {
   l: Locale; api: AdminClient; page: AccessPage; self: string; onDone: (login: string) => void; onCancel: () => void; onReload: () => void; onRefresh: () => void; stepping: boolean;

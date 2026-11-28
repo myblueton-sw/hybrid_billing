@@ -37,3 +37,37 @@ Limits: hover states are not measured; Chromium only; controls that are not `:fo
 - With the earlier finding that colour appears only on primary buttons and one tag, each with its own words (HYB-313), no state is carried by colour alone in the default views.
 
 Limits: computed from CSS colours, not from rendered pixels; images, SVG, gradients and partly transparent layers are counted as unsure and skipped, as in the ordinary measurement; states that appear only after a submission are step D.
+
+# D. States after the final press on P02–P05 command forms (2026-11-28)
+
+`tools/form-states-qa.mjs --confirm 1 --outcome <kind>` takes each of the 22 kinds of command form on P02–P05 to its confirmation, presses the confirmation's primary button from the keyboard, and answers the command with a routed response instead of the service: `refused` (422 `prerequisite_failed`), `conflict` (409 `revision_conflict`), `unavailable` (503 `dependency_unavailable`) or `unknown` (the request is failed at once with a network timeout error, so the client's own timeout is not exercised). No command reaches the service.
+
+For each form it checks that:
+- the press sends exactly one command;
+- focus is on a visible element and not the page body;
+- the focused element sits in a live region or alert (`role=status`, `role=alert` or `aria-live`) whose text was not on the page before the press;
+- that text states the outcome. A refusal must say "Nothing changed"; a conflict must say "confirm again"; unavailable and unknown must say "may have been applied". Refusal and conflict must not use the "may have been applied" wording. The English and Arabic forms of each phrase are both accepted;
+- the page does not overflow, cut off or lose text contrast.
+
+A summary check requires every confirmation reached to have been pressed and answered.
+
+| Answer | Language, width | Forms | Focused region | Checks |
+| --- | --- | --- | --- | --- |
+| refused | English 1440 | 22 of 22 | `role=status` | 293, none failed |
+| unknown | English 1440 | 22 of 22 | `role=alert` | 293, none failed |
+| conflict | Arabic 320 | 22 of 22 | `role=status` | 293, none failed |
+| unavailable | English 320 | 22 of 22 | `role=alert` | 293, none failed |
+
+- Proven on a planted mismatch: answering `unavailable` while expecting `refused` (`--answer unavailable --outcome refused`) failed the outcome-text check on all 22 forms.
+- Unavailable and unknown show the same text and role ("may have been applied", `role=alert`): a 503 is treated like a lost response and offered for retry with the same key. The unavailable run therefore does not show a 503-specific statement. Whether that wording is right is a product question, recorded in HYB-400.
+
+Detector corrections made on the way, recorded because they changed what a pass means:
+- The first run pressed nothing, because the final button is not a submit button. The summary check was added.
+- The first live-region test accepted any text, including the screen-review panel's status line. The test now reads only the focused region, requires it to be new, and requires outcome-specific text (independent method review, conditions taken).
+- `input` and `textarea` elements are no longer reported as cut off when their typed value is longer than the box, since they scroll their content. `select` is still measured. The all-views check still passes 1,738 checks.
+
+Not measured here:
+- The same states on M, O and P01 forms. They have no shared confirmation step and need a per-form harness.
+- The busy state during sending, which lasts only until the routed answer.
+- A successful completion, which would need the service to accept a command.
+- Screen-reader announcement.

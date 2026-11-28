@@ -23,7 +23,7 @@ export function inspectView(page, vision = "") {
     const r = e.getBoundingClientRect(), c = getComputedStyle(e);
     if (r.width < 2 || r.height < 2 || c.visibility !== "visible") continue;
     if ((r.right > vw + 1 || r.left < -1) && !scrolls(e)) { const k = name(e); if (!seenClip.has(k)) { seenClip.add(k); clipped.push({ el: k, left: Math.round(r.left), right: Math.round(r.right), vw }); } }
-    if (/(hidden|clip)/.test(c.overflowX) && e.scrollWidth > e.clientWidth + 1 && c.textOverflow !== "ellipsis") { const k = name(e); if (!seenCut.has(k)) { seenCut.add(k); cut.push({ el: k, content: e.scrollWidth, box: e.clientWidth }); } }
+    if (/(hidden|clip)/.test(c.overflowX) && e.scrollWidth > e.clientWidth + 1 && c.textOverflow !== "ellipsis" && !e.matches("input, textarea")) { const k = name(e); if (!seenCut.has(k)) { seenCut.add(k); cut.push({ el: k, content: e.scrollWidth, box: e.clientWidth }); } }
     const text = [...e.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim().length > 0);
     if (!text || e.matches(":disabled, [aria-disabled=true]") || e.closest(":disabled")) continue;
     const fg = rgb(c.color); if (!fg) continue;

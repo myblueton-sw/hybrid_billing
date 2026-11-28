@@ -119,3 +119,23 @@ Method notes:
 - In the development server, React runs effects twice, so a dialog that prepares on open may send the same request twice. Requests are counted once per distinct path.
 - O03 sends two reads when a contract is opened, so up to three distinct requests per press are accepted.
 - Only the refused answer is run here. Conflict, unavailable and unknown on these forms are left to HYB-401 and the per-screen checks.
+
+# G. Other answers on M, O and P01, and native zoom (2026-11-28)
+
+`tools/other-outcomes-qa.mjs --answer conflict|unavailable|unknown` reruns the step F exploration with a 409 `revision_conflict`, a 503 `dependency_unavailable`, or a request failed at once with a network timeout error.
+
+| Answer | Language, width | Requests reached | Checks |
+| --- | --- | --- | --- |
+| conflict | Arabic 320 | 41 | 208, none failed |
+| unavailable | English 1440 | 36 | 147, none failed |
+| unknown | English 320 | 45 | 183, none failed |
+
+In every case focus stayed on a visible element in the page and a new alert or status stated the answer.
+
+A wording finding was recorded from the stated texts. When the response is lost (`unknown`), these screens state that nothing was applied:
+- M01 create user and suspend user, and M03 request revocation: "Could not save this change. The user service is not responding."
+- M01 bulk add: "Nothing has been revoked."
+
+P01, O02 and O03 state the uncertainty ("may have been applied", "resend the same request"). Because the M01 and M03 statement may be false, it is moved to HYB-402.
+
+Native zoom: `tools/views-qa.mjs --scale 2` lays the page out at device pixel ratio 2, as native browser zoom does, rather than with CSS zoom. Each view checks that the ratio is in effect. 640 CSS pixels at ratio 2 is a 1280-pixel window at 200%; 320 is the same window at 400%. All 62 views at English 640, Arabic 640 and English 320 passed: 1,676 checks, none failed.

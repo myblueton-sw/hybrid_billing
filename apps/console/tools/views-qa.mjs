@@ -7,7 +7,7 @@ const args = Object.fromEntries(process.argv.slice(2).flatMap((v, i, all) => (v.
 const { chromium } = createRequire(import.meta.url)(args["playwright-module"] || "playwright");
 const base = (args.url || "http://127.0.0.1:4173").replace(/\/$/, "");
 const browser = await chromium.launch({ headless: true, ...(args.chromium ? { executablePath: args.chromium } : {}) });
-const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: Number(args.scale ?? 1) });
 const page = await context.newPage();
 const results = [], errors = [], notes = [];
 let navigation = 0;
@@ -61,6 +61,7 @@ try {
       await page.evaluate(() => document.fonts.ready);
       const state = await page.evaluate(() => ({ alerts: [...document.querySelectorAll("main [role=alert], main .live-error")].filter((e) => e.getClientRects().length && e.textContent.trim()).map((e) => e.textContent.trim().slice(0, 80)), signedIn: !!document.querySelector(".service-session"), words: (document.querySelector("main")?.innerText ?? "").trim().split(/\s+/).length }));
       check(`${at}: the view finished loading, signed in, with no error panel`, settled && state.signedIn && state.alerts.length === 0, JSON.stringify({ settled, ...state }));
+      if (args.scale) check(`${at}: the page is laid out at device pixel ratio ${args.scale}`, (await page.evaluate(() => window.devicePixelRatio)) === Number(args.scale));
       const found = await inspect();
       const controls = (await measurePresentation(page)).results?.filter((r) => r.candidate).map((r) => ({ el: r.element.tag + "." + r.element.className.split(" ")[0], kind: r.kind, ratio: Math.round(r.ratio * 100) / 100, need: r.threshold })) ?? [];
       records.push({ screen: screen.id, view: tab.key, lang, width, settled, ...state, ...found, controls });

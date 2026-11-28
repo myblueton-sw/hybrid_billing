@@ -175,3 +175,31 @@ O01 and O03 kept focus.
 The pressed control is disabled while busy, and a focused control that becomes disabled drops focus. Focus returns to the outcome when the answer arrives (steps F and G, HYB-404), so the loss lasts only for the wait. The fix is moved to HYB-406.
 
 Not measured: P02–P05, because `form-states-qa` has no busy mode yet (recorded in HYB-406).
+
+# I. Going back or cancelling instead of the final press, on M, O and P01 (2026-11-28)
+
+`tools/other-outcomes-qa.mjs --recovery 1` first learns how many presses each form needs before its command is sent. It then drives the form again to the step just before the final press and, instead of that press, presses each of the first two other buttons beside the final one. List rows and pagers are skipped. For each, it checks that:
+- no command is sent;
+- focus lands on a visible element in the page or dialog, not the body;
+- the page does not overflow, cut off or lose contrast.
+
+It also records which filled fields remain.
+
+| Run | Checks |
+| --- | --- |
+| Four recipes, English 1440 and Arabic 320 | 50, none failed |
+| Explorer, English 1440 | 290 passed |
+| M02, M05, P01 and O03 rerun after excluding list rows | 94, none failed |
+
+The explorer's four failures came from the method, not the screens: on O03 the buttons "beside" the final one were other contract rows, which open the contract and read its setup. The rerun excludes list rows.
+
+What the screens do:
+
+| Screen | Button | Focus after | Filled values |
+| --- | --- | --- | --- |
+| M02 trust proposal | Go back | "Review proposal" | The edited time and step are kept; the reason typed in the confirmation dialog is cleared |
+| P01 proposal, approval and withdrawal | Back to edit | Section heading | The reason is kept |
+| M01, M03 and M05 | Cancel | The opener | The typed values are discarded, as expected |
+| O02 | Change, Enter an ID, Search instead | Moves within the form | All values are kept |
+
+No defect was found. Whether M02 should keep the confirmation reason when going back is left to the owner's screen review.

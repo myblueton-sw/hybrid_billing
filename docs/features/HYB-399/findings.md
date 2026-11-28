@@ -139,3 +139,39 @@ A wording finding was recorded from the stated texts. When the response is lost 
 P01, O02 and O03 state the uncertainty ("may have been applied", "resend the same request"). Because the M01 and M03 statement may be false, it is moved to HYB-402.
 
 Native zoom: `tools/views-qa.mjs --scale 2` lays the page out at device pixel ratio 2, as native browser zoom does, rather than with CSS zoom. Each view checks that the ratio is in effect. 640 CSS pixels at ratio 2 is a 1280-pixel window at 200%; 320 is the same window at 400%. All 62 views at English 640, Arabic 640 and English 320 passed: 1,676 checks, none failed.
+
+# H. While a command is in flight (2026-11-28)
+
+`tools/other-outcomes-qa.mjs --busy 1` holds each routed answer until the page has been measured, then lets it through.
+
+While the request is in flight, it checks that:
+- focus is on a visible element, not the page body;
+- the page says it is working, through `aria-busy` or a new status;
+- nothing overflows, is cut off or loses text contrast.
+
+| Run | Requests measured | Checks |
+| --- | --- | --- |
+| Explorer, English 1440 | 36 | 291, 23 failed |
+| Four recipes, English 1440 and Arabic 320 | 8 | 68, 6 failed |
+
+What held:
+- Every request announced that it was working.
+- No layout failed.
+
+The failures are all one kind: focus fell to the page body while the request was in flight.
+
+| Where | Requests |
+| --- | --- |
+| M01 | 7 |
+| M02 trust proposal | 2 |
+| M03 | 2 (explorer) and 2 (recipe) |
+| M04 account creation | 2 |
+| M05 password | 1 |
+| O02 relationship proposal | 10 |
+| P01 plan proposal, approval and withdrawal | 3 |
+
+O01 and O03 kept focus.
+
+The pressed control is disabled while busy, and a focused control that becomes disabled drops focus. Focus returns to the outcome when the answer arrives (steps F and G, HYB-404), so the loss lasts only for the wait. The fix is moved to HYB-406.
+
+Not measured: P02–P05, because `form-states-qa` has no busy mode yet (recorded in HYB-406).

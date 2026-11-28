@@ -170,13 +170,14 @@ try {
   await page.locator("#signin-workspace").fill("sample-workspace"); await page.locator("#signin-email").fill("admin@example.invalid");
   await page.locator("#signin-password").fill(password); await page.locator("form button[type=submit]").click();
   await page.locator(".service-session").waitFor();
-  const answered = [], dropped = [];
-  await page.route((url) => url.pathname.includes("/api/"), (route) => {
+  const answered = [], dropped = [], held = [], busy = [];
+  await page.route((url) => url.pathname.includes("/api/"), async (route) => {
     const method = route.request().method();
     if (method === "GET" || method === "HEAD") return route.continue();
     const path = new URL(route.request().url()).pathname;
     if (/sign-?out|logout|\/session$/.test(path) && method === "DELETE") { dropped.push(path); return route.abort(); }
     answered.push(method + " " + path);
+    if (args.busy) await new Promise((done) => { held.push(done); setTimeout(done, 15000); });
     if (answer === "unknown") return route.abort("timedout");
     const [status, code, next] = reply[answer];
     return route.fulfill({ status, json: { code, retry: status === 503, next_action: next, request_id: "qa-outcome" } });
@@ -220,6 +221,24 @@ try {
           await fill();
           if (!(await nextButton())) break;
         }
+        if (args.busy && answered.length > before) {
+          await page.waitForTimeout(250);
+          const during = await page.evaluate((earlier) => {
+            const a = document.activeElement, r = a?.getBoundingClientRect();
+            const live = [...document.querySelectorAll("main [role=status], main [role=alert], main [aria-live]")].map((e) => e.textContent.trim().replace(/\s+/g, " ").slice(0, 90)).filter((t) => t && !earlier.includes(t));
+            const marked = !!document.querySelector("main [aria-busy=true]");
+            const pressed = document.querySelector("[data-qa-pressed]:last-of-type");
+            return { tag: a?.tagName ?? "", text: (a?.textContent ?? "").trim().slice(0, 40), visible: !!r && r.width > 0 && r.height > 0, marked, live: live.slice(0, 2), disabled: !!pressed?.disabled };
+          }, earlier);
+          const shown = await inspectView(page);
+          busy.push({ at, ...during });
+          check(`${at}: while the request is in flight focus is on a visible element, not the body`, during.tag !== "BODY" && during.tag !== "" && during.visible, JSON.stringify(during));
+          check(`${at}: while the request is in flight the page says it is working (aria-busy or a new status)`, during.marked || during.live.length > 0, JSON.stringify(during));
+          check(`${at}: the in-flight state does not overflow, cut off or lose text contrast`, shown.overflow <= 1 && !shown.clipped.length && !shown.cut.length && !shown.vcut.length && !shown.low.length, JSON.stringify({ o: shown.overflow, c: shown.clipped.slice(0, 2), cut: shown.cut.slice(0, 2), v: shown.vcut.slice(0, 2), low: shown.low.slice(0, 2) }));
+          held.splice(0).forEach((done) => done());
+          await page.waitForFunction(() => !document.querySelector("main [aria-busy=true]"), null, { timeout: 8000 }).catch(() => {});
+          await page.waitForTimeout(300);
+        }
         if (answered.length === before) { unreached.push(`${at}: no command after ${rounds} presses`); if (args.shots && key === "recipe") await page.screenshot({ path: `${args.shots}/unreached-${screen.id}-${lang}-${width}.png`, fullPage: true }); continue; }
         await frames();
         const state = await page.evaluate((earlier) => {
@@ -247,7 +266,7 @@ try {
   if (args.recipes) check(`every recipe reached its command (${outcomes.length} of ${args.recipes.split(",").length * combos.length})`, unreached.length === 0 && outcomes.length === args.recipes.split(",").length * combos.length, unreached.join(" | "));
   check("no sign-out request was made", dropped.length === 0, dropped.join());
   check("no page error", errors.length === 0, errors.join(" | "));
-  if (args.shots) await writeFile(`${args.shots}/other-outcomes.json`, JSON.stringify({ outcomes, unreached, notes }, null, 1));
+  if (args.shots) await writeFile(`${args.shots}/other-outcomes.json`, JSON.stringify({ outcomes, unreached, notes, busy }, null, 1));
 } catch (e) {
   check("the script ran to the end", false, e.stack || e.message);
 } finally {

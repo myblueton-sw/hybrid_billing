@@ -20,7 +20,7 @@ const combos = (args.combos ?? "en:1440").split(",").map((c) => c.split(":"));
 const limit = Number(args.limit ?? 30);
 const frames = () => page.evaluate(() => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(done, 80)))));
 const answer = args.answer ?? args.outcome ?? "refused";
-const reply = { refused: [422, "prerequisite_failed", "correct_request"], conflict: [409, "revision_conflict", "reload"], unavailable: [503, "dependency_unavailable", "retry"] };
+const reply = { invalid: [422, "invalid_request", "correct_request"], refused: [422, "prerequisite_failed", "correct_request"], conflict: [409, "revision_conflict", "reload"], unavailable: [503, "dependency_unavailable", "retry"] };
 const pending = ["may have been applied", "ربما طُبّق"];
 const skip = /sign out|log out|تسجيل الخروج|로그아웃/i;
 
@@ -180,7 +180,7 @@ try {
     if (args.busy) await new Promise((done) => { held.push(done); setTimeout(done, 15000); });
     if (answer === "unknown") return route.abort("timedout");
     const [status, code, next] = reply[answer];
-    return route.fulfill({ status, json: { code, retry: status === 503, next_action: next, request_id: "qa-outcome" } });
+    return route.fulfill({ status, json: { code, retry: status === 503, next_action: next, request_id: "qa-outcome", ...(answer === "invalid" ? { fields: (args.fields ?? "reason,rationale,name,members,days,value").split(",") } : {}) } });
   });
   if (args.shots) await mkdir(args.shots, { recursive: true });
 
@@ -252,14 +252,19 @@ try {
           let near = [], depth = 0;
           if (!own) for (let n = a?.parentElement; n && n.tagName !== "MAIN"; n = n.parentElement, depth++) { near = [...n.querySelectorAll("[role=alert], [role=status], [aria-live]")].filter(fresh); if (near.length) break; }
           const region = own ?? near.find((e) => e.getAttribute("role") === "alert") ?? near[0] ?? null;
-          return { depth, how: own ? "focused" : region ? "near" : "", titled: !!a && a.getAttribute("tabindex") === "-1", tag: a?.tagName ?? "", cls: String(a?.className ?? "").slice(0, 40), text: (a?.textContent ?? "").trim().replace(/\s+/g, " ").slice(0, 60), visible: !!r && r.width > 0 && r.height > 0, inMain: !!a?.closest?.("main"), role: region?.getAttribute("role") ?? region?.getAttribute("aria-live") ?? "", said: region ? region.textContent.trim().replace(/\s+/g, " ").slice(0, 90) : "" };
+          const invalid = [...document.querySelectorAll("main [aria-invalid=true], dialog [aria-invalid=true]")].filter((e) => e.getClientRects().length);
+          const described = invalid.every((e) => (e.getAttribute("aria-describedby") ?? "").split(/\s+/).filter(Boolean).some((id) => (document.getElementById(id)?.textContent ?? "").trim()));
+          const focusedField = !!a && a.getAttribute("aria-invalid") === "true";
+          return { invalid: invalid.length, described, focusedField, depth, how: own ? "focused" : region ? "near" : "", titled: !!a && a.getAttribute("tabindex") === "-1", tag: a?.tagName ?? "", cls: String(a?.className ?? "").slice(0, 40), text: (a?.textContent ?? "").trim().replace(/\s+/g, " ").slice(0, 60), visible: !!r && r.width > 0 && r.height > 0, inMain: !!a?.closest?.("main"), role: region?.getAttribute("role") ?? region?.getAttribute("aria-live") ?? "", said: region ? region.textContent.trim().replace(/\s+/g, " ").slice(0, 90) : "" };
         }, earlier);
         const found = await inspectView(page);
         const sent = [...new Set(answered.slice(before))];
         outcomes.push({ screen: screen.id, view: tab.key, lang, width, key, sent, ...state, overflow: found.overflow, clipped: found.clipped, cut: found.cut, vcut: found.vcut, low: found.low });
         check(`${at}: only the final press sent requests (${sent.join(", ")})`, sent.length >= 1 && sent.length <= 3, sent.join(", "));
         check(`${at}: after the ${answer} answer focus is on a visible element in the page, not the body`, state.tag !== "BODY" && state.tag !== "" && state.visible && state.inMain, JSON.stringify(state));
-        check(`${at}: the ${answer} answer is stated in a new live region or alert that holds focus, or sits with the focused title`, !!state.said && !earlier.includes(state.said) && (state.how === "focused" || (state.how === "near" && state.titled)), JSON.stringify({ said: state.said, role: state.role, how: state.how, titled: state.titled, focus: state.cls + " " + state.text }));
+        if (answer === "invalid") check(`${at}: every field marked invalid points to a message with text`, state.described, JSON.stringify({ invalid: state.invalid, said: state.said }));
+        if (answer === "invalid" && state.focusedField && state.described) check(`${at}: the invalid answer moves focus to the field that needs correcting`, true);
+        else check(`${at}: the ${answer} answer is stated in a new live region or alert that holds focus, or sits with the focused title`, !!state.said && !earlier.includes(state.said) && (state.how === "focused" || (state.how === "near" && state.titled)), JSON.stringify({ said: state.said, role: state.role, how: state.how, titled: state.titled, focus: state.cls + " " + state.text }));
         if (answer === "refused" || answer === "conflict") check(`${at}: the ${answer} answer does not say the request may have been applied`, !pending.some((p) => state.said.includes(p)), state.said);
         check(`${at}: the ${answer} state does not overflow, cut off or lose text contrast`, found.overflow <= 1 && !found.clipped.length && !found.cut.length && !found.vcut.length && !found.low.length, JSON.stringify({ o: found.overflow, c: found.clipped.slice(0, 2), cut: found.cut.slice(0, 2), v: found.vcut.slice(0, 2), low: found.low.slice(0, 2) }));
         if (args.shots && (state.tag === "BODY" || !state.said)) await page.screenshot({ path: `${args.shots}/${screen.id}-${tab.key}-${lang}-${width}-${outcomes.length}.png` });

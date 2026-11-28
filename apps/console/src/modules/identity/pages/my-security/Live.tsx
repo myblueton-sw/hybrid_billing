@@ -11,7 +11,7 @@ import { w } from "../users/live-copy";
 import { roleName } from "../users/live-model";
 import { when } from "../authentication/live-model";
 import { m } from "./live-copy";
-import { canChange, changeOutcome, checkChange } from "./live-model";
+import { canChange, changeOutcome, changeUnsettled, checkChange } from "./live-model";
 import LiveSessions from "./LiveSessions";
 import { useScopedRead, type ScopedValue } from "./scoped-read";
 import "../users/live.css";
@@ -63,6 +63,7 @@ function PasswordForm({ l, api, page, stepping, hadWrong, pending, onWrong, onDo
   const [problems, setProblems] = useState<Problems>([]);
   const [server, setServer] = useState<Problems>([]);
   const [failure, setFailure] = useState("");
+  const [unsettled, setUnsettled] = useState(false);
   const [changed, setChanged] = useState(false);
   const [focusKey, setFocusKey] = useState(0);
   const clear = () => { for (const r of [current, next, confirm]) if (r.current) r.current.value = ""; };
@@ -105,6 +106,7 @@ function PasswordForm({ l, api, page, stepping, hadWrong, pending, onWrong, onDo
         setServer([{ field: "mysec-new", message: m.errForm(l) }]);
         focus("mysec-new");
       } else {
+        setUnsettled(changeUnsettled(outcome));
         setFailure(outcome === "locked" ? m.errLocked(l) : outcome === "limited" ? m.errLimited(l, err instanceof AdminError ? err.retryAfter : 0)
           : outcome === "conflict" ? m.errConflict(l) : outcome === "busy" ? m.errBusy(l) : m.changeUnknown(l));
         setFocusKey((k) => k + 1);
@@ -132,7 +134,7 @@ function PasswordForm({ l, api, page, stepping, hadWrong, pending, onWrong, onDo
       <h2 id="mysec-pw-title" tabIndex={-1} ref={heading}>{m.changeTitle(l)}</h2>
       <p className="live-impact">{m.changeImpact(l)}</p>
       {problems.length > 0 && <Summary locale={l} title={c.check(l)} problems={problems} focusKey={focusKey} />}
-      {failure && <FailureNote focusKey={focusKey} title={w.saveFailed(l)} body={failure} />}
+      {failure && <FailureNote focusKey={focusKey} title={unsettled ? m.mayHaveChanged(l) : w.saveFailed(l)} body={failure} />}
       <span className="visually-hidden" aria-hidden="true"><input type="text" autoComplete="username" readOnly tabIndex={-1} value={page.login} /></span>
       <SecretField l={l} id="mysec-current" label={m.currentPassword(l)} autoComplete="current-password" error={field("mysec-current")} field={current} />
       <SecretField l={l} id="mysec-new" label={c.newPassword(l)} autoComplete="new-password" hint={`${c.rule(l)} ${m.differ(l)}`} error={field("mysec-new")} field={next} />

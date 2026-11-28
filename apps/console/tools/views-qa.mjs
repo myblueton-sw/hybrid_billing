@@ -21,7 +21,10 @@ const screens = [...(await load("identity")), ...(await load("organizations")), 
 const combos = (args.combos ?? "en:320,ko:320,ar:320,en:1440").split(",").map((c) => c.split(":"));
 const records = [];
 
-const inspect = () => inspectView(page);
+const inspect = async () => {
+  if (args.plant) await page.evaluate(() => { const m = document.querySelector("main"); if (m && !m.querySelector("[data-qa-plant]")) { const p = document.createElement("p"); p.setAttribute("data-qa-plant", ""); p.textContent = "planted red on black"; p.style.cssText = "color:#ff0000;background:#000;font-size:14px"; m.prepend(p); } });
+  return inspectView(page, args.vision ?? "");
+};
 
 try {
   const lines = (await readFile(args.activation, "utf8")).trim().split("\n");

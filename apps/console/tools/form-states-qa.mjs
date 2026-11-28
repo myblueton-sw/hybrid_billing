@@ -18,7 +18,7 @@ const screens = JSON.parse(await readFile(new URL("../src/modules/administration
 const combos = (args.combos ?? "en:320,ar:320,en:1440").split(",").map((c) => c.split(":"));
 const frames = () => page.evaluate(() => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(done, 60))))));
 let picked = 0;
-const records = [], submitted = [], confirmed = [], unreached = [], notes2 = [], shot = new Set();
+const records = [], submitted = [], confirmed = [], unreached = [], notes2 = [], shot = new Set(), outcomes = [];
 let probed = false;
 const rings = () => page.evaluate(async () => {
   const rgb = (v) => { const p = v.match(/[\d.]+/g)?.map(Number); return /^rgba?\(/.test(v) && p?.length >= 3 ? [p[0], p[1], p[2], p[3] ?? 1] : null; };
@@ -64,7 +64,22 @@ try {
   await page.locator("#signin-password").fill(password); await page.locator("form button[type=submit]").click();
   await page.locator(".service-session").waitFor();
   const posts = [];
-  await page.route((url) => url.pathname.includes("/api/"), (route) => { if (route.request().method() === "GET") return route.continue(); posts.push(new URL(route.request().url()).pathname); return route.abort(); });
+  const answered = [];
+  const wording = { nothing: ["Nothing changed", "لم يتغيّر شيء"], pending: ["may have been applied", "ربما طُبّق"], again: ["confirm again", "أكّد مرة أخرى"] };
+  const reply = { refused: [422, "prerequisite_failed", "correct_request"], conflict: [409, "revision_conflict", "reload"], unavailable: [503, "dependency_unavailable", "retry"] };
+  await page.route((url) => url.pathname.includes("/api/"), (route) => {
+    if (route.request().method() === "GET") return route.continue();
+    const path = new URL(route.request().url()).pathname;
+    if (args.outcome && path.includes("/commands/")) {
+      answered.push(path);
+      const answer = args.answer ?? args.outcome;
+      if (answer === "unknown") return route.abort("timedout");
+      const [status, code, next] = reply[answer];
+      return route.fulfill({ status, json: { code, retry: status === 503, next_action: next, request_id: "qa-outcome" } });
+    }
+    posts.push(path);
+    return route.abort();
+  });
   if (args.shots) await mkdir(args.shots, { recursive: true });
 
   for (const [lang, w] of combos) {
@@ -127,6 +142,35 @@ try {
           check(`${at}: on reaching the confirmation, focus is on its title inside the form`, focus.inside && /^H[1-6]$/.test(focus.tag), JSON.stringify(focus));
           check(`${at}: the confirmation does not overflow, cut off or lose text contrast`, shown.overflow <= 1 && shown.clipped.length === 0 && shown.cut.length === 0 && shown.low.length === 0, JSON.stringify({ overflow: shown.overflow, clipped: shown.clipped.slice(0, 2), cut: shown.cut.slice(0, 2), low: shown.low.slice(0, 3) }));
           check(`${at}: every control of the confirmation shows a 2px, 3:1 outline`, ring.controls > 0 && ring.shown === ring.controls && ring.byOutline === ring.controls, JSON.stringify({ controls: ring.controls, shown: ring.shown, byOutline: ring.byOutline, weak: ring.weak.slice(0, 2) }));
+          if (args.outcome && reached) {
+            const final = page.locator("[class*=form-wrap] [class*=confirm] .live-primary:not([disabled])").first();
+            if ((await final.count()) === 0) { notes2.push(`${at}: no final button`); }
+            else {
+              const before = answered.length;
+              const earlier = await page.evaluate(() => [...document.querySelectorAll("main [role=alert], main [role=status], main [aria-live]")].map((e) => e.textContent.trim().replace(/\s+/g, " ").slice(0, 90)));
+              await final.focus(); await page.keyboard.press("Enter");
+              await page.waitForFunction(() => !document.querySelector("[aria-busy=true]"), null, { timeout: 8000 }).catch(() => {});
+              await frames(); await page.waitForTimeout(300);
+              const sent = answered.length - before;
+              const state = await page.evaluate(() => {
+                const a = document.activeElement, r = a?.getBoundingClientRect();
+                const region = a?.closest?.("[role=alert], [role=status], [aria-live]");
+                const live = region ? [region.textContent.trim().replace(/\s+/g, " ").slice(0, 90)].filter(Boolean) : [];
+                return { tag: a?.tagName ?? "", text: (a?.textContent ?? "").trim().replace(/\s+/g, " ").slice(0, 60), visible: !!r && r.width > 0 && r.height > 0, role: region?.getAttribute("role") ?? region?.getAttribute("aria-live") ?? "", live, liveCount: live.length };
+              });
+              const after = await inspectView(page);
+              outcomes.push({ screen: screen.id, view: tab.key, lang, width, kind: m.kind, outcome: args.outcome, sent, ...state, overflow: after.overflow, clipped: after.clipped, cut: after.cut, low: after.low });
+              check(`${at}: the final press sends exactly one command (answered ${args.outcome})`, sent === 1, String(sent));
+              check(`${at}: after the ${args.outcome} answer focus is on a visible element, not the page body`, state.tag !== "BODY" && state.tag !== "" && state.visible, JSON.stringify(state));
+              const said = state.live[0] ?? "";
+              const has = (key) => wording[key].some((w) => said.includes(w));
+              const fits = { refused: has("nothing") && !has("pending"), conflict: has("again") && !has("pending"), unavailable: has("pending"), unknown: has("pending") }[args.outcome];
+              check(`${at}: the ${args.outcome} answer is stated in a focused live region or alert that is new since the press`, state.liveCount > 0 && !earlier.includes(said), JSON.stringify({ said, earlier: earlier.slice(0, 3) }));
+              check(`${at}: the focused text states the ${args.outcome} outcome`, fits, said);
+              check(`${at}: the ${args.outcome} state does not overflow, cut off or lose text contrast`, after.overflow <= 1 && after.clipped.length === 0 && after.cut.length === 0 && after.low.length === 0, JSON.stringify({ o: after.overflow, c: after.clipped.slice(0, 2), cut: after.cut.slice(0, 2), low: after.low.slice(0, 2) }));
+              if (args.shots && !shot.has(screen.id + args.outcome + lang + width)) { shot.add(screen.id + args.outcome + lang + width); await page.screenshot({ path: `${args.shots}/${screen.id}-${args.outcome}-${lang}-${width}.png`, fullPage: false }); }
+            }
+          }
           if (args.shots && !shot.has(screen.id + "confirm" + lang + width)) { shot.add(screen.id + "confirm" + lang + width); await page.screenshot({ path: `${args.shots}/${screen.id}-confirm-${lang}-${width}.png`, fullPage: false }); }
           await open();
           continue;
@@ -155,8 +199,9 @@ try {
   check("the planted-defect probe ran", probed);
   check("every opener found opened a form that took focus", notes.length === 0, notes.join(" | "));
   if (args.confirm) check("every opened form reached its confirmation", unreached.length === 0, notes2.join(" | "));
+  if (args.outcome) check(`every confirmation was pressed and answered ${args.outcome} (${outcomes.length} of ${confirmed.length})`, outcomes.length > 0 && outcomes.length === confirmed.length && notes2.length === 0, notes2.slice(0, 3).join(" | "));
   check("no page error", errors.length === 0, errors.join(" | "));
-  if (args.shots) await (await import("node:fs/promises")).writeFile(`${args.shots}/form-states.json`, JSON.stringify({ records, submitted, confirmed, unreached, notes2 }, null, 1));
+  if (args.shots) await (await import("node:fs/promises")).writeFile(`${args.shots}/form-states.json`, JSON.stringify({ records, submitted, confirmed, unreached, notes2, outcomes }, null, 1));
 } catch (e) {
   check("the script ran to the end", false, e.stack || e.message);
 } finally {

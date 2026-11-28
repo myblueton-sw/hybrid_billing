@@ -377,7 +377,7 @@ export function useDraftEditor({ api, l, list, onDirty, say, focus }: {
       return;
     }
     const text = kind === "limit" ? (list.limit && list.open >= list.limit ? o.openLimit(l, list.limit) : o.capRefused(l, list.maxMembers))
-      : kind === "conflict" ? o[conflictCopy(!!id)](l) : kind === "dependency" ? o.depFailed(l) : o.saveFailed(l);
+      : kind === "conflict" ? o[conflictCopy(!!id)](l) : kind === "dependency" ? o.depFailed(l) : kind === "unknown" ? o.outcomeUnknown(l) : o.saveFailed(l);
     setNotice({ text, alert: true });
     focus("#o01-draft-notice");
   };
@@ -476,7 +476,7 @@ export function useDraftEditor({ api, l, list, onDirty, say, focus }: {
         const found = await list.find(id).catch(() => null);
         await list.reload();
         const err = e instanceof AdminError ? e : null;
-        const why = err?.failure === "invalid" ? o.eMembersServer(l) : err?.failure === "busy" ? o.partialBusy(l) : o.partialFailed(l);
+        const why = err?.failure === "invalid" ? o.eMembersServer(l) : err?.failure === "busy" ? o.partialBusy(l) : refusalOf(err?.failure ?? "", err?.code ?? "") === "unknown" ? o.partialUnknown(l) : o.partialFailed(l);
         if (found) {
           setTarget({ kind: "draft", draft: found });
           setStart({ name: found.name, mode: found.new_group ? "new" : "existing", group: found.new_group ? "" : found.group, adds: [], removes: [] });
@@ -524,7 +524,7 @@ export function useDraftEditor({ api, l, list, onDirty, say, focus }: {
         setAdds((a) => a.filter((x) => !doneAdds.has(x.id)));
         setRemoves((r) => r.filter((x) => !doneRemoves.has(x)));
         if (calls[0].name) setStart((s) => ({ ...s, name: name.trim() }));
-        setPartial({ done, total, rest: total - done, reason: e instanceof AdminError && e.failure === "busy" ? o.partialBusy(l) : o.partialFailed(l), kind: "edit", draftId: d.id });
+        setPartial({ done, total, rest: total - done, reason: e instanceof AdminError && e.failure === "busy" ? o.partialBusy(l) : refusalOf(e instanceof AdminError ? e.failure : "", e instanceof AdminError ? e.code : "") === "unknown" ? o.partialUnknown(l) : o.partialFailed(l), kind: "edit", draftId: d.id });
         focus("#o01-draft-partial");
         return;
       }

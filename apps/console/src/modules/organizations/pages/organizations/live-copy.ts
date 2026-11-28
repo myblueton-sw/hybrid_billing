@@ -314,6 +314,20 @@ export const o = {
     t(l, `This draft changed before your save and can no longer be edited. It was reloaded; ${n} unsaved changes were not kept.`, `저장하기 전에 이 초안이 바뀌어 더 이상 고칠 수 없습니다. 다시 불러왔으며 저장하지 않은 변경 ${n}건은 남지 않았습니다.`,
       `تغيّرت هذه المسودة قبل الحفظ ولم تعد قابلة للتعديل. أُعيد تحميلها، ولم يُحتفظ بالتغييرات غير المحفوظة (${n}).`),
   depFailed: (l: Locale) => t(l, "The relationships could not be read. Nothing was saved. Try again.", "관계를 읽지 못했습니다. 저장된 것은 없습니다. 다시 시도하세요.", "تعذرت قراءة العلاقات. لم يُحفظ شيء. أعد المحاولة."),
+  outcomeUnknown: (l: Locale) =>
+    t(
+      l,
+      "This change may have been applied. No answer confirming the result was received. Check the drafts before trying again; your input is kept.",
+      "이 변경이 적용되었을 수 있습니다. 결과를 확인해 주는 응답을 받지 못했습니다. 다시 시도하기 전에 초안 목록을 확인하세요. 입력한 내용은 유지됩니다.",
+      "ربما طُبّق هذا التغيير. لم يصل ردّ يؤكد النتيجة. تحقّق من المسودات قبل المحاولة مرة أخرى؛ تم الاحتفاظ بما أدخلته.",
+    ),
+  partialUnknown: (l: Locale) =>
+    t(
+      l,
+      "The rest may or may not have been saved: no answer confirming the last batch was received. Check the members below before saving again.",
+      "나머지가 저장되었는지 알 수 없습니다. 마지막 묶음의 결과를 확인해 주는 응답을 받지 못했습니다. 다시 저장하기 전에 아래 구성원을 확인하세요.",
+      "لا يُعرف ما إذا كان الباقي قد حُفظ: لم يصل ردّ يؤكد نتيجة الدفعة الأخيرة. تحقّق من الأعضاء أدناه قبل الحفظ مرة أخرى.",
+    ),
   saveFailed: (l: Locale) => t(l, "The draft could not be saved. Your input is kept.", "초안을 저장하지 못했습니다. 입력한 내용은 유지됩니다.", "تعذر حفظ المسودة. تم الاحتفاظ بما أدخلته."),
   capRefused: (l: Locale, max: number) => t(l, `A draft can hold up to ${max} members.`, `초안에는 구성원을 최대 ${max}개까지 담을 수 있습니다.`, `الحد الأقصى لأعضاء المسودة: ${max}.`),
   eName: (l: Locale) => t(l, "Enter a draft name of 1 to 80 characters without control characters.", "제어 문자 없이 1~80자로 초안 이름을 입력하세요.", "أدخل اسم مسودة من 1 إلى 80 حرفًا دون أحرف تحكّم."),

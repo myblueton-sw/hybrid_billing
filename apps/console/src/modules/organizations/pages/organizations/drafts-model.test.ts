@@ -129,7 +129,7 @@ test("settings, links and refusals", () => {
   assert.equal(planHref("plan-1", "ar"), "#/organization-changes?view=impact&plan=plan-1&lang=ar");
   assert.equal(planHref("plan-1", ""), "#/organization-changes?view=impact&plan=plan-1");
   for (const [failure, code, want] of [["invalid", "", "field"], ["refused", "", "limit"], ["stage", "", "stage"], ["denied", "permission_denied", "denied"], ["denied", "", "failed"],
-    ["unauthenticated", "", "signin"], ["busy", "", "dependency"], ["partial", "", "failed"], ["unavailable", "unsupported_command", "missing"], ["conflict", "revision_conflict", "conflict"]]) assert.equal(refusalOf(failure, code), want, failure);
+    ["unauthenticated", "", "signin"], ["busy", "", "dependency"], ["partial", "", "unknown"], ["unavailable", "", "unknown"], ["", "", "unknown"], ["wrong", "", "failed"], ["unavailable", "unsupported_command", "missing"], ["conflict", "revision_conflict", "conflict"]]) assert.equal(refusalOf(failure, code), want, failure);
   assert.deepEqual((["open", "proposed", "activated", "discarded", "unknown"] as const).map(stateKey), ["stOpen", "stProposed", "stActivated", "stDiscarded", "stUnknown"]);
 });
 

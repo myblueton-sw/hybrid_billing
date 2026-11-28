@@ -1,4 +1,5 @@
 import {
+  useEffect,
   useLayoutEffect,
   useRef,
   useState,
@@ -30,6 +31,9 @@ export function usePresent() {
 export function useIntents(recovery: Recovery) {
   useSyncExternalStore(recovery.commands.subscribe, recovery.commands.version);
 }
+export function settledAfterSending(before: string | undefined, now: string | undefined): boolean {
+  return before === "sending" && (now === "refused" || now === "unknown" || now === "lapsed");
+}
 export function IntentNotice({
   l,
   recovery,
@@ -41,10 +45,17 @@ export function IntentNotice({
 }) {
   useIntents(recovery);
   const entry = recovery.commands.get(kind);
+  const title = useRef<HTMLHeadingElement>(null);
+  const seen = useRef(entry?.phase);
+  const phase = entry?.phase;
+  useEffect(() => {
+    if (settledAfterSending(seen.current, phase)) title.current?.focus();
+    seen.current = phase;
+  }, [phase]);
   if (!entry) return null;
   return (
     <section className="live-held" aria-live="polite">
-      <h3>
+      <h3 ref={title} tabIndex={-1}>
         {entry.phase === "done"
           ? t(l, "done")
           : entry.phase === "unknown"

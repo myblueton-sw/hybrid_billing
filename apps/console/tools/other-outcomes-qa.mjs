@@ -136,10 +136,11 @@ const recipes = {
     await form.locator("input").first().fill("qa-outcome");
     const selects = form.locator("select");
     const choose = async (value) => { const n = await selects.count(); for (let i = 0; i < n; i++) { const pick = await selects.nth(i).evaluate((e, v) => { const o = [...e.options].find((o) => o.value === v || o.textContent.trim() === v || o.value.endsWith(":" + v) || o.textContent.trim().startsWith(v + " ")); return o && (!e.value || e.value === o.value) ? o.value : null; }, value); if (pick) { await selects.nth(i).selectOption(pick); return; } } const seen = await selects.evaluateAll((es) => es.slice(2).map((e) => (e.value || "-") + ":" + [...e.options].map((o) => o.value + "=" + o.textContent.trim()).slice(0, 5).join(","))); throw new Error("no select offers " + value + " " + seen.join(" / ")); };
-    await choose(args.owner ?? "sample-admin");
+    const settle = async (value) => { for (let i = 0; ; i++) { try { await choose(value); return; } catch (e) { if (i >= 30) throw e; await page.waitForTimeout(250); } } };
+    await settle(args.owner ?? "sample-admin");
     await form.locator("textarea:not(#live-reason)").first().fill("Keyboard outcome check");
-    await choose("sample-le-seller");
-    await choose("test-service-api");
+    await settle("sample-le-seller");
+    await settle("test-service-api");
     for (let i = 0; ; i++) { try { await choose("read"); break; } catch (e) { if (i >= 20) throw e; await page.waitForTimeout(250); } }
     await form.locator("button").filter({ hasText: label(lang, "Add scope", "범위 추가", "إضافة نطاق") }).first().click();
     await form.locator("#live-reason").fill("Keyboard outcome check");

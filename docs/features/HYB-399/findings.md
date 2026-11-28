@@ -71,3 +71,18 @@ Not measured here:
 - The busy state during sending, which lasts only until the routed answer.
 - A successful completion, which would need the service to accept a command.
 - Screen-reader announcement.
+
+# E. Vertical clipping, text spacing and zoom (2026-11-28)
+
+`tools/view-measure.mjs` now also reports text that is cut off vertically: an element with text whose box hides its vertical overflow, or clamps its lines, while its content is taller than the box. `input`, `textarea` and `select` are excluded, as for horizontal cut-off. `tools/views-qa.mjs` asserts it on every view, and its planted-defect probe now includes a vertically cut box.
+
+`--spacing 1` applies the WCAG 1.4.12 text-spacing override inside `main`: line height 1.5, letter spacing 0.12em, word spacing 0.16em, and paragraph spacing 2em. On each view a check confirms the override is in effect, so the run cannot pass without it.
+
+| Run | Combinations | Checks |
+| --- | --- | --- |
+| Plain | 62 views in English 1440, Arabic 320 and English 640 | 1,490, none failed |
+| With text spacing | the same | 1,676, none failed (including 186 override-in-effect checks) |
+
+In both runs the page was not wider than the viewport, nothing was cut off horizontally or vertically, and text contrast held.
+
+Zoom: browser zoom of 200% on a 1280-wide window lays out the page as a 640-wide viewport, and 400% as 320. Both widths are measured above and in HYB-313. Text-only zoom, where only the font size grows, is not measured, because headless Chromium offers no text-only zoom. The text-spacing run is the closest stress.

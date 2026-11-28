@@ -43,8 +43,9 @@ try {
     await page.goto(`${base}/?service=api&lang=en&qa=${++navigation}#${screens[0].path}?lang=en&view=${screens[0].tabs[0].key}`);
     await page.locator("main").waitFor(); await page.waitForLoadState("networkidle");
     await page.evaluate(() => { const m = document.querySelector("main"); const a = document.createElement("p"); a.id = "qa-low"; a.textContent = "low contrast probe"; a.style.cssText = "color: rgb(170,170,170); background: rgb(255,255,255)"; const b = document.createElement("div"); b.id = "qa-wide"; b.textContent = "wide probe"; b.style.cssText = "inline-size: 900px"; const c = document.createElement("div"); c.id = "qa-cut"; c.style.cssText = "inline-size: 100px; overflow: hidden; white-space: nowrap"; c.textContent = "a probe that is certainly longer than one hundred pixels"; m.append(a, b, c); });
+    await page.evaluate(() => { const d = document.createElement("div"); d.id = "qa-vcut"; d.textContent = "vertical probe line one and line two and line three"; d.style.cssText = "inline-size: 80px; block-size: 12px; overflow: hidden"; document.querySelector("main").prepend(d); });
     const probe = await inspect();
-    check("the detectors find a planted low-contrast text, a planted wide box and a planted cut-off text", probe.low.some((x) => x.el.includes("qa-low")) && probe.clipped.some((x) => x.el.includes("qa-wide")) && probe.cut.some((x) => x.el.includes("qa-cut")) && probe.overflow > 1, JSON.stringify({ low: probe.low.length, clipped: probe.clipped.length, cut: probe.cut.length, overflow: probe.overflow }));
+    check("the detectors find a planted low-contrast text, a planted wide box, a planted cut-off text and a planted vertically cut text", probe.low.some((x) => x.el.includes("qa-low")) && probe.clipped.some((x) => x.el.includes("qa-wide")) && probe.cut.some((x) => x.el.includes("qa-cut")) && probe.vcut.some((x) => x.el.includes("qa-vcut")) && probe.overflow > 1, JSON.stringify({ low: probe.low.length, clipped: probe.clipped.length, cut: probe.cut.length, overflow: probe.overflow }));
   }
   for (const [lang, w] of combos) {
     const width = Number(w);
@@ -55,6 +56,8 @@ try {
       await page.locator("main").waitFor();
       await page.waitForLoadState("networkidle");
       const settled = await page.waitForFunction(() => !document.querySelector("main [aria-busy=true]"), null, { timeout: 8000 }).then(() => true, () => false);
+      if (args.spacing) await page.addStyleTag({ content: "main *, main *::before, main *::after { line-height: 1.5 !important; letter-spacing: 0.12em !important; word-spacing: 0.16em !important; } main p { margin-block-end: 2em !important; }" });
+      if (args.spacing) { const applied = await page.evaluate(() => { const e = document.querySelector("main p, main h1, main h2, main td, main span"); if (!e) return null; const c = getComputedStyle(e), f = parseFloat(c.fontSize); return { letter: parseFloat(c.letterSpacing) / f, line: parseFloat(c.lineHeight) / f }; }); check(`${at}: the text-spacing override is in effect`, !!applied && Math.abs(applied.letter - 0.12) < 0.01 && Math.abs(applied.line - 1.5) < 0.02, JSON.stringify(applied)); }
       await page.evaluate(() => document.fonts.ready);
       const state = await page.evaluate(() => ({ alerts: [...document.querySelectorAll("main [role=alert], main .live-error")].filter((e) => e.getClientRects().length && e.textContent.trim()).map((e) => e.textContent.trim().slice(0, 80)), signedIn: !!document.querySelector(".service-session"), words: (document.querySelector("main")?.innerText ?? "").trim().split(/\s+/).length }));
       check(`${at}: the view finished loading, signed in, with no error panel`, settled && state.signedIn && state.alerts.length === 0, JSON.stringify({ settled, ...state }));
@@ -64,10 +67,11 @@ try {
       check(`${at}: the page is not wider than the viewport`, found.overflow <= 1, String(found.overflow));
       check(`${at}: nothing extends past the viewport outside a scrolling region`, found.clipped.length === 0, JSON.stringify(found.clipped.slice(0, 3)));
       check(`${at}: nothing is cut off inside a box that hides its overflow`, found.cut.length === 0, JSON.stringify(found.cut.slice(0, 3)));
+      check(`${at}: no text is cut off vertically by a box that hides its overflow or clamps its lines`, found.vcut.length === 0, JSON.stringify(found.vcut.slice(0, 3)));
       check(`${at}: text was measured`, found.measured > 0, `${found.measured} measured, ${found.unsure} not measurable`);
       check(`${at}: text contrast meets 4.5:1 (3:1 large)`, found.low.length === 0, JSON.stringify(found.low.slice(0, 3)));
       check(`${at}: control contrast candidates`, controls.length === 0, JSON.stringify(controls.slice(0, 3)));
-      if (args.shots && (found.overflow > 1 || found.clipped.length || found.cut.length || found.low.length)) await page.screenshot({ path: `${args.shots}/${screen.id}-${tab.key}-${lang}-${width}.png`, fullPage: true });
+      if (args.shots && (found.overflow > 1 || found.clipped.length || found.cut.length || found.vcut.length || found.low.length)) await page.screenshot({ path: `${args.shots}/${screen.id}-${tab.key}-${lang}-${width}.png`, fullPage: true });
     }
   }
   check("no page error", errors.length === 0, errors.join(" | "));

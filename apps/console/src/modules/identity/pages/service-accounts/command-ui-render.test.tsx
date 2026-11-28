@@ -22,7 +22,7 @@ else
         `export async function load(url, context, next) { return ${assetStub}.test(url) ? { format: "module", source: "export default ''", shortCircuit: true } : next(url, context); }`,
       ),
   );
-const { Reauthenticate } = await import("./command-ui");
+const { Reauthenticate, settledAfterSending } = await import("./command-ui");
 const { ReadBoundary, Picker } = await import("./query-ui");
 
 test("M04 read failures describe reads and service accounts while retaining safe server references", () => {
@@ -282,4 +282,11 @@ test("required picker errors retain a unique focusable target while the select i
     }
   }
   assert.equal(reads, 0);
+});
+
+test("a held command takes focus only when its send settles as refused, unknown or lapsed", () => {
+  for (const now of ["refused", "unknown", "lapsed"]) assert.equal(settledAfterSending("sending", now), true);
+  assert.equal(settledAfterSending("sending", "done"), false);
+  assert.equal(settledAfterSending("sending", "sending"), false);
+  for (const before of [undefined, "refused", "unknown", "lapsed", "done"]) for (const now of ["refused", "unknown", "lapsed"]) assert.equal(settledAfterSending(before, now), false);
 });

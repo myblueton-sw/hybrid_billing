@@ -203,3 +203,22 @@ What the screens do:
 | O02 | Change, Enter an ID, Search instead | Moves within the form | All values are kept |
 
 No defect was found. Whether M02 should keep the confirmation reason when going back is left to the owner's screen review.
+
+# J. Field errors returned by the server (2026-11-28)
+
+`tools/other-outcomes-qa.mjs --answer invalid` answers each command with `422 invalid_request` and the field list `reason, rationale, name, members, days, value` (`--fields` changes it). For each reached command it checks that:
+- every element marked `aria-invalid` points, through `aria-describedby`, to a message with text;
+- focus goes to the field that needs correcting, or to a new alert or summary.
+
+The existing focus and layout checks also run.
+
+| Run | Checks |
+| --- | --- |
+| Four recipes, English 1440 and Arabic 320 | 44, none failed |
+| Explorer, English 1440 | 183, none failed |
+
+Fields named in the answer are marked and described on M01 create user, M03 access request (days), O01 draft name, O02 and P01 (reason).
+
+Findings moved to HYB-407:
+- M02 trust proposal and M01 suspend user show the summary title "Check the following" with nothing under it when no named field is on the form. P01, O01 and O02 show a fallback sentence in that case.
+- M05 password change treats a field refusal as an unknown outcome ("Your password may have changed").

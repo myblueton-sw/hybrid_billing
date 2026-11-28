@@ -170,13 +170,14 @@ try {
   await page.locator("#signin-workspace").fill("sample-workspace"); await page.locator("#signin-email").fill("admin@example.invalid");
   await page.locator("#signin-password").fill(password); await page.locator("form button[type=submit]").click();
   await page.locator(".service-session").waitFor();
-  const answered = [], dropped = [], held = [], busy = [], recovered = [];
+  const answered = [], dropped = [], held = [], busy = [], recovered = [], passed = [];
   await page.route((url) => url.pathname.includes("/api/"), async (route) => {
     const method = route.request().method();
     if (method === "GET" || method === "HEAD") return route.continue();
     const path = new URL(route.request().url()).pathname;
     if (/sign-?out|logout|\/session$/.test(path) && method === "DELETE") { dropped.push(path); return route.abort(); }
     answered.push(method + " " + path);
+    if (args.pass && new RegExp("/commands/(" + args.pass + ")$").test(path) && !/approve|activate|decide|issue|payment|invoice/.test(path)) { passed.push(path); return route.continue(); }
     if (args.busy) await new Promise((done) => { held.push(done); setTimeout(done, 15000); });
     if (answer === "unknown") return route.abort("timedout");
     if (answer === "done") return route.fulfill({ status: 200, json: { status: "succeeded", business_state: "applied", result_revision: "qa-done-1", fields: {}, request_id: "qa-outcome" } });
@@ -317,6 +318,7 @@ try {
     }
   }
   check(`commands were reached and answered (${outcomes.length})`, outcomes.length > 0);
+  if (args.pass) notes.push(`passed to the disposable service: ${[...new Set(passed)].join(", ") || "none"}`);
   if (args.recipes) check(`every recipe reached its command (${outcomes.length} of ${args.recipes.split(",").length * combos.length})`, unreached.length === 0 && outcomes.length === args.recipes.split(",").length * combos.length, unreached.join(" | "));
   check("no sign-out request was made", dropped.length === 0, dropped.join());
   check("no page error", errors.length === 0, errors.join(" | "));

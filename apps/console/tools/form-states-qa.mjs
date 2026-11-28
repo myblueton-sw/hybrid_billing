@@ -64,7 +64,7 @@ try {
   await page.locator("#signin-password").fill(password); await page.locator("form button[type=submit]").click();
   await page.locator(".service-session").waitFor();
   const posts = [];
-  const answered = [];
+  const answered = [], passedThrough = [];
   const wording = { nothing: ["Nothing changed", "لم يتغيّر شيء", "바뀐 것은 없습니다", "변경된 내용이 없습니다"], pending: ["may have been applied", "ربما طُبّق", "반영되었을 수 있습니다", "적용되었을 수 있습니다"], again: ["confirm again", "أكّد مرة أخرى", "다시 확인"] };
   const reply = { refused: [422, "prerequisite_failed", "correct_request"], conflict: [409, "revision_conflict", "reload"], unavailable: [503, "dependency_unavailable", "retry"] };
   await page.route((url) => url.pathname.includes("/api/"), (route) => {
@@ -72,6 +72,7 @@ try {
     const path = new URL(route.request().url()).pathname;
     if (args.outcome && path.includes("/commands/")) {
       answered.push(path);
+      if (args.pass && new RegExp("/commands/(" + args.pass + ")$").test(path) && !/approve|activate|decide|issue|payment|invoice/.test(path)) { passedThrough.push(path); return route.continue(); }
       const answer = args.answer ?? args.outcome;
       if (answer === "unknown") return route.abort("timedout");
       if (answer === "done") return route.fulfill({ status: 200, json: { status: "succeeded", business_state: "applied", result_revision: "qa-done-1", fields: {}, request_id: "qa-outcome" } });
@@ -202,6 +203,7 @@ try {
   if (args.confirm) check("every opened form reached its confirmation", unreached.length === 0, notes2.join(" | "));
   if (args.outcome) check(`every confirmation was pressed and answered ${args.outcome} (${outcomes.length} of ${confirmed.length})`, outcomes.length > 0 && outcomes.length === confirmed.length && notes2.length === 0, notes2.slice(0, 3).join(" | "));
   check("no page error", errors.length === 0, errors.join(" | "));
+  if (args.pass) notes.push(`passed to the disposable service: ${[...new Set(passedThrough)].join(", ") || "none"}`);
   if (args.shots) await (await import("node:fs/promises")).writeFile(`${args.shots}/form-states.json`, JSON.stringify({ records, submitted, confirmed, unreached, notes2, outcomes }, null, 1));
 } catch (e) {
   check("the script ran to the end", false, e.stack || e.message);

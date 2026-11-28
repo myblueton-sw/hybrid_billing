@@ -32,6 +32,8 @@ export function changeOutcome(e: unknown, hadWrong: boolean): Outcome {
     case "form":
     case "conflict":
       return e.failure;
+    case "invalid":
+      return e.code === "invalid_request" ? "form" : "unknown";
     case "unauthenticated":
       return hadWrong ? "lockedOut" : "signedOut";
   }

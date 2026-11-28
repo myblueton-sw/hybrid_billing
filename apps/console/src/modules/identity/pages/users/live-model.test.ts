@@ -105,6 +105,9 @@ test("failures have distinct text", () => {
   assert.match(failureText("en", new AdminError("partial", [], 0, "op-9")).body, /op-9/);
   assert.equal(failureText("en", new AdminError("refused")).title, w.refusedTitle("en"));
   assert.equal(failureText("en", new AdminError("invalid")).body, "");
+  assert.equal(failureText("en", new AdminError("invalid", ["x"], 0, "", "invalid_request")).body, w.readInvalid("en"));
+  assert.equal(commandFailure("en", new AdminError("invalid")).title, w.unknownTitle("en"));
+  assert.equal(commandFailure("en", new AdminError("invalid", ["x"], 0, "", "invalid_request")).body, w.invalidFallback("en"));
   assert.equal(failureText("en", new Error("x")).title, w.saveFailed("en"));
   assert.equal(failureText("en", new AdminError("conflict")).title, w.saveFailed("en"));
   assert.equal(failureText("en", new AdminError("denied")).title, w.deniedTitle("en"));
@@ -119,7 +122,7 @@ test("a command whose answer was lost is not described as unsaved", () => {
       assert.equal(shown.body, w.unknownBody(l));
       assert.notEqual(shown.title, w.saveFailed(l));
     }
-    for (const k of ["conflict", "refused", "stage", "denied", "unauthenticated", "limited", "partial", "busy", "stale", "invalid"] as const) {
+    for (const k of ["conflict", "refused", "stage", "denied", "unauthenticated", "limited", "partial", "busy", "stale"] as const) {
       assert.deepEqual(commandFailure(l, new AdminError(k, [], 3, "op-1")), failureText(l, new AdminError(k, [], 3, "op-1")));
     }
   }

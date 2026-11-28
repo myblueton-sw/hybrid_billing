@@ -167,6 +167,20 @@ export const w = {
     ),
   reloadUsers: (l: Locale) => t(l, "Reload users", "사용자 다시 불러오기", "إعادة تحميل المستخدمين"),
   saveFailed: (l: Locale) => t(l, "Could not save this change", "변경을 저장하지 못했습니다", "تعذّر حفظ هذا التغيير"),
+  invalidFallback: (l: Locale) =>
+    t(
+      l,
+      "The service did not accept a value in this form. Nothing was saved. Check the details and try again.",
+      "서비스가 이 양식의 값을 받아들이지 않았습니다. 저장된 것은 없습니다. 내용을 확인한 뒤 다시 시도하세요.",
+      "لم تقبل الخدمة قيمة في هذا النموذج. لم يُحفظ شيء. تحقّق من التفاصيل ثم حاول مرة أخرى.",
+    ),
+  readInvalid: (l: Locale) =>
+    t(
+      l,
+      "The service did not accept this request. Reload the list and try again.",
+      "서비스가 이 요청을 받아들이지 않았습니다. 목록을 다시 불러온 뒤 다시 시도하세요.",
+      "لم تقبل الخدمة هذا الطلب. أعد تحميل القائمة ثم حاول مرة أخرى.",
+    ),
   unknownTitle: (l: Locale) => t(l, "This change may have been saved", "변경 사항이 저장되었을 수 있습니다", "ربما حُفظ هذا التغيير"),
   unknownBody: (l: Locale) =>
     t(

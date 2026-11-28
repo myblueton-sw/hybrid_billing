@@ -76,7 +76,7 @@ export function policyFailure(l: Locale, e: unknown): { title: string; body: str
     case "partial":
       return { title: w.unknownTitle(l), body: w.partial(l, e.operation) };
     case "invalid":
-      return { title: c.check(l), body: "" };
+      return e.code === "invalid_request" ? { title: c.check(l), body: w.invalidFallback(l) } : { title: w.unknownTitle(l), body: w.unknownBody(l) };
     case "reauth":
     case "reauth_cancelled":
       return { title: p.saveFailed(l), body: c.reauthText(l, e.failure) };

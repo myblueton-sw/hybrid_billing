@@ -63,7 +63,8 @@ test("dates and failures", () => {
   const bodies = kinds.map((k) => policyFailure("en", new AdminError(k, [], 2, "op-3")).body);
   assert.equal(new Set(bodies).size, kinds.length);
   assert.equal(policyFailure("en", new AdminError("stale")).body, policyFailure("en", new AdminError("conflict")).body);
-  assert.equal(policyFailure("en", new AdminError("invalid")).body, "");
+  assert.equal(policyFailure("en", new AdminError("invalid", ["x"], 0, "", "invalid_request")).body, w.invalidFallback("en"));
+  assert.equal(policyFailure("en", new AdminError("invalid")).title, w.unknownTitle("en"));
   for (const l of ["en", "ko", "ar"] as const) {
     assert.equal(policyFailure(l, new Error("x")).title, w.unknownTitle(l));
     assert.equal(policyFailure(l, new AdminError("unavailable")).title, w.unknownTitle(l));

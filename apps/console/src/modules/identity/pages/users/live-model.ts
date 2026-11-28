@@ -55,11 +55,13 @@ export function offers(l: Locale, u: UserRow, self: string): Offer {
 }
 
 export function outcomeUnknown(e: unknown): boolean {
-  return !(e instanceof AdminError) || e.failure === "unavailable";
+  return !(e instanceof AdminError) || e.failure === "unavailable" || (e.failure === "invalid" && e.code !== "invalid_request");
 }
 
 export function commandFailure(l: Locale, e: unknown): { title: string; body: string } {
-  return outcomeUnknown(e) ? { title: w.unknownTitle(l), body: w.unknownBody(l) } : failureText(l, e);
+  if (outcomeUnknown(e)) return { title: w.unknownTitle(l), body: w.unknownBody(l) };
+  if (e instanceof AdminError && e.failure === "invalid") return { title: c.check(l), body: w.invalidFallback(l) };
+  return failureText(l, e);
 }
 
 export function failureText(l: Locale, e: unknown): { title: string; body: string } {
@@ -84,7 +86,7 @@ export function failureText(l: Locale, e: unknown): { title: string; body: strin
     case "busy":
       return { title: w.saveFailed(l), body: w.busy(l) };
     case "invalid":
-      return { title: c.check(l), body: "" };
+      return { title: c.check(l), body: e.code === "invalid_request" ? w.readInvalid(l) : "" };
     case "reauth":
     case "reauth_cancelled":
       return { title: w.saveFailed(l), body: c.reauthText(l, e.failure) };

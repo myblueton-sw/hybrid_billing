@@ -37,6 +37,7 @@ test("the form hides without a password and other sessions exclude this one", ()
 test("change failures choose the lockout sign-out only after a wrong attempt", () => {
   for (const f of ["wrong", "locked", "limited", "form", "conflict"] as const) assert.equal(changeOutcome(new AdminError(f), false), f);
   assert.equal(changeOutcome(new AdminError("unauthenticated"), true), "lockedOut");
+  assert.equal(changeOutcome(new AdminError("invalid", ["new_password"], 0, "", "invalid_request"), false), "form");
   assert.equal(changeUnsettled(changeOutcome(new Error("network"), false)), true);
   assert.equal(changeUnsettled(changeOutcome(new AdminError("unavailable"), false)), true);
   for (const f of ["wrong", "locked", "limited", "form", "conflict", "busy"] as const) assert.equal(changeUnsettled(changeOutcome(new AdminError(f), false)), false);

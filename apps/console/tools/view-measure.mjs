@@ -17,13 +17,14 @@ export function inspectView(page, vision = "") {
   const hidden = (e) => !!e.closest(".visually-hidden, [hidden], [inert], [aria-hidden=true]");
   const scrolls = (e) => { for (let n = e.parentElement; n && n !== document.body; n = n.parentElement) { const c = getComputedStyle(n); if (/(auto|scroll|hidden|clip)/.test(c.overflowX)) return true; } return false; };
   const cut = [], seenCut = new Set(); let measured = 0, unsureCount = 0;
-  const clipped = [], low = [], seenClip = new Set(), seenLow = new Set();
+  const clipped = [], low = [], seenClip = new Set(), seenLow = new Set(), vcut = [], seenV = new Set();
   for (const e of document.querySelectorAll("main *")) {
     if (hidden(e) || !e.getClientRects().length) continue;
     const r = e.getBoundingClientRect(), c = getComputedStyle(e);
     if (r.width < 2 || r.height < 2 || c.visibility !== "visible") continue;
     if ((r.right > vw + 1 || r.left < -1) && !scrolls(e)) { const k = name(e); if (!seenClip.has(k)) { seenClip.add(k); clipped.push({ el: k, left: Math.round(r.left), right: Math.round(r.right), vw }); } }
     if (/(hidden|clip)/.test(c.overflowX) && e.scrollWidth > e.clientWidth + 1 && c.textOverflow !== "ellipsis" && !e.matches("input, textarea")) { const k = name(e); if (!seenCut.has(k)) { seenCut.add(k); cut.push({ el: k, content: e.scrollWidth, box: e.clientWidth }); } }
+    if ((/(hidden|clip)/.test(c.overflowY) || (c.webkitLineClamp && c.webkitLineClamp !== "none")) && e.scrollHeight > e.clientHeight + 1 && !e.matches("input, textarea, select") && e.textContent.trim()) { const k = name(e); if (!seenV.has(k)) { seenV.add(k); vcut.push({ el: k, content: e.scrollHeight, box: e.clientHeight, sample: e.textContent.trim().slice(0, 30) }); } }
     const text = [...e.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim().length > 0);
     if (!text || e.matches(":disabled, [aria-disabled=true]") || e.closest(":disabled")) continue;
     const fg = rgb(c.color); if (!fg) continue;
@@ -36,7 +37,7 @@ export function inspectView(page, vision = "") {
     const got = ratio(over(fg, bg), bg), need = large ? 3 : 4.5;
     if (got < need) { const k = name(e) + c.color; if (!seenLow.has(k)) { seenLow.add(k); low.push({ el: name(e), color: c.color, on: bg.map(Math.round).join(","), ratio: Math.round(got * 100) / 100, need, sample: e.textContent.trim().slice(0, 30) }); } }
   }
-  return { overflow: document.documentElement.scrollWidth - vw, clipped: clipped.slice(0, 12), cut: cut.slice(0, 12), low: low.slice(0, 12), measured, unsure: unsureCount };
+  return { overflow: document.documentElement.scrollWidth - vw, clipped: clipped.slice(0, 12), cut: cut.slice(0, 12), vcut: vcut.slice(0, 12), low: low.slice(0, 12), measured, unsure: unsureCount };
   }, visionMatrices[vision] ?? null);
 }
 

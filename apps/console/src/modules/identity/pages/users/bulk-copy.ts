@@ -44,6 +44,7 @@ export const b = {
     t(l, `The server is limiting requests. Sending continues in a few seconds (${sent} of ${n} sent).`, `서버가 요청을 제한하고 있습니다. 몇 초 뒤 전송을 계속합니다(${n}명 중 ${sent}명 전송).`,
       `يحدّ الخادم من الطلبات. يستمر الإرسال بعد ثوانٍ (أُرسل ${sent} من ${n}).`),
   notPrepared: (l: Locale) => t(l, "Preview not prepared", "미리보기를 준비하지 못했습니다", "لم تُحضَّر المعاينة"),
+  mayBePrepared: (l: Locale) => t(l, "The preview may have been prepared", "미리보기가 준비되었을 수 있습니다", "ربما حُضّرت المعاينة"),
   staged: (l: Locale, k: number, n: number) => t(l, `Sent for preview before it stopped: ${k} of ${n}.`, `중단 전까지 미리보기용으로 보낸 인원: ${n}명 중 ${k}명.`, `أُرسل للمعاينة قبل التوقف: ${k} من ${n}.`),
   resume: (l: Locale) => t(l, "Resume sending", "전송 이어 하기", "استئناف الإرسال"),
   discardDraft: (l: Locale) => t(l, "Discard the draft", "초안 버리기", "تجاهل المسودة"),

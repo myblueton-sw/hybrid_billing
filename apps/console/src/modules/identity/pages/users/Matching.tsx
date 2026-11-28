@@ -7,7 +7,7 @@ import { b } from "./bulk-copy";
 import { fc } from "./filter-copy";
 import { appliedKeys, type UserFilters } from "./filter-model";
 import { chipText } from "./filters";
-import { failureText } from "./live-model";
+import { commandFailure, failureText } from "./live-model";
 import { w } from "./live-copy";
 import { m } from "./match-copy";
 import { confirmable, countNote, countView, emptyFilter, fixedOfFields, keepsOwn, refusalCause, storedFilters, type Fixed, type RefusalCause } from "./match-model";
@@ -246,7 +246,7 @@ export function MatchAction({ l, api, query, filters, picked, pendingLimit, relo
     }
   } else if (region.kind === "refused") {
     const text = region.cause === "openDraft" ? b.openDraft(l) : region.cause === "pending" ? b.pendingLimit(l) : region.cause === "none" ? m.noneMatch(l)
-      : region.cause === "over" ? m.tooMany(l, region.limit) : region.cause === "unknown" ? m.combined(l) : failureText(l, region.error).body;
+      : region.cause === "over" ? m.tooMany(l, region.limit) : region.cause === "unknown" ? m.combined(l) : commandFailure(l, region.error).body;
     body = (
       <div role="alert" tabIndex={-1} ref={alert} className="m01-match-refusal">
         <p>{text}</p>

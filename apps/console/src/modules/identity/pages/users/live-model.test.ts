@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { AdminError, type Membership, type UserRow } from "../../../../service/admin";
-import { accountName, failureText, offers, roleName, setup, when } from "./live-model";
+import { accountName, commandFailure, failureText, offers, roleName, setup, when } from "./live-model";
 import { w } from "./live-copy";
 import { c } from "../../../../service/copy";
 
@@ -109,6 +109,21 @@ test("failures have distinct text", () => {
   assert.equal(failureText("en", new AdminError("conflict")).title, w.saveFailed("en"));
   assert.equal(failureText("en", new AdminError("denied")).title, w.deniedTitle("en"));
   assert.equal(failureText("en", new AdminError("invalid")).title, "Check the following");
+});
+
+test("a command whose answer was lost is not described as unsaved", () => {
+  for (const l of ["en", "ko", "ar"] as const) {
+    for (const e of [new AdminError("unavailable"), new Error("network"), new AdminError("unavailable", [], 0, "", "unknown_code")]) {
+      const shown = commandFailure(l, e);
+      assert.equal(shown.title, w.unknownTitle(l));
+      assert.equal(shown.body, w.unknownBody(l));
+      assert.notEqual(shown.title, w.saveFailed(l));
+    }
+    for (const k of ["conflict", "refused", "stage", "denied", "unauthenticated", "limited", "partial", "busy", "stale", "invalid"] as const) {
+      assert.deepEqual(commandFailure(l, new AdminError(k, [], 3, "op-1")), failureText(l, new AdminError(k, [], 3, "op-1")));
+    }
+  }
+  assert.equal(failureText("en", new AdminError("unavailable")).body, w.unavailable("en"));
 });
 
 test("step-up refusals and cancellations have neutral copy in every locale", () => {

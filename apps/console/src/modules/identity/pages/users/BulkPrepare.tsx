@@ -7,7 +7,7 @@ import { bulkClient, stage, stagedBatches, StageError, type BulkDetail, type Bul
 import { b } from "./bulk-copy";
 import { digestShown, expired, number } from "./bulk-model";
 import { FailureBox, Reason, reasonProblem } from "./Live";
-import { failureText, roleName } from "./live-model";
+import { commandFailure, outcomeUnknown, roleName } from "./live-model";
 import { w } from "./live-copy";
 import { Emph, PeriodCell } from "./RolePeriod";
 import { At, Stamp } from "./Stamp";
@@ -162,7 +162,7 @@ export function ConfirmDialog({ l, api, prepared, revision, defaultReason, onClo
     }
   };
   const final = error instanceof AdminError && ["stage", "invalid", "refused", "conflict", "stale", "denied"].includes(error.failure);
-  const describe = (lc: Locale, e: unknown) => (e instanceof AdminError && e.failure === "refused" ? { title: b.refused(lc), body: b.blocked(lc) } : failureText(lc, e));
+  const describe = (lc: Locale, e: unknown) => (e instanceof AdminError && e.failure === "refused" ? { title: b.refused(lc), body: b.blocked(lc) } : commandFailure(lc, e));
   const close = () => { if (busy) return; dialog.current?.close(); if (final) onReload(); onClose(); };
   return (
     <dialog className="m01-confirm" ref={dialog} aria-labelledby="m01-confirm-title" onCancel={(e) => { e.preventDefault(); close(); }}>
@@ -320,7 +320,7 @@ export function BulkFlow({ l, api, ids, names, admins, rows, serverTime, revisio
           {problem && <Summary locale={l} title={c.check(l)} problems={[{ field: "live-reason", message: problem }]} focusKey={focusKey} />}
           {state.kind === "failed" && (
             <div className="service-summary" role="alert" tabIndex={-1}>
-              <h2>{b.notPrepared(l)}</h2>
+              <h2>{!state.cause && outcomeUnknown(state.error) ? b.mayBePrepared(l) : b.notPrepared(l)}</h2>
               {state.cause ? (
                 <>
                   <p>{state.cause === "draft" ? b.openDraft(l) : b.pendingLimit(l)}</p>
@@ -328,7 +328,7 @@ export function BulkFlow({ l, api, ids, names, admins, rows, serverTime, revisio
                 </>
               ) : (
                 <>
-                  <p>{failureText(l, state.error).body}</p>
+                  <p>{commandFailure(l, state.error).body}</p>
                   <p>{b.staged(l, state.staged, ids.length)}</p>
                 </>
               )}

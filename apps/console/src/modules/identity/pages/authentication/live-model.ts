@@ -54,8 +54,10 @@ export function wholeMinutes(raw: string, low: number, high: number): number | n
 }
 
 export function policyFailure(l: Locale, e: unknown): { title: string; body: string } {
-  if (!(e instanceof AdminError)) return { title: p.saveFailed(l), body: w.unavailable(l) };
+  if (!(e instanceof AdminError)) return { title: w.unknownTitle(l), body: w.unknownBody(l) };
   switch (e.failure) {
+    case "unavailable":
+      return { title: w.unknownTitle(l), body: w.unknownBody(l) };
     case "refused":
       return { title: p.refusedTitle(l), body: p.refusedBody(l) };
     case "stage":
@@ -72,7 +74,7 @@ export function policyFailure(l: Locale, e: unknown): { title: string; body: str
     case "limited":
       return { title: p.saveFailed(l), body: c.limited(l, retryPhrase(l, e.retryAfter || 60)) };
     case "partial":
-      return { title: p.saveFailed(l), body: w.partial(l, e.operation) };
+      return { title: w.unknownTitle(l), body: w.partial(l, e.operation) };
     case "invalid":
       return { title: c.check(l), body: "" };
     case "reauth":

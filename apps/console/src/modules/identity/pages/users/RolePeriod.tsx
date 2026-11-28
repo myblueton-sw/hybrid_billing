@@ -9,7 +9,7 @@ import { bounds, dateParts, direction, endProblem, endFields, initialEnd, localI
 export { endFields, initialEnd, type EndValue };
 import { b } from "./bulk-copy";
 import { m } from "./match-copy";
-import { failureText as failure } from "./live-model";
+import { commandFailure as failure } from "./live-model";
 import { w } from "./live-copy";
 import { FailureBox, Reason, reasonProblem, settles } from "./Live";
 import { At, fill, Stamp } from "./Stamp";

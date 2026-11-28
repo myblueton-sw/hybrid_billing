@@ -54,6 +54,14 @@ export function offers(l: Locale, u: UserRow, self: string): Offer {
   return out;
 }
 
+export function outcomeUnknown(e: unknown): boolean {
+  return !(e instanceof AdminError) || e.failure === "unavailable";
+}
+
+export function commandFailure(l: Locale, e: unknown): { title: string; body: string } {
+  return outcomeUnknown(e) ? { title: w.unknownTitle(l), body: w.unknownBody(l) } : failureText(l, e);
+}
+
 export function failureText(l: Locale, e: unknown): { title: string; body: string } {
   if (!(e instanceof AdminError)) return { title: w.saveFailed(l), body: w.unavailable(l) };
   switch (e.failure) {
@@ -72,7 +80,7 @@ export function failureText(l: Locale, e: unknown): { title: string; body: strin
     case "limited":
       return { title: w.saveFailed(l), body: c.limited(l, retryPhrase(l, e.retryAfter || 60)) };
     case "partial":
-      return { title: w.saveFailed(l), body: w.partial(l, e.operation) };
+      return { title: w.unknownTitle(l), body: w.partial(l, e.operation) };
     case "busy":
       return { title: w.saveFailed(l), body: w.busy(l) };
     case "invalid":

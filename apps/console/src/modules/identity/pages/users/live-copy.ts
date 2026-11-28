@@ -167,6 +167,14 @@ export const w = {
     ),
   reloadUsers: (l: Locale) => t(l, "Reload users", "사용자 다시 불러오기", "إعادة تحميل المستخدمين"),
   saveFailed: (l: Locale) => t(l, "Could not save this change", "변경을 저장하지 못했습니다", "تعذّر حفظ هذا التغيير"),
+  unknownTitle: (l: Locale) => t(l, "This change may have been saved", "변경 사항이 저장되었을 수 있습니다", "ربما حُفظ هذا التغيير"),
+  unknownBody: (l: Locale) =>
+    t(
+      l,
+      "No answer confirming the result was received, so it is not known whether this change was saved. Check the current details before sending it again.",
+      "결과를 확인해 주는 응답을 받지 못해 변경 사항이 저장되었는지 알 수 없습니다. 다시 보내기 전에 현재 상세 내용을 확인하세요.",
+      "لم يصل ردّ يؤكد النتيجة، فلا يُعرف ما إذا كان هذا التغيير قد حُفظ. تحقّق من التفاصيل الحالية قبل إرساله مرة أخرى.",
+    ),
   deniedTitle: (l: Locale) => t(l, "You can't manage users here", "여기에서는 사용자를 관리할 수 없습니다", "لا يمكنك إدارة المستخدمين هنا"),
   busy: (l: Locale) =>
     t(

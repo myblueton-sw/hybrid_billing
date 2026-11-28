@@ -8,7 +8,7 @@ import { c } from "../../../../service/copy";
 import { emailValid, loginValid, utf8Length } from "../../../../service/helpers";
 import { Summary, TextField, type Problems } from "../../../../service/Service";
 import { actionDone, actionLabel, impact, w, type Action } from "./live-copy";
-import { accountName, failureText, offers, roleName, setup, tags } from "./live-model";
+import { accountName, commandFailure, failureText, offers, roleName, setup, tags } from "./live-model";
 import { b } from "./bulk-copy";
 import { mayBeAdministrator, number, selectLoaded, toggle, without, type Selection } from "./bulk-model";
 import { batches, bulkClient } from "../../../../service/identity-bulk";
@@ -101,7 +101,7 @@ export function reasonProblem(l: Locale, reason: string): string {
   return utf8Length(reason) > 256 ? w.longReason(l) : "";
 }
 
-export function FailureBox({ l, error, focusKey, describe = failureText }: {
+export function FailureBox({ l, error, focusKey, describe = commandFailure }: {
   l: Locale; error: unknown; focusKey: number; describe?: (l: Locale, e: unknown) => { title: string; body: string };
 }) {
   const box = useRef<HTMLDivElement>(null);

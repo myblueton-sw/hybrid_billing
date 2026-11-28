@@ -7,7 +7,7 @@ import { c } from "../../../../service/copy";
 import { Summary } from "../../../../service/Service";
 import { FailureBox, Reason, reasonProblem, settles } from "../users/Live";
 import { w } from "../users/live-copy";
-import { failureText } from "../users/live-model";
+import { describeRequest } from "./failure-model";
 import { when } from "../authentication/live-model";
 import { a, kindLabel } from "./live-copy";
 import { accessText } from "./live-model";
@@ -22,18 +22,6 @@ export type Decision = "approve" | "reject" | "withdraw";
 
 const mark = "\u0000who\u0000";
 
-export function describeRequest(l: Locale, e: unknown): { title: string; body: string } {
-  if (e instanceof AdminError) {
-    if (e.failure === "refused") return { title: a.refusedTitle(l), body: q.refusedRequest(l) };
-    if (e.failure === "stage") return { title: a.refusedTitle(l), body: q.stageRequest(l) };
-    if (e.failure === "busy") return { title: w.saveFailed(l), body: q.busyIncrease(l) };
-    if (e.failure === "partial") return { title: w.saveFailed(l), body: q.outcomeUnknown(l) };
-    if (e.failure === "invalid") return { title: a.refusedTitle(l), body: a.invalidBody(l) };
-    if (e.failure === "denied") return { title: a.refusedTitle(l), body: a.goneBody(l) };
-    if (e.failure === "conflict" || e.failure === "stale") return { title: w.saveFailed(l), body: a.conflictBody(l) };
-  }
-  return failureText(l, e);
-}
 
 function scopeLine(l: Locale, r: ListedRequest): string {
   const what = `${accessText(l, r.action, r.fields)} · ${kindLabel(l, r.kind) ?? r.kind} · ${r.customer === "all" || r.customer === "" ? a.allCustomers(l) : r.customer}`;

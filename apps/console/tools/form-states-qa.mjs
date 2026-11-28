@@ -74,6 +74,7 @@ try {
       answered.push(path);
       const answer = args.answer ?? args.outcome;
       if (answer === "unknown") return route.abort("timedout");
+      if (answer === "done") return route.fulfill({ status: 200, json: { status: "succeeded", business_state: "applied", result_revision: "qa-done-1", fields: {}, request_id: "qa-outcome" } });
       const [status, code, next] = reply[answer];
       return route.fulfill({ status, json: { code, retry: status === 503, next_action: next, request_id: "qa-outcome" } });
     }
@@ -164,7 +165,7 @@ try {
               check(`${at}: after the ${args.outcome} answer focus is on a visible element, not the page body`, state.tag !== "BODY" && state.tag !== "" && state.visible, JSON.stringify(state));
               const said = state.live[0] ?? "";
               const has = (key) => wording[key].some((w) => said.includes(w));
-              const fits = { refused: has("nothing") && !has("pending"), conflict: has("again") && !has("pending"), unavailable: has("pending"), unknown: has("pending") }[args.outcome];
+              const fits = { refused: has("nothing") && !has("pending"), conflict: has("again") && !has("pending"), unavailable: has("pending"), unknown: has("pending"), done: !has("pending") && !has("nothing") }[args.outcome];
               check(`${at}: the ${args.outcome} answer is stated in a focused live region or alert that is new since the press`, state.liveCount > 0 && !earlier.includes(said), JSON.stringify({ said, earlier: earlier.slice(0, 3) }));
               check(`${at}: the focused text states the ${args.outcome} outcome`, fits, said);
               check(`${at}: the ${args.outcome} state does not overflow, cut off or lose text contrast`, after.overflow <= 1 && after.clipped.length === 0 && after.cut.length === 0 && after.low.length === 0, JSON.stringify({ o: after.overflow, c: after.clipped.slice(0, 2), cut: after.cut.slice(0, 2), low: after.low.slice(0, 2) }));

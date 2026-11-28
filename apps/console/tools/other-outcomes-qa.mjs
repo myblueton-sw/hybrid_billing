@@ -179,6 +179,7 @@ try {
     answered.push(method + " " + path);
     if (args.busy) await new Promise((done) => { held.push(done); setTimeout(done, 15000); });
     if (answer === "unknown") return route.abort("timedout");
+    if (answer === "done") return route.fulfill({ status: 200, json: { status: "succeeded", business_state: "applied", result_revision: "qa-done-1", fields: {}, request_id: "qa-outcome" } });
     const [status, code, next] = reply[answer];
     return route.fulfill({ status, json: { code, retry: status === 503, next_action: next, request_id: "qa-outcome", ...(answer === "invalid" ? { fields: (args.fields ?? "reason,rationale,name,members,days,value").split(",") } : {}) } });
   });

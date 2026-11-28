@@ -170,7 +170,7 @@ try {
   await page.locator("#signin-workspace").fill("sample-workspace"); await page.locator("#signin-email").fill("admin@example.invalid");
   await page.locator("#signin-password").fill(password); await page.locator("form button[type=submit]").click();
   await page.locator(".service-session").waitFor();
-  const answered = [], dropped = [], held = [], busy = [];
+  const answered = [], dropped = [], held = [], busy = [], recovered = [];
   await page.route((url) => url.pathname.includes("/api/"), async (route) => {
     const method = route.request().method();
     if (method === "GET" || method === "HEAD") return route.continue();
@@ -200,14 +200,18 @@ try {
       const keys = args.recipes ? (recipes[`${screen.id}:${tab.key}`] && args.recipes.split(",").includes(`${screen.id}:${tab.key}`) ? ["recipe"] : []) : await candidates();
       for (const key of keys) {
         const at = `${screen.id} ${tab.key} ${lang} ${width} [${key.split("|")[0].slice(0, 40)}]`;
+        const begin = async () => {
         await open();
         await page.evaluate(() => document.querySelectorAll("main button").forEach((b) => b.setAttribute("data-qa-seen", "")));
         if (key === "recipe") {
           let final = null;
-          try { final = await recipes[`${screen.id}:${tab.key}`](lang); } catch (e) { unreached.push(`${at}: recipe stopped: ${String(e.message).split("\n").slice(0, 3).join(" ").slice(0, 300)}`); if (args.shots) await page.screenshot({ path: `${args.shots}/unreached-${screen.id}-${lang}-${width}.png`, fullPage: true }); continue; }
+          try { final = await recipes[`${screen.id}:${tab.key}`](lang); } catch (e) { unreached.push(`${at}: recipe stopped: ${String(e.message).split("\n").slice(0, 3).join(" ").slice(0, 300)}`); if (args.shots) await page.screenshot({ path: `${args.shots}/unreached-${screen.id}-${lang}-${width}.png`, fullPage: true }); return false; }
           await page.evaluate(() => document.querySelectorAll("main button").forEach((b) => b.setAttribute("data-qa-seen", "")));
           await final.evaluate((b) => b.setAttribute("data-qa-next", ""));
-        } else if (!(await pressKey(key))) { notes.push(`${at}: not found again`); continue; }
+        } else if (!(await pressKey(key))) { notes.push(`${at}: not found again`); return false; }
+          return true;
+        };
+        if (!(await begin())) continue;
         const before = answered.length;
         let earlier = [];
         let rounds = 0;
@@ -259,6 +263,50 @@ try {
         if (answer === "refused" || answer === "conflict") check(`${at}: the ${answer} answer does not say the request may have been applied`, !pending.some((p) => state.said.includes(p)), state.said);
         check(`${at}: the ${answer} state does not overflow, cut off or lose text contrast`, found.overflow <= 1 && !found.clipped.length && !found.cut.length && !found.vcut.length && !found.low.length, JSON.stringify({ o: found.overflow, c: found.clipped.slice(0, 2), cut: found.cut.slice(0, 2), v: found.vcut.slice(0, 2), low: found.low.slice(0, 2) }));
         if (args.shots && (state.tag === "BODY" || !state.said)) await page.screenshot({ path: `${args.shots}/${screen.id}-${tab.key}-${lang}-${width}-${outcomes.length}.png` });
+        if (args.recovery && rounds >= 1) {
+          for (let pick = 0; pick < 2; pick++) {
+            if (!(await begin())) break;
+            for (let i = 0; i < rounds; i++) {
+              if (i === 0 && key !== "recipe" && (await page.locator("[data-qa-next]").count()) === 0) await pressKey(key);
+              if (!(await press())) break;
+              await page.waitForFunction(() => !document.querySelector("main [aria-busy=true]"), null, { timeout: 8000 }).catch(() => {});
+              await page.waitForTimeout(200);
+              await fill();
+              if (!(await nextButton())) break;
+            }
+            const sib = await page.evaluate((pick) => {
+              const final = document.querySelector("[data-qa-next]");
+              if (!final) return null;
+              let box = final.parentElement;
+              while (box && box.querySelectorAll("button").length < 2 && box.tagName !== "MAIN") box = box.parentElement;
+              const others = [...(box?.querySelectorAll("button") ?? [])].filter((b) => b !== final && !b.disabled && b.getClientRects().length && !b.closest("li, tr, [role=row], [role=listitem], .list-pager"));
+              const b = others[pick];
+              if (!b) return null;
+              final.removeAttribute("data-qa-next");
+              b.setAttribute("data-qa-sib", "");
+              return { final: final.textContent.trim().slice(0, 40), text: b.textContent.trim().slice(0, 40) };
+            }, pick);
+            if (!sib) break;
+            const sent = answered.length;
+            const typed = await page.evaluate(() => [...document.querySelectorAll("main textarea, main input[type=text]")].filter((e) => e.value === "QA keyboard check reason" || e.value === "Keyboard outcome check").length);
+            const filledBefore = await page.evaluate(() => [...document.querySelectorAll("main input:not([type=search]):not([type=checkbox]):not([type=radio]):not([type=hidden]), main textarea, dialog input:not([type=hidden]), dialog textarea")].filter((e) => e.value).map((e) => e.id || e.name || e.tagName));
+            await page.locator("[data-qa-sib]").focus();
+            await page.keyboard.press("Enter");
+            await frames(); await page.waitForTimeout(300);
+            const after = await page.evaluate(() => {
+              const a = document.activeElement, r = a?.getBoundingClientRect();
+              const kept = [...document.querySelectorAll("main textarea, main input[type=text]")].filter((e) => e.value === "QA keyboard check reason" || e.value === "Keyboard outcome check").length;
+              const filled = [...document.querySelectorAll("main input:not([type=search]):not([type=checkbox]):not([type=radio]):not([type=hidden]), main textarea")].filter((e) => e.value && e.getClientRects().length).map((e) => e.id || e.name || e.tagName);
+              return { tag: a?.tagName ?? "", text: (a?.textContent ?? "").trim().replace(/\s+/g, " ").slice(0, 40), visible: !!r && r.width > 0 && r.height > 0, inside: !!a?.closest?.("main, dialog"), kept, filled };
+            });
+            const shown = await inspectView(page);
+            const where = `${at} [${sib.text} beside ${sib.final}]`;
+            recovered.push({ at: where, typed, filledBefore, ...after });
+            check(`${where}: pressing it sends no command`, answered.length === sent, String(answered.length - sent));
+            check(`${where}: focus lands on a visible element in the page, not the body`, after.tag !== "BODY" && after.tag !== "" && after.visible && after.inside, JSON.stringify(after));
+            check(`${where}: the page does not overflow, cut off or lose text contrast`, shown.overflow <= 1 && !shown.clipped.length && !shown.cut.length && !shown.vcut.length && !shown.low.length, JSON.stringify({ o: shown.overflow, c: shown.clipped.slice(0, 2), v: shown.vcut.slice(0, 2), low: shown.low.slice(0, 2) }));
+          }
+        }
       }
     }
   }
@@ -266,7 +314,7 @@ try {
   if (args.recipes) check(`every recipe reached its command (${outcomes.length} of ${args.recipes.split(",").length * combos.length})`, unreached.length === 0 && outcomes.length === args.recipes.split(",").length * combos.length, unreached.join(" | "));
   check("no sign-out request was made", dropped.length === 0, dropped.join());
   check("no page error", errors.length === 0, errors.join(" | "));
-  if (args.shots) await writeFile(`${args.shots}/other-outcomes.json`, JSON.stringify({ outcomes, unreached, notes, busy }, null, 1));
+  if (args.shots) await writeFile(`${args.shots}/other-outcomes.json`, JSON.stringify({ outcomes, unreached, notes, busy, recovered }, null, 1));
 } catch (e) {
   check("the script ran to the end", false, e.stack || e.message);
 } finally {

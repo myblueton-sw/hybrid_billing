@@ -38,6 +38,10 @@ export function changeOutcome(e: unknown, hadWrong: boolean): Outcome {
   return "unknown";
 }
 
+export function changeUnsettled(outcome: Outcome): boolean {
+  return outcome === "unknown";
+}
+
 export type RowOutcome = "complete" | "running" | "failed" | "gone";
 
 export function rowOutcome(row: SelfEndRow): RowOutcome {

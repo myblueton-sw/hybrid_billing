@@ -77,6 +77,76 @@ const nextButton = () => page.evaluate((skip) => {
   return true;
 }, skip.source);
 
+const label = (lang, en, ko, ar) => ({ en, ko, ar })[lang] ?? en;
+const byText = (text) => page.locator("main button").filter({ hasText: new RegExp("^\\s*" + text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\s*$") }).first();
+const recipes = {
+  "M02:policies": async (lang) => {
+    await byText(label(lang, "Propose trust change", "신뢰 변경 제안", "اقتراح تغيير ثقة")).click();
+    const form = page.locator("form:has(#m02-age)");
+    await form.locator("input[type=radio]").nth(1).check();
+    await page.locator("#m02-age").fill("10");
+    return form.locator("button[type=submit]").first();
+  },
+  "M03:grants": async (lang) => {
+    await byText(label(lang, "Request access", "권한 추가 요청", "طلب صلاحية")).click();
+    await page.locator("#access-person").waitFor();
+    await page.locator("#access-person").fill("admin2");
+    await page.waitForTimeout(600);
+    await page.locator("#access-panel button").filter({ hasText: "admin2@example.invalid" }).first().click();
+    const cap = page.locator("#access-capability");
+    await cap.selectOption({ index: 1 });
+    await page.locator("#access-days").fill("7");
+    await page.locator("#access-panel #live-reason").fill("Keyboard outcome check");
+    return page.locator("#access-panel form button[type=submit]").last();
+  },
+  "O01:groups": async (lang) => {
+    await page.locator("#o01-new-draft").click();
+    await page.locator("#o01-group-new").check();
+    await page.locator("#o01-draft-name").fill("QA outcome group");
+    const panel = page.locator("#o01-draft-name").locator("xpath=ancestor::*[.//textarea[@id='live-reason']][1]");
+    await page.locator("#o01-draft-q").focus();
+    await page.keyboard.press("Enter");
+    await page.waitForTimeout(300);
+    await page.waitForFunction(() => { const name = document.getElementById("o01-draft-name"); const after = [...document.querySelectorAll("main button")].filter((b) => (name.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING) && b.getClientRects().length); const c = {}; after.forEach((b) => { c[b.textContent.trim()] = (c[b.textContent.trim()] ?? 0) + 1; }); return Object.values(c).some((n) => n > 1); }, null, { timeout: 8000 }).catch(async () => {
+      const search = page.locator("#o01-draft-q").locator("xpath=following::button[1]");
+      await search.focus(); await page.keyboard.press("Enter"); await page.waitForTimeout(1200);
+    });
+    const adds = await page.evaluate(() => {
+      const name = document.getElementById("o01-draft-name");
+      const after = [...document.querySelectorAll("main button")].filter((b) => name && (name.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING) && b.getClientRects().length && !b.disabled);
+      const count = {};
+      after.forEach((b) => { const t = b.textContent.trim(); count[t] = (count[t] ?? 0) + 1; });
+      const text = Object.entries(count).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "";
+      const pick = after.filter((b) => b.textContent.trim() === text)[2] ?? after.find((b) => b.textContent.trim() === text);
+      pick?.setAttribute("data-qa-add", "");
+      return text + " " + JSON.stringify(count);
+    });
+    const add = page.locator("[data-qa-add]").first();
+    await add.focus();
+    await page.keyboard.press("Enter");
+    await page.waitForTimeout(300);
+    const added = await panel.evaluate((e) => e.innerText.match(/\n(\d+)[^\n]*1000/)?.[1] ?? "?");
+    if (added === "0") throw new Error(`adding a member did not register (${adds})`);
+    await page.locator("main textarea#live-reason").fill("Keyboard outcome check");
+    return byText(label(lang, "Save draft", "초안 저장", "حفظ المسودة"));
+  },
+  "M04:accounts": async (lang) => {
+    await byText(label(lang, "Create service account", "서비스 계정 만들기", "إنشاء حساب خدمة")).click();
+    const form = page.locator("main form").filter({ has: page.locator("#live-reason") }).first();
+    await form.locator("input").first().fill("qa-outcome");
+    const selects = form.locator("select");
+    const choose = async (value) => { const n = await selects.count(); for (let i = 0; i < n; i++) { const pick = await selects.nth(i).evaluate((e, v) => { const o = [...e.options].find((o) => o.value === v || o.textContent.trim() === v || o.value.endsWith(":" + v) || o.textContent.trim().startsWith(v + " ")); return o && (!e.value || e.value === o.value) ? o.value : null; }, value); if (pick) { await selects.nth(i).selectOption(pick); return; } } const seen = await selects.evaluateAll((es) => es.slice(2).map((e) => (e.value || "-") + ":" + [...e.options].map((o) => o.value + "=" + o.textContent.trim()).slice(0, 5).join(","))); throw new Error("no select offers " + value + " " + seen.join(" / ")); };
+    await choose(args.owner ?? "sample-admin");
+    await form.locator("textarea:not(#live-reason)").first().fill("Keyboard outcome check");
+    await choose("sample-le-seller");
+    await choose("test-service-api");
+    for (let i = 0; ; i++) { try { await choose("read"); break; } catch (e) { if (i >= 20) throw e; await page.waitForTimeout(250); } }
+    await form.locator("button").filter({ hasText: label(lang, "Add scope", "범위 추가", "إضافة نطاق") }).first().click();
+    await form.locator("#live-reason").fill("Keyboard outcome check");
+    return form.locator("button[type=submit]").last();
+  },
+};
+
 const press = async () => {
   const b = page.locator("[data-qa-next]").first();
   if ((await b.count()) === 0) return false;
@@ -125,18 +195,23 @@ try {
         return page.locator(".service-session").count();
       };
       if (!(await open())) { notes.push(`${screen.id} ${tab.key}: signed out`); continue; }
-      const keys = await candidates();
+      const keys = args.recipes ? (recipes[`${screen.id}:${tab.key}`] && args.recipes.split(",").includes(`${screen.id}:${tab.key}`) ? ["recipe"] : []) : await candidates();
       for (const key of keys) {
         const at = `${screen.id} ${tab.key} ${lang} ${width} [${key.split("|")[0].slice(0, 40)}]`;
         await open();
         await page.evaluate(() => document.querySelectorAll("main button").forEach((b) => b.setAttribute("data-qa-seen", "")));
-        if (!(await pressKey(key))) { notes.push(`${at}: not found again`); continue; }
+        if (key === "recipe") {
+          let final = null;
+          try { final = await recipes[`${screen.id}:${tab.key}`](lang); } catch (e) { unreached.push(`${at}: recipe stopped: ${String(e.message).split("\n").slice(0, 3).join(" ").slice(0, 300)}`); if (args.shots) await page.screenshot({ path: `${args.shots}/unreached-${screen.id}-${lang}-${width}.png`, fullPage: true }); continue; }
+          await page.evaluate(() => document.querySelectorAll("main button").forEach((b) => b.setAttribute("data-qa-seen", "")));
+          await final.evaluate((b) => b.setAttribute("data-qa-next", ""));
+        } else if (!(await pressKey(key))) { notes.push(`${at}: not found again`); continue; }
         const before = answered.length;
         let earlier = [];
         let rounds = 0;
         for (; rounds < 6; rounds++) {
           earlier = await page.evaluate(() => [...document.querySelectorAll("main [role=alert], main [role=status], main [aria-live]")].map((e) => e.textContent.trim().replace(/\s+/g, " ").slice(0, 90)));
-          if (rounds === 0 && (await page.locator("[data-qa-next]").count()) === 0) await pressKey(key);
+          if (rounds === 0 && key !== "recipe" && (await page.locator("[data-qa-next]").count()) === 0) await pressKey(key);
           if (!(await press())) break;
           await page.waitForFunction(() => !document.querySelector("main [aria-busy=true]"), null, { timeout: 8000 }).catch(() => {});
           await page.waitForTimeout(200);
@@ -144,7 +219,7 @@ try {
           await fill();
           if (!(await nextButton())) break;
         }
-        if (answered.length === before) { unreached.push(`${at}: no command after ${rounds} presses`); continue; }
+        if (answered.length === before) { unreached.push(`${at}: no command after ${rounds} presses`); if (args.shots && key === "recipe") await page.screenshot({ path: `${args.shots}/unreached-${screen.id}-${lang}-${width}.png`, fullPage: true }); continue; }
         await frames();
         const state = await page.evaluate((earlier) => {
           const a = document.activeElement, r = a?.getBoundingClientRect();
@@ -168,6 +243,7 @@ try {
     }
   }
   check(`commands were reached and answered (${outcomes.length})`, outcomes.length > 0);
+  if (args.recipes) check(`every recipe reached its command (${outcomes.length} of ${args.recipes.split(",").length * combos.length})`, unreached.length === 0 && outcomes.length === args.recipes.split(",").length * combos.length, unreached.join(" | "));
   check("no sign-out request was made", dropped.length === 0, dropped.join());
   check("no page error", errors.length === 0, errors.join(" | "));
   if (args.shots) await writeFile(`${args.shots}/other-outcomes.json`, JSON.stringify({ outcomes, unreached, notes }, null, 1));

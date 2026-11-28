@@ -191,7 +191,11 @@ export const stateSentenceWords: Words = {
 };
 
 export const keptWords: Words = {
-  "release_evidence.approve:refused": ["You cannot approve your own proposal. Nothing changed.", "자신의 제안은 승인할 수 없습니다. 변경된 내용이 없습니다.", "لا يمكنك اعتماد مقترحك. لم يتغيّر شيء."],
+  "release_evidence.approve:refused": [
+    "The register refused this approval. Nothing changed. You may be its proposer, who cannot approve it, or a register limit may have been reached.",
+    "레지스트리가 이 승인을 거부했습니다. 변경된 내용이 없습니다. 승인할 수 없는 제안자 본인이거나 레지스트리 한도에 도달했을 수 있습니다.",
+    "رفض السجل هذا الاعتماد. لم يتغيّر شيء. ربما كنت مقترِحه، ولا يحق لك اعتماده، أو بُلغ أحد حدود السجل.",
+  ],
   "release_evidence.approve:stage": [
     "The register refused this approval. Nothing changed. The proposal may no longer be pending, the requirement or profile may already be retired, or the replacement may no longer be at least as strong.",
     "레지스트리가 이 승인을 거부했습니다. 변경된 내용이 없습니다. 제안이 더 이상 대기 중이 아니거나, 요구사항 또는 프로파일이 이미 폐지되었거나, 대체 요구사항이 더 이상 같은 수준 이상이 아닐 수 있습니다.",
